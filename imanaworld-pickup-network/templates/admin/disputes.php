@@ -44,9 +44,11 @@ defined( 'ABSPATH' ) || exit;
 			</tbody>
 		</table>
 	</div>
-</div>
 
-<!-- Order detail modal — same shell as Orders & Disputes, populated from the clicked row's data-order attribute. -->
+	<!-- Nested inside .wrap.ipn-admin deliberately — admin.css's modal rules
+	     are scoped as ".ipn-admin .modal-scrim" etc., so a modal placed
+	     outside this wrapper renders unstyled and permanently visible
+	     instead of as a hidden overlay. -->
 <div class="modal-scrim" id="ipn-order-modal-scrim">
 	<div class="modal">
 		<div class="modal-head">
@@ -71,4 +73,5 @@ defined( 'ABSPATH' ) || exit;
 			<button type="button" class="btn btn-ghost" onclick="ipnCloseModal('ipn-order-modal-scrim')"><?php esc_html_e( 'Close', 'ipn' ); ?></button>
 		</div>
 	</div>
+</div>
 </div>

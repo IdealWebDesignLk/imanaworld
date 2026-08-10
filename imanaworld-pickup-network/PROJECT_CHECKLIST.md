@@ -12,7 +12,9 @@ double-check anything before relying on it.
 - 🚫 **Out of scope** — confirmed Phase 2, correctly excluded from this build
 - ⏳ **Pending on client** — not a dev task; blocked on IMANAWORLD/Choppies
 
-Last verified: 2026-08-10 (post order-status-wiring build).
+Last verified: 2026-08-10 (post order-status-wiring build; v0.5.2 modal-CSS bug fix).
+
+**Bug fix (2026-08-10, reported as GitHub issue #1):** every admin screen with a popup (Branches add/edit + closures, Stock adjust, Orders & Disputes detail) rendered its modal as unstyled, permanently-visible plain HTML — "click Add branch and nothing happens" was actually the modal already being stuck open, unstyled. Root cause: the modal markup in all 4 templates sat as a sibling *after* the closing `</div>` of `.wrap.ipn-admin`, but every modal CSS rule in `admin.css` is scoped `.ipn-admin .modal-scrim` (descendant selector) — so the CSS never matched. Pre-existing bug from the original scaffold, not something introduced by this session's earlier work; just hadn't been clicked on a live site until now. Fixed by nesting the modal markup inside `.wrap.ipn-admin` in all 4 files. Shipped as v0.5.2.
 
 ---
 

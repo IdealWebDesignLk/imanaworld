@@ -97,39 +97,43 @@ foreach ( $branches as $branch ) {
 			</table>
 		</div>
 	<?php endif; ?>
-</div>
 
-<div class="modal-scrim" id="ipn-stock-modal-scrim">
-	<div class="modal">
-		<form method="post">
-			<?php wp_nonce_field( 'ipn_adjust_stock' ); ?>
-			<input type="hidden" name="ipn_adjust_stock" value="1" />
-			<input type="hidden" name="product_id" id="sm-product-id" value="" />
-			<input type="hidden" name="branch_id" id="sm-branch-id" value="" />
+	<!-- Nested inside .wrap.ipn-admin deliberately — admin.css's modal rules
+	     are scoped as ".ipn-admin .modal-scrim" etc., so a modal placed
+	     outside this wrapper renders completely unstyled and permanently
+	     visible instead of as a hidden overlay. -->
+	<div class="modal-scrim" id="ipn-stock-modal-scrim">
+		<div class="modal">
+			<form method="post">
+				<?php wp_nonce_field( 'ipn_adjust_stock' ); ?>
+				<input type="hidden" name="ipn_adjust_stock" value="1" />
+				<input type="hidden" name="product_id" id="sm-product-id" value="" />
+				<input type="hidden" name="branch_id" id="sm-branch-id" value="" />
 
-			<div class="modal-head">
-				<div class="modal-title"><?php esc_html_e( 'Adjust stock', 'ipn' ); ?></div>
-				<button type="button" class="modal-close" onclick="ipnCloseModal('ipn-stock-modal-scrim')">✕</button>
-			</div>
-			<div class="modal-body">
-				<div class="field">
-					<label><?php esc_html_e( 'Product', 'ipn' ); ?></label>
-					<input type="text" id="sm-product-name" disabled="disabled" />
+				<div class="modal-head">
+					<div class="modal-title"><?php esc_html_e( 'Adjust stock', 'ipn' ); ?></div>
+					<button type="button" class="modal-close" onclick="ipnCloseModal('ipn-stock-modal-scrim')">✕</button>
 				</div>
-				<div class="field">
-					<label><?php esc_html_e( 'Branch', 'ipn' ); ?></label>
-					<input type="text" id="sm-branch-name" disabled="disabled" />
+				<div class="modal-body">
+					<div class="field">
+						<label><?php esc_html_e( 'Product', 'ipn' ); ?></label>
+						<input type="text" id="sm-product-name" disabled="disabled" />
+					</div>
+					<div class="field">
+						<label><?php esc_html_e( 'Branch', 'ipn' ); ?></label>
+						<input type="text" id="sm-branch-name" disabled="disabled" />
+					</div>
+					<div class="field">
+						<label for="sm-total"><?php esc_html_e( 'Total stock on hand', 'ipn' ); ?></label>
+						<input type="number" id="sm-total" name="total_stock" min="0" required="required" />
+						<div class="hint"><?php esc_html_e( 'This sets the total; reserved stock (from unfulfilled orders) is unchanged and still subtracted to work out what\'s actually available.', 'ipn' ); ?></div>
+					</div>
 				</div>
-				<div class="field">
-					<label for="sm-total"><?php esc_html_e( 'Total stock on hand', 'ipn' ); ?></label>
-					<input type="number" id="sm-total" name="total_stock" min="0" required="required" />
-					<div class="hint"><?php esc_html_e( 'This sets the total; reserved stock (from unfulfilled orders) is unchanged and still subtracted to work out what\'s actually available.', 'ipn' ); ?></div>
+				<div class="modal-foot">
+					<button type="button" class="btn btn-ghost" onclick="ipnCloseModal('ipn-stock-modal-scrim')"><?php esc_html_e( 'Cancel', 'ipn' ); ?></button>
+					<button type="submit" class="btn btn-primary"><?php esc_html_e( 'Save', 'ipn' ); ?></button>
 				</div>
-			</div>
-			<div class="modal-foot">
-				<button type="button" class="btn btn-ghost" onclick="ipnCloseModal('ipn-stock-modal-scrim')"><?php esc_html_e( 'Cancel', 'ipn' ); ?></button>
-				<button type="submit" class="btn btn-primary"><?php esc_html_e( 'Save', 'ipn' ); ?></button>
-			</div>
-		</form>
+			</form>
+		</div>
 	</div>
 </div>

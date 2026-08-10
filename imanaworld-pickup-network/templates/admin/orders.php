@@ -77,10 +77,12 @@ $ipn_statuses = array(
 			</tbody>
 		</table>
 	</div>
-</div>
 
-<!-- Order detail modal — opens on row click, populated from that row's data-order attribute. -->
-<div class="modal-scrim" id="ipn-order-modal-scrim">
+	<!-- Nested inside .wrap.ipn-admin deliberately — admin.css's modal rules
+	     are scoped as ".ipn-admin .modal-scrim" etc., so a modal placed
+	     outside this wrapper renders unstyled and permanently visible
+	     instead of as a hidden overlay. -->
+	<div class="modal-scrim" id="ipn-order-modal-scrim">
 	<div class="modal">
 		<div class="modal-head">
 			<div class="modal-title" id="ipn-om-title"><?php esc_html_e( 'Order detail', 'ipn' ); ?></div>
@@ -104,4 +106,5 @@ $ipn_statuses = array(
 			<button type="button" class="btn btn-ghost" onclick="ipnCloseModal('ipn-order-modal-scrim')"><?php esc_html_e( 'Close', 'ipn' ); ?></button>
 		</div>
 	</div>
+</div>
 </div>

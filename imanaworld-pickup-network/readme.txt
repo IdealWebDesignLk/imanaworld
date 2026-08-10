@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.5.1
+Stable tag: 0.5.2
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -41,6 +41,13 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.5.2 =
+* Fix: every admin screen with a popup (Branches add/edit + closures, Stock
+  adjust, Orders & Disputes detail) rendered its modal as unstyled, always-
+  visible plain HTML instead of a hidden overlay, because the modal markup
+  sat outside the .ipn-admin wrapper that admin.css's modal rules are scoped
+  to. Moved the modal markup inside that wrapper in all 4 templates.
 
 = 0.5.1 =
 * GitHub-based auto-updates: the plugin now checks IdealWebDesignLk/imanaworld

@@ -143,9 +143,13 @@ $ipn_branch_hours_summary = function ( $branch_id ) {
 			</tbody>
 		</table>
 	</div>
-</div>
 
-<!-- Branch add/edit modal — a real form now; posts back to this same admin page. -->
+	<!-- Nested inside .wrap.ipn-admin deliberately, along with the
+	     closures modal below — admin.css's modal rules are scoped as
+	     ".ipn-admin .modal-scrim" etc., so a modal placed outside this
+	     wrapper renders unstyled and permanently visible instead of as
+	     a hidden overlay. This is a real form now; posts back to this
+	     same admin page. -->
 <div class="modal-scrim" id="ipn-branch-modal-scrim">
 	<div class="modal">
 		<form method="post">
@@ -266,4 +270,5 @@ $ipn_branch_hours_summary = function ( $branch_id ) {
 			<button type="button" class="btn btn-ghost" onclick="ipnCloseModal('ipn-closures-modal-scrim')"><?php esc_html_e( 'Close', 'ipn' ); ?></button>
 		</div>
 	</div>
+</div>
 </div>
