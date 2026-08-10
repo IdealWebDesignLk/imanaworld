@@ -1,0 +1,301 @@
+/**
+ * IPN admin design system — ported from the approved client mockup
+ * (UI for IPN/admin/index.html). Everything is scoped under .ipn-admin
+ * so it never leaks onto other wp-admin screens. WordPress admin already
+ * supplies the page chrome (menu, top toolbar), so the mockup's
+ * .app/.sidebar/.topbar/.main/.content/.view shell rules are intentionally
+ * NOT ported here — only the reusable component classes are.
+ */
+
+.ipn-admin {
+	--paper: #f6f5f0;
+	--surface: #ffffff;
+	--surface-sunken: #efeee7;
+	--ink: #1c1b18;
+	--muted: #6b6b63;
+	--faint: #9a988e;
+	--line: #e1dfd7;
+	--line-strong: #cfcdc2;
+
+	--brand-900: #143d17;
+	--brand-700: #1b5e20;
+	--brand-600: #2e7d32;
+	--brand-100: #e8f5e9;
+	--on-brand: #ffffff;
+
+	--new: #1565c0;
+	--new-bg: #e8f0fb;
+	--preparing: #a8530a;
+	--preparing-bg: #fbeee0;
+	--ready: #1b5e20;
+	--ready-bg: #e8f5e9;
+	--express: #6a1b9a;
+	--express-bg: #f2e7f8;
+	--danger: #b3261e;
+	--danger-bg: #fbeae9;
+	--neutral-bg: #eeede6;
+
+	--focus: #2e7d32;
+	--shadow: 0 1px 2px rgba(28, 27, 24, .06), 0 6px 20px rgba(28, 27, 24, .08);
+	--shadow-lg: 0 12px 40px rgba(28, 27, 24, .16);
+	--radius: 12px;
+
+	--font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+	--font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+	color: var(--ink);
+	font-family: var(--font-ui);
+	-webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+	.ipn-admin:not([data-theme="light"]) {
+		--paper: #101210;
+		--surface: #191c18;
+		--surface-sunken: #14160f;
+		--ink: #eeece3;
+		--muted: #a6a599;
+		--faint: #74736a;
+		--line: #2c2f27;
+		--line-strong: #3a3d33;
+		--brand-900: #b7e0b9;
+		--brand-700: #7fc986;
+		--brand-600: #6abf72;
+		--brand-100: #1d2c1c;
+		--on-brand: #0c1a0d;
+		--new: #7fb2f0;
+		--new-bg: #17233a;
+		--preparing: #eeab6b;
+		--preparing-bg: #3a2915;
+		--ready: #7fc986;
+		--ready-bg: #1a2c1a;
+		--express: #cd9be5;
+		--express-bg: #2c1f36;
+		--danger: #f2938c;
+		--danger-bg: #3a1917;
+		--neutral-bg: #22251e;
+		--focus: #7fc986;
+		--shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .4);
+		--shadow-lg: 0 20px 60px rgba(0, 0, 0, .55);
+	}
+}
+
+.ipn-admin[data-theme="dark"] {
+	--paper: #101210;
+	--surface: #191c18;
+	--surface-sunken: #14160f;
+	--ink: #eeece3;
+	--muted: #a6a599;
+	--faint: #74736a;
+	--line: #2c2f27;
+	--line-strong: #3a3d33;
+	--brand-900: #b7e0b9;
+	--brand-700: #7fc986;
+	--brand-600: #6abf72;
+	--brand-100: #1d2c1c;
+	--on-brand: #0c1a0d;
+	--new: #7fb2f0;
+	--new-bg: #17233a;
+	--preparing: #eeab6b;
+	--preparing-bg: #3a2915;
+	--ready: #7fc986;
+	--ready-bg: #1a2c1a;
+	--express: #cd9be5;
+	--express-bg: #2c1f36;
+	--danger: #f2938c;
+	--danger-bg: #3a1917;
+	--neutral-bg: #22251e;
+	--focus: #7fc986;
+	--shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .4);
+	--shadow-lg: 0 20px 60px rgba(0, 0, 0, .55);
+}
+
+.ipn-admin[data-theme="light"] {
+	--paper: #f6f5f0;
+	--surface: #ffffff;
+	--surface-sunken: #efeee7;
+	--ink: #1c1b18;
+	--muted: #6b6b63;
+	--faint: #9a988e;
+	--line: #e1dfd7;
+	--line-strong: #cfcdc2;
+	--brand-900: #143d17;
+	--brand-700: #1b5e20;
+	--brand-600: #2e7d32;
+	--brand-100: #e8f5e9;
+	--on-brand: #ffffff;
+	--new: #1565c0;
+	--new-bg: #e8f0fb;
+	--preparing: #a8530a;
+	--preparing-bg: #fbeee0;
+	--ready: #1b5e20;
+	--ready-bg: #e8f5e9;
+	--express: #6a1b9a;
+	--express-bg: #f2e7f8;
+	--danger: #b3261e;
+	--danger-bg: #fbeae9;
+	--neutral-bg: #eeede6;
+	--focus: #2e7d32;
+	--shadow: 0 1px 2px rgba(28, 27, 24, .06), 0 6px 20px rgba(28, 27, 24, .08);
+	--shadow-lg: 0 12px 40px rgba(28, 27, 24, .16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ipn-admin * {
+		animation-duration: .001ms !important;
+		transition-duration: .001ms !important;
+	}
+}
+
+.ipn-admin button,
+.ipn-admin input,
+.ipn-admin select,
+.ipn-admin textarea {
+	font-family: inherit;
+}
+
+.ipn-admin :focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+
+/* ---------- layout helpers ---------- */
+.ipn-admin .grid { display: grid; gap: 14px; }
+.ipn-admin .cols-4 { grid-template-columns: repeat(4, 1fr); }
+.ipn-admin .cols-3 { grid-template-columns: repeat(3, 1fr); }
+.ipn-admin .cols-2 { grid-template-columns: 1fr 1fr; }
+@media (max-width: 900px) {
+	.ipn-admin .cols-4 { grid-template-columns: repeat(2, 1fr); }
+	.ipn-admin .cols-3 { grid-template-columns: repeat(2, 1fr); }
+	.ipn-admin .cols-2 { grid-template-columns: 1fr; }
+}
+
+.ipn-admin .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+.ipn-admin .panel-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.ipn-admin .panel-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+
+.ipn-admin .stat-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.ipn-admin .stat-label { font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.ipn-admin .stat-value { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.ipn-admin .stat-delta { font-size: 11.5px; margin-top: 5px; font-weight: 650; }
+.ipn-admin .stat-delta.up { color: var(--ready); }
+.ipn-admin .stat-delta.down { color: var(--danger); }
+
+.ipn-admin .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 26px 0 12px; flex-wrap: wrap; }
+.ipn-admin .section-head:first-child { margin-top: 0; }
+.ipn-admin .section-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+
+/* ---------- buttons ---------- */
+.ipn-admin .btn { appearance: none; border: none; border-radius: 9px; font-size: 13px; font-weight: 650; padding: 9px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: transform .08s ease, background .12s ease; white-space: nowrap; text-decoration: none; }
+.ipn-admin .btn:active { transform: scale(0.98); }
+.ipn-admin .btn:disabled { opacity: .5; cursor: not-allowed; }
+.ipn-admin .btn-primary { background: var(--brand-600); color: var(--on-brand); }
+.ipn-admin .btn-primary:hover:not(:disabled) { background: var(--brand-700); color: var(--on-brand); }
+.ipn-admin .btn-secondary { background: var(--brand-100); color: var(--brand-700); }
+.ipn-admin .btn-secondary:hover { background: var(--surface-sunken); color: var(--brand-700); }
+.ipn-admin .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.ipn-admin .btn-ghost:hover { background: var(--surface-sunken); color: var(--muted); }
+.ipn-admin .btn-danger-outline { background: transparent; color: var(--danger); border: 1px solid var(--danger-bg); }
+.ipn-admin .btn-danger-outline:hover { background: var(--danger-bg); }
+.ipn-admin .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+
+/* ---------- tables ---------- */
+.ipn-admin .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.ipn-admin table.data { border-collapse: collapse; width: 100%; font-size: 13px; }
+.ipn-admin table.data th { text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--surface-sunken); }
+.ipn-admin table.data td { padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.ipn-admin table.data tr:last-child td { border-bottom: none; }
+.ipn-admin table.data tr:hover td { background: var(--surface-sunken); }
+.ipn-admin .num { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* ---------- chips ---------- */
+.ipn-admin .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 20px; white-space: nowrap; line-height: 1.5; }
+.ipn-admin .chip-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.ipn-admin .chip-active { background: var(--ready-bg); color: var(--ready); }
+.ipn-admin .chip-inactive { background: var(--neutral-bg); color: var(--muted); }
+.ipn-admin .chip-new,
+.ipn-admin .chip-accepted { background: var(--new-bg); color: var(--new); }
+.ipn-admin .chip-preparing { background: var(--preparing-bg); color: var(--preparing); }
+.ipn-admin .chip-ready { background: var(--ready-bg); color: var(--ready); }
+.ipn-admin .chip-collected { background: var(--neutral-bg); color: var(--muted); }
+.ipn-admin .chip-disputed,
+.ipn-admin .chip-expired,
+.ipn-admin .chip-cancelled { background: var(--danger-bg); color: var(--danger); }
+.ipn-admin .chip-express { background: var(--express-bg); color: var(--express); }
+.ipn-admin .chip-standard { background: var(--neutral-bg); color: var(--muted); }
+
+/* ---------- form fields ---------- */
+.ipn-admin .field { margin-bottom: 12px; }
+.ipn-admin .field label { display: block; font-size: 12px; font-weight: 650; color: var(--muted); margin-bottom: 6px; }
+.ipn-admin .field input,
+.ipn-admin .field select,
+.ipn-admin .field textarea {
+	width: 100%; border: 1px solid var(--line-strong); background: var(--surface-sunken); color: var(--ink);
+	border-radius: 9px; padding: 9px 11px; font-size: 13.5px;
+}
+.ipn-admin .field input:focus,
+.ipn-admin .field select:focus,
+.ipn-admin .field textarea:focus { border-color: var(--focus); background: var(--surface); }
+.ipn-admin .field-row { display: flex; gap: 10px; }
+.ipn-admin .field-row .field { flex: 1; }
+.ipn-admin .hint { font-size: 11.5px; color: var(--faint); margin-top: 5px; line-height: 1.5; }
+
+.ipn-admin .switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+.ipn-admin .switch input { opacity: 0; width: 0; height: 0; }
+.ipn-admin .switch-track { position: absolute; inset: 0; background: var(--line-strong); border-radius: 20px; cursor: pointer; transition: background .15s; }
+.ipn-admin .switch-track::before { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: transform .15s; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
+.ipn-admin .switch input:checked + .switch-track { background: var(--brand-600); }
+.ipn-admin .switch input:checked + .switch-track::before { transform: translateX(16px); }
+
+/* ---------- toolbar ---------- */
+.ipn-admin .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.ipn-admin .toolbar input[type=text],
+.ipn-admin .toolbar input[type=search] { border: 1px solid var(--line-strong); background: var(--surface-sunken); color: var(--ink); border-radius: 9px; padding: 8px 12px; font-size: 13px; min-width: 200px; }
+.ipn-admin .toolbar select { border: 1px solid var(--line-strong); background: var(--surface-sunken); color: var(--ink); border-radius: 9px; padding: 8px 10px; font-size: 13px; }
+
+/* ---------- modal ---------- */
+.ipn-admin .modal-scrim { position: fixed; inset: 0; background: rgba(20, 20, 16, .45); z-index: 100060; display: none; align-items: center; justify-content: center; padding: 20px; }
+.ipn-admin .modal-scrim.show { display: flex; }
+.ipn-admin .modal { background: var(--surface); border-radius: 14px; max-width: 480px; width: 100%; box-shadow: var(--shadow-lg); max-height: 88vh; overflow-y: auto; }
+.ipn-admin .modal-head { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+.ipn-admin .modal-title { font-size: 15px; font-weight: 700; }
+.ipn-admin .modal-close { background: var(--surface-sunken); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; color: var(--muted); }
+.ipn-admin .modal-body { padding: 18px 20px; }
+.ipn-admin .modal-foot { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ---------- import ---------- */
+.ipn-admin .dropzone { border: 1.5px dashed var(--line-strong); border-radius: var(--radius); padding: 30px 20px; text-align: center; background: var(--surface-sunken); margin-bottom: 14px; }
+.ipn-admin .dropzone-ico { font-size: 28px; margin-bottom: 8px; }
+.ipn-admin .dropzone-title { font-size: 13.5px; font-weight: 650; margin-bottom: 4px; }
+.ipn-admin .dropzone-sub { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+
+.ipn-admin .import-log-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 12.5px; gap: 10px; }
+.ipn-admin .import-log-row + .import-log-row { border-top: 1px solid var(--line); }
+
+/* ---------- audit ---------- */
+.ipn-admin .audit-item { display: flex; gap: 10px; padding: 10px 0; font-size: 12.5px; }
+.ipn-admin .audit-item + .audit-item { border-top: 1px solid var(--line); }
+.ipn-admin .audit-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand-600); margin-top: 5px; flex-shrink: 0; }
+.ipn-admin .audit-meta { color: var(--faint); font-size: 11.5px; margin-top: 2px; }
+
+/* ---------- charts ---------- */
+.ipn-admin .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 130px; padding-top: 6px; }
+.ipn-admin .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+.ipn-admin .bar { width: 100%; border-radius: 5px 5px 0 0; background: var(--brand-600); min-height: 3px; }
+.ipn-admin .bar-label { font-size: 10px; color: var(--faint); }
+
+.ipn-admin .hbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.ipn-admin .hbar-label { width: 120px; flex-shrink: 0; font-size: 12px; color: var(--muted); text-align: right; }
+.ipn-admin .hbar-track { flex: 1; height: 9px; background: var(--surface-sunken); border-radius: 5px; overflow: hidden; }
+.ipn-admin .hbar-fill { height: 100%; background: var(--brand-600); border-radius: 5px; }
+.ipn-admin .hbar-val { width: 46px; flex-shrink: 0; font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+/* ---------- toast ---------- */
+.ipn-admin .toast {
+	position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(6px); background: var(--ink); color: var(--paper);
+	padding: 11px 16px; border-radius: 11px; font-size: 12.5px; font-weight: 600; box-shadow: var(--shadow-lg);
+	opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; z-index: 100070; white-space: nowrap;
+}
+.ipn-admin .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.ipn-admin .empty-state { text-align: center; padding: 40px 20px; color: var(--faint); font-size: 13px; }

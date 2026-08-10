@@ -1,0 +1,366 @@
+/**
+ * Branch staff dashboard — ported from the branch-staff mockup
+ * (UI for IPN/branch-staff/index.html). The mockup's :root palette is
+ * identical to the admin mockup's, so the tokens below are scoped under
+ * .ipn-staff-dashboard rather than global :root to avoid clashing with
+ * assets/css/admin.css or assets/css/storefront.css.
+ *
+ * The mockup is a client-side SPA that toggles four full-screen panels
+ * with JS. This dashboard renders one screen per page load instead
+ * (see classes/class-ipn-staff-dashboard.php), so the .screen/.active
+ * show-hide rules from the mockup aren't needed here — every .screen
+ * that gets rendered is already the one the visitor asked for.
+ */
+
+.ipn-staff-dashboard {
+	--paper: #f6f5f0;
+	--surface: #ffffff;
+	--surface-sunken: #efeee7;
+	--ink: #1c1b18;
+	--muted: #6b6b63;
+	--faint: #9a988e;
+	--line: #e1dfd7;
+	--line-strong: #cfcdc2;
+
+	--brand-900: #143d17;
+	--brand-700: #1b5e20;
+	--brand-600: #2e7d32;
+	--brand-100: #e8f5e9;
+	--on-brand: #ffffff;
+
+	--new: #1565c0;
+	--new-bg: #e8f0fb;
+	--preparing: #a8530a;
+	--preparing-bg: #fbeee0;
+	--ready: #1b5e20;
+	--ready-bg: #e8f5e9;
+	--express: #6a1b9a;
+	--express-bg: #f2e7f8;
+	--danger: #b3261e;
+	--danger-bg: #fbeae9;
+	--neutral-bg: #eeede6;
+
+	--focus: #2e7d32;
+	--shadow: 0 1px 2px rgba(28,27,24,.06), 0 6px 20px rgba(28,27,24,.08);
+	--radius: 14px;
+
+	--font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+	--font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+	max-width: 460px;
+	margin: 24px auto;
+	padding: 0 14px 24px;
+	font-family: var(--font-ui);
+	color: var(--ink);
+	-webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+	.ipn-staff-dashboard {
+		--paper: #111310;
+		--surface: #191c18;
+		--surface-sunken: #14160f;
+		--ink: #eeece3;
+		--muted: #a6a599;
+		--faint: #74736a;
+		--line: #2c2f27;
+		--line-strong: #3a3d33;
+
+		--brand-900: #b7e0b9;
+		--brand-700: #7fc986;
+		--brand-600: #6abf72;
+		--brand-100: #1d2c1c;
+		--on-brand: #0c1a0d;
+
+		--new: #7fb2f0;
+		--new-bg: #17233a;
+		--preparing: #eeab6b;
+		--preparing-bg: #3a2915;
+		--ready: #7fc986;
+		--ready-bg: #1a2c1a;
+		--express: #cd9be5;
+		--express-bg: #2c1f36;
+		--danger: #f2938c;
+		--danger-bg: #3a1917;
+		--neutral-bg: #22251e;
+
+		--focus: #7fc986;
+		--shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.4);
+	}
+}
+
+.ipn-staff-dashboard, .ipn-staff-dashboard * { box-sizing: border-box; }
+.ipn-staff-dashboard button,
+.ipn-staff-dashboard input,
+.ipn-staff-dashboard select { font-family: inherit; }
+.ipn-staff-dashboard :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+	.ipn-staff-dashboard * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+.ipn-staff-dashboard .device {
+	width: 100%;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 22px;
+	box-shadow: var(--shadow);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	min-height: 480px;
+	position: relative;
+}
+
+/* ---------- shared bits ---------- */
+.ipn-staff-dashboard .screen { display: flex; flex-direction: column; }
+
+.ipn-staff-dashboard .topbar {
+	flex-shrink: 0;
+	background: var(--brand-700);
+	color: var(--on-brand);
+	padding: 14px 18px 12px;
+}
+.ipn-staff-dashboard .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ipn-staff-dashboard .topbar-brand { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .78; }
+.ipn-staff-dashboard .topbar-branch { font-size: 17px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
+.ipn-staff-dashboard .open-pill {
+	font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 20px;
+	background: rgba(255,255,255,.16); white-space: nowrap; flex-shrink: 0;
+}
+.ipn-staff-dashboard .icon-btn {
+	background: rgba(255,255,255,.14); border: none; color: var(--on-brand);
+	width: 30px; height: 30px; border-radius: 9px; cursor: pointer;
+	display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+	text-decoration: none;
+}
+.ipn-staff-dashboard .icon-btn:hover { background: rgba(255,255,255,.24); }
+
+.ipn-staff-dashboard .content { flex: 1; padding: 16px 16px 14px; min-height: 0; }
+
+.ipn-staff-dashboard .section-label {
+	font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;
+	letter-spacing: .07em; margin: 18px 0 8px 2px;
+}
+.ipn-staff-dashboard .section-label:first-child { margin-top: 0; }
+
+/* ---------- pills / chips ---------- */
+.ipn-staff-dashboard .chip {
+	display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700;
+	padding: 3px 9px; border-radius: 20px; white-space: nowrap; line-height: 1.5;
+}
+.ipn-staff-dashboard .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.ipn-staff-dashboard .chip-new { background: var(--new-bg); color: var(--new); }
+.ipn-staff-dashboard .chip-accepted { background: var(--new-bg); color: var(--new); }
+.ipn-staff-dashboard .chip-preparing { background: var(--preparing-bg); color: var(--preparing); }
+.ipn-staff-dashboard .chip-ready { background: var(--ready-bg); color: var(--ready); }
+.ipn-staff-dashboard .chip-collected { background: var(--neutral-bg); color: var(--muted); }
+.ipn-staff-dashboard .chip-disputed { background: var(--danger-bg); color: var(--danger); }
+.ipn-staff-dashboard .chip-express { background: var(--express-bg); color: var(--express); }
+.ipn-staff-dashboard .chip-standard { background: var(--neutral-bg); color: var(--muted); }
+
+/* ---------- buttons ---------- */
+.ipn-staff-dashboard .btn {
+	appearance: none; border: none; border-radius: 11px; font-size: 14.5px; font-weight: 650;
+	padding: 12px 16px; cursor: pointer; width: 100%; display: flex; align-items: center;
+	justify-content: center; gap: 6px; transition: transform .08s ease, background .12s ease;
+	text-decoration: none;
+}
+.ipn-staff-dashboard .btn:active { transform: scale(0.98); }
+.ipn-staff-dashboard .btn:disabled { cursor: not-allowed; opacity: .55; }
+.ipn-staff-dashboard .btn-primary { background: var(--brand-600); color: var(--on-brand); }
+.ipn-staff-dashboard .btn-primary:hover { background: var(--brand-700); }
+.ipn-staff-dashboard .btn-secondary { background: var(--brand-100); color: var(--brand-700); }
+.ipn-staff-dashboard .btn-secondary:hover { background: var(--surface-sunken); }
+.ipn-staff-dashboard .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger-bg); }
+.ipn-staff-dashboard .btn-danger:hover { background: var(--danger-bg); }
+.ipn-staff-dashboard .btn-ghost { background: transparent; color: var(--muted); }
+.ipn-staff-dashboard .btn-row { display: flex; gap: 8px; }
+
+/* ---------- fields (login, reject reason) ---------- */
+.ipn-staff-dashboard .field { margin-bottom: 14px; }
+.ipn-staff-dashboard .field label { display: block; font-size: 12px; font-weight: 650; color: var(--muted); margin-bottom: 6px; }
+.ipn-staff-dashboard .field input,
+.ipn-staff-dashboard .field select {
+	width: 100%; border: 1px solid var(--line-strong); background: var(--surface-sunken); color: var(--ink);
+	border-radius: 10px; padding: 11px 12px; font-size: 15px;
+}
+.ipn-staff-dashboard .field input:focus,
+.ipn-staff-dashboard .field select:focus { border-color: var(--focus); background: var(--surface); }
+
+/* ---------- login ---------- */
+.ipn-staff-dashboard .login-screen { justify-content: center; align-items: stretch; padding: 32px 26px; }
+.ipn-staff-dashboard .login-mark { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+.ipn-staff-dashboard .login-mark-badge {
+	width: 40px; height: 40px; border-radius: 10px; background: var(--brand-700); color: #fff;
+	display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; flex-shrink: 0;
+}
+.ipn-staff-dashboard .login-mark-text .t1 { font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.ipn-staff-dashboard .login-mark-text .t2 { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+.ipn-staff-dashboard .login-title { font-size: 22px; font-weight: 700; letter-spacing: -0.015em; text-wrap: balance; margin-bottom: 4px; }
+.ipn-staff-dashboard .login-sub { font-size: 13.5px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
+.ipn-staff-dashboard .login-demo {
+	margin-top: 16px; font-size: 12px; color: var(--faint); background: var(--surface-sunken);
+	border-radius: 10px; padding: 10px 12px; line-height: 1.5;
+}
+.ipn-staff-dashboard .login-demo b { color: var(--muted); }
+
+/* wp_login_form() markup, styled to match .field */
+.ipn-staff-dashboard .login-screen form p { margin-bottom: 14px; }
+.ipn-staff-dashboard .login-screen form label { display: block; font-size: 12px; font-weight: 650; color: var(--muted); margin-bottom: 6px; }
+.ipn-staff-dashboard .login-screen form input.input {
+	width: 100%; border: 1px solid var(--line-strong); background: var(--surface-sunken); color: var(--ink);
+	border-radius: 10px; padding: 11px 12px; font-size: 15px;
+}
+.ipn-staff-dashboard .login-screen form input.input:focus { border-color: var(--focus); background: var(--surface); }
+.ipn-staff-dashboard .login-screen form .login-remember { font-size: 12.5px; color: var(--muted); }
+.ipn-staff-dashboard .login-screen form .login-submit { margin-bottom: 0; }
+.ipn-staff-dashboard .login-screen form .login-submit input[type="submit"] {
+	appearance: none; border: none; border-radius: 11px; font-size: 14.5px; font-weight: 650;
+	padding: 12px 16px; cursor: pointer; width: 100%; background: var(--brand-600); color: var(--on-brand);
+}
+.ipn-staff-dashboard .login-screen form .login-submit input[type="submit"]:hover { background: var(--brand-700); }
+
+/* ---------- queue ---------- */
+.ipn-staff-dashboard .filters { display: flex; gap: 6px; overflow-x: auto; padding: 12px 16px 0; flex-shrink: 0; }
+.ipn-staff-dashboard .filter-tab {
+	flex-shrink: 0; font-size: 12.5px; font-weight: 650; padding: 7px 12px; border-radius: 9px;
+	background: transparent; border: 1px solid var(--line); color: var(--muted); cursor: pointer;
+	display: flex; align-items: center; gap: 6px; text-decoration: none;
+}
+.ipn-staff-dashboard .filter-tab .n { font-variant-numeric: tabular-nums; opacity: .7; }
+.ipn-staff-dashboard .filter-tab.active { background: var(--brand-700); border-color: var(--brand-700); color: var(--on-brand); }
+.ipn-staff-dashboard .filter-tab.active .n { opacity: .85; }
+
+.ipn-staff-dashboard .order-card {
+	display: block;
+	background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+	padding: 13px 14px; margin-bottom: 9px; cursor: pointer; transition: border-color .12s ease;
+	text-decoration: none; color: inherit;
+}
+.ipn-staff-dashboard .order-card:hover { border-color: var(--line-strong); }
+.ipn-staff-dashboard .order-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.ipn-staff-dashboard .order-id { font-family: var(--font-mono); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ipn-staff-dashboard .order-customer { font-size: 14px; font-weight: 650; margin-top: 1px; }
+.ipn-staff-dashboard .order-meta { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ipn-staff-dashboard .order-time { font-variant-numeric: tabular-nums; }
+.ipn-staff-dashboard .order-chips { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+
+.ipn-staff-dashboard .empty-state { text-align: center; padding: 40px 20px; color: var(--faint); font-size: 13.5px; line-height: 1.6; }
+
+/* ---------- order detail ---------- */
+.ipn-staff-dashboard .detail-header { padding: 4px 2px 2px; }
+.ipn-staff-dashboard .detail-idrow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.ipn-staff-dashboard .detail-id { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ipn-staff-dashboard .detail-customer { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 4px; text-wrap: balance; }
+.ipn-staff-dashboard .detail-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+
+.ipn-staff-dashboard .card {
+	background: var(--surface-sunken); border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+}
+.ipn-staff-dashboard .card-title { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 10px; }
+
+.ipn-staff-dashboard .item-row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; font-size: 13.5px; }
+.ipn-staff-dashboard .item-row + .item-row { border-top: 1px solid var(--line); }
+.ipn-staff-dashboard .item-name { flex: 1; }
+.ipn-staff-dashboard .item-qty { font-variant-numeric: tabular-nums; color: var(--muted); flex-shrink: 0; }
+
+.ipn-staff-dashboard .kv-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 13.5px; }
+.ipn-staff-dashboard .kv-label { color: var(--muted); }
+.ipn-staff-dashboard .kv-value { font-weight: 600; text-align: right; }
+
+.ipn-staff-dashboard .recipient-banner {
+	background: var(--express-bg); color: var(--express); border-radius: 11px; padding: 11px 13px;
+	font-size: 12.5px; font-weight: 650; margin-bottom: 10px; display: flex; gap: 8px; align-items: flex-start;
+}
+
+.ipn-staff-dashboard .otp-box {
+	display: flex; align-items: center; justify-content: center; gap: 10px;
+	font-family: var(--font-mono); font-size: 26px; font-weight: 700; letter-spacing: .18em;
+	background: var(--ready-bg); color: var(--ready); border-radius: 11px; padding: 14px; margin-bottom: 12px;
+	font-variant-numeric: tabular-nums;
+}
+.ipn-staff-dashboard .otp-form { margin: 0; }
+.ipn-staff-dashboard .otp-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.ipn-staff-dashboard .otp-input-row input {
+	flex: 1; text-align: center; letter-spacing: .3em; font-family: var(--font-mono); font-size: 18px;
+	border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+	border-radius: 10px; padding: 10px; font-variant-numeric: tabular-nums;
+}
+.ipn-staff-dashboard .otp-input-row input:focus { border-color: var(--focus); }
+.ipn-staff-dashboard .otp-input-row .btn { width: auto; }
+.ipn-staff-dashboard .otp-hint { font-size: 12px; color: var(--faint); margin-bottom: 12px; line-height: 1.5; }
+
+.ipn-staff-dashboard .audit-list { display: flex; flex-direction: column; gap: 9px; }
+.ipn-staff-dashboard .audit-item { display: flex; gap: 9px; font-size: 12.5px; }
+.ipn-staff-dashboard .audit-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand-600); margin-top: 5px; flex-shrink: 0; }
+.ipn-staff-dashboard .audit-text { color: var(--ink); }
+.ipn-staff-dashboard .audit-time { color: var(--faint); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+.ipn-staff-dashboard .banner {
+	border-radius: 11px; padding: 12px 13px; font-size: 13px; font-weight: 600; margin-bottom: 12px;
+	display: flex; gap: 9px; align-items: flex-start; line-height: 1.4;
+}
+.ipn-staff-dashboard .banner-info { background: var(--new-bg); color: var(--new); }
+.ipn-staff-dashboard .banner-success { background: var(--ready-bg); color: var(--ready); }
+.ipn-staff-dashboard .banner-danger { background: var(--danger-bg); color: var(--danger); }
+
+.ipn-staff-dashboard .reject-panel { border-top: 1px dashed var(--line-strong); margin-top: 4px; padding-top: 12px; }
+
+.ipn-staff-dashboard .sticky-actions { flex-shrink: 0; padding: 12px 16px 16px; border-top: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- stock ---------- */
+.ipn-staff-dashboard .stock-search { padding: 12px 16px 4px; flex-shrink: 0; }
+.ipn-staff-dashboard .stock-search input {
+	width: 100%; border: 1px solid var(--line-strong); background: var(--surface-sunken); color: var(--ink);
+	border-radius: 10px; padding: 10px 12px; font-size: 14px;
+}
+.ipn-staff-dashboard .stock-row {
+	background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+	padding: 12px 13px; margin-bottom: 8px;
+}
+.ipn-staff-dashboard .stock-name { font-size: 13.5px; font-weight: 650; margin-bottom: 8px; text-wrap: balance; }
+.ipn-staff-dashboard .stock-figs { display: flex; gap: 14px; margin-bottom: 10px; }
+.ipn-staff-dashboard .stock-fig .n { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.ipn-staff-dashboard .stock-fig .l { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+.ipn-staff-dashboard .stock-fig.reserved .n { color: var(--preparing); }
+.ipn-staff-dashboard .stock-fig.available .n { color: var(--ready); }
+.ipn-staff-dashboard .stock-edit { display: flex; gap: 8px; align-items: center; }
+.ipn-staff-dashboard .stock-edit label { font-size: 11.5px; color: var(--muted); flex-shrink: 0; }
+.ipn-staff-dashboard .stock-edit input {
+	width: 70px; border: 1px solid var(--line-strong); background: var(--surface-sunken); color: var(--ink);
+	border-radius: 8px; padding: 7px 8px; font-size: 13.5px; font-variant-numeric: tabular-nums;
+}
+.ipn-staff-dashboard .stock-edit button {
+	border: none; background: var(--brand-100); color: var(--brand-700); font-weight: 650; font-size: 12.5px;
+	border-radius: 8px; padding: 7px 12px; cursor: pointer; flex-shrink: 0;
+}
+.ipn-staff-dashboard .stock-edit button:hover { background: var(--surface-sunken); }
+.ipn-staff-dashboard .stock-edit button:disabled,
+.ipn-staff-dashboard .stock-edit input:disabled { cursor: not-allowed; opacity: .6; }
+
+/* ---------- bottom nav ---------- */
+.ipn-staff-dashboard .tabbar {
+	flex-shrink: 0; display: flex; border-top: 1px solid var(--line); background: var(--surface);
+}
+.ipn-staff-dashboard .tab {
+	flex: 1; background: none; border: none; padding: 10px 4px 9px; cursor: pointer;
+	display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--faint); position: relative;
+	text-decoration: none;
+}
+.ipn-staff-dashboard .tab.active { color: var(--brand-700); }
+.ipn-staff-dashboard .tab-ico { font-size: 18px; line-height: 1; }
+.ipn-staff-dashboard .tab-lbl { font-size: 10.5px; font-weight: 650; }
+.ipn-staff-dashboard .tab-badge {
+	position: absolute; top: 4px; right: 22%; background: var(--danger); color: #fff; font-size: 9.5px;
+	font-weight: 700; min-width: 15px; height: 15px; border-radius: 8px; display: flex; align-items: center;
+	justify-content: center; padding: 0 3px; font-variant-numeric: tabular-nums;
+}
+
+.ipn-staff-dashboard .back-row { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+
+/* ---------- mobile ---------- */
+@media (max-width: 480px) {
+	.ipn-staff-dashboard { max-width: 100%; margin: 0; padding: 0; }
+	.ipn-staff-dashboard .device { border-radius: 0; border-left: none; border-right: none; box-shadow: none; min-height: 100vh; }
+}

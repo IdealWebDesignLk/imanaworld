@@ -1,0 +1,349 @@
+/**
+ * Customer-facing storefront styles: branch selector, persistent branch
+ * indicator bar, checkout collection-type/recipient fields, and the My
+ * Account order tracker. Ported from the UI mockup (customer/index.html)
+ * and namespaced under ipn- prefixed classes/custom properties so nothing
+ * here collides with the active theme. Light palette only — the mockup's
+ * dark-mode variables are an artifact-viewer feature, not something a
+ * WooCommerce storefront theme is expected to provide.
+ */
+
+:root {
+	--ipn-paper: #f6f5f0;
+	--ipn-surface: #ffffff;
+	--ipn-surface-sunken: #efeee7;
+	--ipn-ink: #1c1b18;
+	--ipn-muted: #6b6b63;
+	--ipn-faint: #9a988e;
+	--ipn-line: #e1dfd7;
+	--ipn-line-strong: #cfcdc2;
+
+	--ipn-brand-700: #1b5e20;
+	--ipn-brand-600: #2e7d32;
+	--ipn-brand-100: #e8f5e9;
+	--ipn-on-brand: #ffffff;
+
+	--ipn-ready: #1b5e20;
+	--ipn-ready-bg: #e8f5e9;
+	--ipn-express: #6a1b9a;
+	--ipn-express-bg: #f2e7f8;
+	--ipn-neutral-bg: #eeede6;
+
+	--ipn-focus: #2e7d32;
+	--ipn-radius: 14px;
+}
+
+/* ---------- branch selector (mockup: view-branch) ---------- */
+
+.ipn-branch-selector {
+	margin-bottom: 28px;
+}
+
+.ipn-branch-selector__title {
+	font-size: 20px;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	margin: 0 0 4px;
+}
+
+.ipn-branch-selector__sub {
+	font-size: 13.5px;
+	color: var( --ipn-muted );
+	line-height: 1.5;
+	margin: 0 0 18px;
+}
+
+.ipn-branch-grid {
+	display: grid;
+	grid-template-columns: repeat( auto-fill, minmax( 240px, 1fr ) );
+	gap: 12px;
+}
+
+.ipn-branch-card {
+	display: block;
+	background: var( --ipn-surface );
+	border: 1px solid var( --ipn-line );
+	border-radius: var( --ipn-radius );
+	padding: 16px;
+	text-decoration: none;
+	color: inherit;
+	cursor: pointer;
+	transition: border-color 0.12s ease;
+}
+
+.ipn-branch-card:hover {
+	border-color: var( --ipn-brand-600 );
+}
+
+.ipn-branch-card__top {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 10px;
+	margin-bottom: 8px;
+}
+
+.ipn-branch-card__name {
+	font-size: 15.5px;
+	font-weight: 700;
+}
+
+.ipn-branch-card__address {
+	font-size: 12.5px;
+	color: var( --ipn-muted );
+	margin-top: 1px;
+}
+
+.ipn-status-pill {
+	font-size: 10.5px;
+	font-weight: 700;
+	padding: 3px 8px;
+	border-radius: 20px;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.ipn-status-pill--open {
+	background: var( --ipn-ready-bg );
+	color: var( --ipn-ready );
+}
+
+.ipn-status-pill--closed {
+	background: var( --ipn-neutral-bg );
+	color: var( --ipn-muted );
+}
+
+.ipn-branch-card__hours {
+	font-size: 12px;
+	color: var( --ipn-faint );
+	margin-top: 8px;
+}
+
+/* ---------- persistent branch indicator bar ---------- */
+
+.ipn-branch-indicator-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 10px;
+	background: var( --ipn-brand-100 );
+	border: 1px solid var( --ipn-line );
+	border-radius: 10px;
+	padding: 10px 14px;
+	margin-bottom: 18px;
+	font-size: 13px;
+	color: var( --ipn-ink );
+}
+
+.ipn-branch-indicator-bar__text b {
+	color: var( --ipn-brand-700 );
+}
+
+.ipn-branch-indicator-bar__change {
+	background: none;
+	border: none;
+	color: var( --ipn-brand-700 );
+	font-weight: 650;
+	font-size: 12.5px;
+	text-decoration: underline;
+	cursor: pointer;
+	padding: 0;
+}
+
+/* ---------- checkout collection type / recipient fields ---------- */
+
+.ipn-checkout-fields {
+	margin-top: 8px;
+}
+
+.ipn-checkout-fields__notice {
+	background: var( --ipn-surface-sunken );
+	border-radius: 10px;
+	padding: 12px 14px;
+	font-size: 13.5px;
+	color: var( --ipn-muted );
+}
+
+.ipn-checkout-fields__heading {
+	font-size: 13px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var( --ipn-muted );
+	margin: 20px 0 10px;
+}
+
+.ipn-checkout-fields__heading:first-child {
+	margin-top: 0;
+}
+
+.ipn-collect-option {
+	display: flex;
+	align-items: flex-start;
+	gap: 11px;
+	padding: 12px;
+	border: 1.5px solid var( --ipn-line );
+	border-radius: 11px;
+	cursor: pointer;
+	margin-bottom: 9px;
+	background: var( --ipn-surface );
+}
+
+.ipn-collect-option:has( input:checked ) {
+	border-color: var( --ipn-brand-600 );
+	background: var( --ipn-brand-100 );
+}
+
+.ipn-collect-option input {
+	margin-top: 3px;
+	accent-color: var( --ipn-brand-700 );
+}
+
+.ipn-collect-option__title {
+	font-size: 13.5px;
+	font-weight: 700;
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.ipn-collect-option__desc {
+	display: block;
+	font-size: 12px;
+	color: var( --ipn-muted );
+	margin-top: 3px;
+	line-height: 1.5;
+}
+
+.ipn-chip {
+	display: inline-flex;
+	align-items: center;
+	font-size: 11px;
+	font-weight: 700;
+	padding: 3px 9px;
+	border-radius: 20px;
+	white-space: nowrap;
+	line-height: 1.5;
+}
+
+.ipn-chip--express {
+	background: var( --ipn-express-bg );
+	color: var( --ipn-express );
+}
+
+.ipn-recipient-toggle {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	font-size: 13.5px;
+	font-weight: 650;
+	cursor: pointer;
+	margin-bottom: 12px;
+}
+
+.ipn-recipient-toggle input {
+	accent-color: var( --ipn-brand-700 );
+	width: 16px;
+	height: 16px;
+}
+
+.ipn-recipient-fields {
+	display: none;
+}
+
+.ipn-recipient-fields.ipn-recipient-fields--visible {
+	display: block;
+}
+
+.ipn-field-optional {
+	font-weight: 400;
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+/* ---------- My Account order tracker (mockup: view-account) ---------- */
+
+.ipn-order-tracker {
+	margin-top: 24px;
+	padding-top: 20px;
+	border-top: 1px solid var( --ipn-line );
+}
+
+.ipn-order-tracker__heading {
+	font-size: 15px;
+	font-weight: 700;
+	margin: 0 0 14px;
+}
+
+.ipn-order-tracker__stages {
+	display: flex;
+	list-style: none;
+	margin: 0 0 14px;
+	padding: 0;
+}
+
+.ipn-tracker-step {
+	flex: 1;
+	text-align: center;
+	position: relative;
+}
+
+.ipn-tracker-step:not( :last-child )::after {
+	content: '';
+	position: absolute;
+	top: 8px;
+	left: 50%;
+	width: 100%;
+	height: 2px;
+	background: var( --ipn-line );
+	z-index: 0;
+}
+
+/* Reserved for when a real current/completed stage exists (Phase 3/4). */
+.ipn-tracker-step--done:not( :last-child )::after {
+	background: var( --ipn-brand-600 );
+}
+
+.ipn-tracker-dot {
+	width: 17px;
+	height: 17px;
+	border-radius: 50%;
+	background: var( --ipn-surface );
+	border: 2px solid var( --ipn-line );
+	margin: 0 auto 6px;
+	position: relative;
+	z-index: 1;
+}
+
+.ipn-tracker-step--done .ipn-tracker-dot {
+	background: var( --ipn-brand-600 );
+	border-color: var( --ipn-brand-600 );
+}
+
+.ipn-tracker-step--current .ipn-tracker-dot {
+	background: var( --ipn-surface );
+	border-color: var( --ipn-brand-600 );
+	box-shadow: 0 0 0 3px var( --ipn-brand-100 );
+}
+
+.ipn-tracker-label {
+	font-size: 10px;
+	font-weight: 650;
+	color: var( --ipn-faint );
+}
+
+.ipn-tracker-step--done .ipn-tracker-label,
+.ipn-tracker-step--current .ipn-tracker-label {
+	color: var( --ipn-ink );
+}
+
+.ipn-order-tracker__notice {
+	font-size: 12.5px;
+	color: var( --ipn-muted );
+	background: var( --ipn-surface-sunken );
+	border-radius: 10px;
+	padding: 10px 13px;
+	margin: 0;
+}
