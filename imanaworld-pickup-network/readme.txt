@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.5.0
+Stable tag: 0.5.1
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -31,7 +31,22 @@ See the full scope document for the complete requirements list.
 All custom tables use the `ipn_` prefix (e.g. `wp_ipn_branches`, `wp_ipn_branch_stock`,
 `wp_ipn_otp_codes`, `wp_ipn_audit_log`). See classes/class-ipn-install.php for the full schema.
 
+== Updates ==
+
+This plugin checks GitHub (IdealWebDesignLk/imanaworld) for updates using the
+Plugin Update Checker library (bundled in vendor/plugin-update-checker/, MIT
+licensed, (c) Janis Elsts). Pushing to main triggers a GitHub Action
+(.github/workflows/release.yml) that builds a plugin zip and publishes it as
+a GitHub Release — WordPress then offers that release as a normal plugin
+update, the same as a wordpress.org-hosted plugin.
+
 == Changelog ==
+
+= 0.5.1 =
+* GitHub-based auto-updates: the plugin now checks IdealWebDesignLk/imanaworld
+  for new releases and can update through the normal wp-admin Plugins screen.
+  A GitHub Action builds and publishes a release automatically on every push
+  to main.
 
 = 0.5.0 =
 * Reporting dashboard: all 8 reports now real (orders by branch, collection

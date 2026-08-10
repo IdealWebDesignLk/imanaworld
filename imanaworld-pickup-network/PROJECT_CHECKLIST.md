@@ -30,6 +30,15 @@ None of these are code tasks — flagging them because several dev tasks below a
 
 ---
 
+## 0.5. Deployment infrastructure (not part of the client scope doc, added 2026-08-10)
+
+- ✅ GitHub-based auto-updates via the bundled Plugin Update Checker library ([vendor/plugin-update-checker/](vendor/plugin-update-checker/), MIT licensed) — wired in [imanaworld-pickup-network.php](imanaworld-pickup-network.php) in "release assets" mode, since the plugin lives in a repo subdirectory rather than at the repo root.
+- ✅ `.github/workflows/release.yml` builds a correctly-rooted plugin zip and publishes/updates a GitHub Release on every push to `main` that touches the plugin — this is what makes "push to main → update available in wp-admin" work with no manual step.
+- ⏳ **Requires the `IdealWebDesignLk/imanaworld` repo to be public** (Rajika's call, in progress as of this note) — the updater has no GitHub token configured by default. If the repo goes back to private, set `IPN_GITHUB_TOKEN` in `wp-config.php` on the WordPress site (a GitHub personal access token with read access to the repo); never hardcode a token in plugin source.
+- ⏳ Not yet verified end-to-end against a live WordPress install (no test site in this environment) — zip structure and version-extraction logic were verified locally, but the actual wp-admin "update available" flow hasn't been observed firsthand yet.
+
+---
+
 ## 1. Plugin foundation (Phase 1 — scaffold, DB schema, admin framework)
 
 - ✅ Plugin bootstrap, naming convention (`IPN` menu label, `ipn_` table prefix, `imanaworld-pickup-network` slug) — [imanaworld-pickup-network.php](imanaworld-pickup-network.php)

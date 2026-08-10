@@ -1,0 +1,62 @@
+name: Release plugin
+
+# Builds a properly-rooted plugin zip and publishes it as a GitHub Release
+# asset on every push to main that touches the plugin. This is what the
+# Plugin Update Checker library wired into imanaworld-pickup-network.php
+# (in "release assets" mode) actually downloads — the repo's own
+# auto-generated source archive can't be used directly because the plugin
+# lives in a subdirectory alongside other repo content, not at the repo
+# root.
+#
+# Re-pushing without bumping the Version header in
+# imanaworld-pickup-network.php updates the existing release's asset in
+# place instead of failing on a duplicate tag, so "push to main" always
+# results in an installable update regardless of whether the version
+# number changed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'imanaworld-pickup-network/**'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read plugin version
+        id: version
+        run: |
+          VERSION=$(grep -m1 "Version:" imanaworld-pickup-network/imanaworld-pickup-network.php | sed -E 's/.*Version:[[:space:]]*//' | tr -d '\r')
+          if [ -z "$VERSION" ]; then
+            echo "Could not read Version header from the plugin file." >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build plugin zip
+        run: |
+          mkdir -p build/imanaworld-pickup-network
+          rsync -a --exclude='.git' --exclude='.DS_Store' imanaworld-pickup-network/ build/imanaworld-pickup-network/
+          cd build
+          zip -rq ../imanaworld-pickup-network.zip imanaworld-pickup-network
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" imanaworld-pickup-network.zip --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" imanaworld-pickup-network.zip \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "IMANAWORLD Pickup Network $TAG" \
+              --notes "Automated release from push to main (${GITHUB_SHA})."
+          fi
