@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>IMANAWORLD Pickup Network — Catalogue Import Specification</title>
+<style>
+	body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #1c1b18; max-width: 850px; margin: 40px auto; line-height: 1.5; }
+	h1 { font-size: 20pt; margin-bottom: 4px; color: #1b5e20; }
+	.subtitle { color: #555; font-size: 10.5pt; margin-bottom: 24px; }
+	.subtitle div { margin-bottom: 2px; }
+	h2 { font-size: 14pt; color: #1b5e20; border-bottom: 1px solid #c8e6c9; padding-bottom: 4px; margin-top: 28px; }
+	table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 10pt; }
+	th, td { border: 1px solid #c9c7bd; padding: 6px 8px; text-align: left; vertical-align: top; }
+	th { background: #e8f5e9; color: #1b5e20; }
+	tr:nth-child(even) td { background: #fafaf7; }
+	code { background: #f1f0ea; padding: 1px 5px; border-radius: 4px; font-size: 95%; }
+	.note { background: #fbeee0; color: #a8530a; padding: 10px 14px; border-radius: 6px; font-size: 10pt; margin: 14px 0; }
+	ul { margin: 8px 0; padding-left: 22px; }
+	li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>IMANAWORLD Pickup Network — Catalogue Import Specification</h1>
+<div class="subtitle">
+	<div><strong>For:</strong> Choppies (catalogue preparation)</div>
+	<div><strong>From:</strong> Ideal Web Design / IMANAWORLD</div>
+	<div><strong>Purpose:</strong> the exact file format the IPN Catalogue Import tool expects. No sample file from Choppies existed when this was written, so the importer was built against this specification — please prepare your export to match it rather than sending your existing internal format as-is.</div>
+</div>
+
+<h2>1. File format</h2>
+<ul>
+	<li><strong>CSV</strong> (<code>.csv</code>) or <strong>Excel</strong> (<code>.xlsx</code>)</li>
+	<li>First row must be the column headers exactly as listed below (case doesn't matter, but spelling does)</li>
+	<li>One sheet only if using Excel — only the first sheet is read</li>
+	<li>UTF-8 encoding recommended (handles currency symbols, accented characters, etc. correctly)</li>
+</ul>
+
+<h2>2. One row = one product at one branch</h2>
+<p>This is the most important rule. If a product (e.g. a 750ml bottle of dishwashing liquid) is stocked at 3 branches, that's <strong>3 rows</strong> in the file — one per branch — not one row with three stock numbers in three columns.</p>
+<p>The product itself (name, price, description, category, image) only needs to be filled in on <strong>one</strong> of those rows; the importer creates the product the first time it sees that SKU and just adds branch stock on every subsequent row for the same SKU. In practice it's simplest to just repeat the product details on every row for that SKU — the importer ignores duplicates.</p>
+
+<h2>3. Columns</h2>
+<table>
+	<thead>
+		<tr><th style="width:14%">Column</th><th style="width:18%">Required?</th><th style="width:20%">Format</th><th>Notes</th></tr>
+	</thead>
+	<tbody>
+		<tr><td><code>SKU</code></td><td><strong>Always required</strong></td><td>Text, e.g. <code>CHP-00123</code></td><td>The unique product code. This is how the importer matches a row to an existing product — if the SKU already exists, its other fields are updated; if not, a new product is created. <strong>Must be consistent across all of a SKU's rows.</strong></td></tr>
+		<tr><td><code>Product Name</code></td><td>Required the first time a SKU appears</td><td>Text</td><td>The product title shown to customers.</td></tr>
+		<tr><td><code>Description</code></td><td>Optional</td><td>Text</td><td>Plain text or simple HTML.</td></tr>
+		<tr><td><code>Category</code></td><td>Optional</td><td>Text, comma-separated for multiple</td><td>e.g. <code>Groceries,Staples</code>. Categories that don't already exist on IMANAWORLD are created automatically.</td></tr>
+		<tr><td><code>Regular Price</code></td><td>Required the first time a SKU appears</td><td>Number, no currency symbol</td><td>e.g. <code>28.50</code>, not <code>BWP 28.50</code>.</td></tr>
+		<tr><td><code>Sale Price</code></td><td>Optional</td><td>Number, no currency symbol</td><td>Leave blank if not on sale.</td></tr>
+		<tr><td><code>Branch Code</code></td><td><strong>Always required</strong></td><td>Text</td><td>Must match a branch code already configured in IPN (IPN → Branches in wp-admin). We'll send Choppies the confirmed branch code list once your pilot store list is finalised — placeholders like <code>CHP-GBE-01</code> are used below until then.</td></tr>
+		<tr><td><code>Stock Quantity</code></td><td><strong>Always required</strong></td><td>Whole number, 0 or more</td><td>Stock for this specific SKU at this specific branch.</td></tr>
+		<tr><td><code>Image URL</code></td><td>Optional</td><td>A public URL to the product image</td><td>Only used the first time a SKU is created — not re-fetched on later updates. Leave blank to skip.</td></tr>
+	</tbody>
+</table>
+
+<h2>4. Example</h2>
+<table>
+	<thead>
+		<tr><th>SKU</th><th>Product Name</th><th>Description</th><th>Category</th><th>Reg. Price</th><th>Sale Price</th><th>Branch Code</th><th>Stock Qty</th><th>Image URL</th></tr>
+	</thead>
+	<tbody>
+		<tr><td>CHP-00123</td><td>Sunlight Dishwashing Liquid 750ml</td><td>Sunlight dishwashing liquid, 750ml bottle.</td><td>Household</td><td>28.50</td><td></td><td>CHP-GBE-01</td><td>40</td><td>https://example.com/images/sunlight-750ml.jpg</td></tr>
+		<tr><td>CHP-00123</td><td>Sunlight Dishwashing Liquid 750ml</td><td>Sunlight dishwashing liquid, 750ml bottle.</td><td>Household</td><td>28.50</td><td></td><td>CHP-FTW-01</td><td>15</td><td></td></tr>
+		<tr><td>CHP-00456</td><td>White Star Maize Meal 2.5kg</td><td>White Star super maize meal, 2.5kg.</td><td>Groceries,Staples</td><td>32.00</td><td>29.99</td><td>CHP-GBE-01</td><td>60</td><td></td></tr>
+	</tbody>
+</table>
+<p>This example is also available as a downloadable template inside the IPN admin panel (<strong>IPN → Catalogue Import → Download IPN import template</strong>), formatted as a ready-to-edit CSV.</p>
+
+<h2>5. What happens on import</h2>
+<ul>
+	<li><strong>New SKU</strong> → a new product is created on the Choppies vendor account, using the branch's assigned vendor, with the given name/price/description/category/image, and stock is set for that branch.</li>
+	<li><strong>Existing SKU</strong> → the product's name/price/description are updated (if provided — blank fields are left unchanged on updates, except stock, which is always set to whatever the file says), and stock is set for that branch.</li>
+	<li><strong>Unknown Branch Code</strong> → that row fails with a clear error; nothing else about the row is applied.</li>
+	<li><strong>Missing SKU, Branch Code, or Stock Quantity</strong> → that row fails; every other valid row in the file still processes normally.</li>
+	<li>Every row's outcome (created / updated / failed, with a reason for failures) is recorded in the import log, visible in <strong>IPN → Catalogue Import</strong>.</li>
+</ul>
+
+<h2>6. Periodic updates</h2>
+<p>The same file format is used for both the initial catalogue load and later stock/price refreshes — just re-upload an updated file with the current stock numbers and it updates existing products rather than duplicating them, matched by SKU.</p>
+
+<h2>7. Known limitation (Excel files)</h2>
+<div class="note">The importer reads standard .xlsx exports (Excel, Google Sheets "Download as .xlsx", etc.) but is not a full spreadsheet engine — it can't evaluate live formulas, multiple sheets, or unusual formatting. If your export tool produces anything non-standard, please save/export as <strong>CSV</strong> instead, which is read directly and has no such limitations.</div>
+
+</body>
+</html>

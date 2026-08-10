@@ -1,33 +1,38 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 /**
- * The daily digest is driven by IPN_Uncollected_Workflow, whose
- * run_daily_check() is a Phase 3 build-out stub (see
- * classes/class-ipn-uncollected-workflow.php) — it doesn't produce an
- * expired/uncollected order list yet, so every value here is an honest
- * placeholder rather than fabricated counts.
+ * Driven by IPN_Uncollected_Workflow's hourly cron — every expired order it
+ * finds logs a collection_expired audit event, which this screen queries
+ * for the last 24 hours.
+ *
+ * @var object[] $expired_orders See IPN_Admin::get_expired_orders_digest() for the shape.
  */
+
+$needing_review = count( array_filter( $expired_orders, function ( $row ) {
+	return empty( $row->refunded );
+} ) );
 ?>
 <div class="wrap ipn-admin">
 	<div class="section-head">
 		<div class="section-title"><?php esc_html_e( "Today's digest", 'ipn' ); ?></div>
-		<button type="button" class="btn btn-secondary" data-ipn-toast="<?php esc_attr_e( 'Digest email preview is not implemented yet.', 'ipn' ); ?>">
+		<a
+			class="btn btn-secondary"
+			target="_blank"
+			rel="noopener noreferrer"
+			href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ipn_preview_digest_email' ), 'ipn_preview_digest_email' ) ); ?>"
+		>
 			<?php esc_html_e( '✉ Preview digest email', 'ipn' ); ?>
-		</button>
+		</a>
 	</div>
 
-	<div class="grid cols-3">
+	<div class="grid cols-2">
 		<div class="stat-card">
 			<div class="stat-label"><?php esc_html_e( 'Expired last 24h', 'ipn' ); ?></div>
-			<div class="stat-value">—</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-label"><?php esc_html_e( 'Refunds auto-issued', 'ipn' ); ?></div>
-			<div class="stat-value">—</div>
+			<div class="stat-value"><?php echo esc_html( count( $expired_orders ) ); ?></div>
 		</div>
 		<div class="stat-card">
 			<div class="stat-label"><?php esc_html_e( 'Refunds needing review', 'ipn' ); ?></div>
-			<div class="stat-value">—</div>
+			<div class="stat-value"><?php echo esc_html( $needing_review ); ?></div>
 		</div>
 	</div>
 
@@ -46,21 +51,35 @@ defined( 'ABSPATH' ) || exit;
 				</tr>
 			</thead>
 			<tbody>
-				<tr>
-					<td colspan="7">
-						<div class="empty-state"><?php esc_html_e( 'The uncollected-orders daily digest is not implemented yet.', 'ipn' ); ?></div>
-					</td>
-				</tr>
+				<?php if ( empty( $expired_orders ) ) : ?>
+					<tr>
+						<td colspan="7">
+							<div class="empty-state"><?php esc_html_e( 'No orders expired in the last 24 hours.', 'ipn' ); ?></div>
+						</td>
+					</tr>
+				<?php else : ?>
+					<?php foreach ( $expired_orders as $row ) : ?>
+						<tr>
+							<td><?php echo esc_html( $row->order_number ); ?></td>
+							<td><?php echo esc_html( $row->branch_name ); ?></td>
+							<td><?php echo esc_html( $row->customer_name ); ?></td>
+							<td><?php echo esc_html( $row->ready_since ); ?></td>
+							<td><?php echo esc_html( $row->expired_at ); ?></td>
+							<td class="num"><?php echo esc_html( number_format_i18n( (float) $row->total, 2 ) ); ?></td>
+							<td>
+								<?php if ( $row->refunded ) : ?>
+									<span class="chip chip-collected"><?php esc_html_e( 'Refunded', 'ipn' ); ?></span>
+								<?php else : ?>
+									<span class="chip chip-disputed"><?php esc_html_e( 'Needs review', 'ipn' ); ?></span>
+								<?php endif; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
 			</tbody>
 		</table>
 	</div>
 	<div class="hint" style="margin-top:10px;">
-		<?php
-		printf(
-			/* translators: %s: link to the IPN settings page */
-			esc_html__( 'Once built, this list — and a summary email in the same format — will be sent to the IMANAWORLD admin automatically every morning. Refund handling will follow the mode set in %s.', 'ipn' ),
-			'<a href="' . esc_url( admin_url( 'admin.php?page=ipn-settings' ) ) . '" style="color:var(--brand-700);font-weight:650;">' . esc_html__( 'IPN settings', 'ipn' ) . '</a>'
-		);
-		?>
+		<?php esc_html_e( 'Refunds are always manual — process them from the order in WooCommerce, same as any other refund. This list does not auto-refund anything.', 'ipn' ); ?>
 	</div>
 </div>

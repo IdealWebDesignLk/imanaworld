@@ -34,6 +34,7 @@ class IPN_Install {
 		$audit_log        = self::table( 'audit_log' );
 		$import_log       = self::table( 'import_log' );
 		$import_log_rows  = self::table( 'import_log_rows' );
+		$order_meta       = self::table( 'order_meta' );
 
 		$sql = array();
 
@@ -155,6 +156,25 @@ class IPN_Install {
 			KEY import_id (import_id)
 		) {$charset_collate};";
 
+		$sql[] = "CREATE TABLE {$order_meta} (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			order_id BIGINT UNSIGNED NOT NULL,
+			branch_id BIGINT UNSIGNED NOT NULL,
+			collection_type VARCHAR(20) NOT NULL DEFAULT 'standard',
+			nominated_name VARCHAR(200) NULL,
+			nominated_phone VARCHAR(50) NULL,
+			nominated_id_number VARCHAR(100) NULL,
+			ready_at DATETIME NULL,
+			collection_window_expires DATETIME NULL,
+			reminder_sent_at DATETIME NULL,
+			dispute_reason VARCHAR(255) NULL,
+			collected_at DATETIME NULL,
+			collected_by VARCHAR(20) NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY order_id (order_id),
+			KEY branch_id (branch_id)
+		) {$charset_collate};";
+
 		foreach ( $sql as $statement ) {
 			dbDelta( $statement );
 		}
@@ -172,6 +192,7 @@ class IPN_Install {
 			self::table( 'audit_log' ),
 			self::table( 'import_log' ),
 			self::table( 'import_log_rows' ),
+			self::table( 'order_meta' ),
 		);
 
 		foreach ( $tables as $table ) {

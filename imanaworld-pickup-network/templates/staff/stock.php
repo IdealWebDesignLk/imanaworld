@@ -53,9 +53,6 @@ if ( '' !== $search ) {
 						<?php endforeach; ?>
 						<input type="text" name="stock_q" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Search products…', 'ipn' ); ?>" />
 					</form>
-					<p class="otp-hint" style="margin-top:8px;">
-						<?php esc_html_e( 'Stock updates from this screen are not implemented yet — contact IMANAWORLD admin to adjust stock.', 'ipn' ); ?>
-					</p>
 				</div>
 
 				<div class="content" style="padding-top:0;">
@@ -85,11 +82,14 @@ if ( '' !== $search ) {
 									<div class="stock-fig reserved"><div class="n"><?php echo esc_html( $row->reserved_stock ); ?></div><div class="l"><?php esc_html_e( 'Reserved', 'ipn' ); ?></div></div>
 									<div class="stock-fig available"><div class="n"><?php echo esc_html( $available ); ?></div><div class="l"><?php esc_html_e( 'Available', 'ipn' ); ?></div></div>
 								</div>
-								<div class="stock-edit">
+								<form method="post" class="stock-edit">
+									<?php wp_nonce_field( 'ipn_staff_adjust_stock_' . $branch_id, 'ipn_staff_stock_nonce' ); ?>
+									<input type="hidden" name="ipn_staff_adjust_stock" value="1" />
+									<input type="hidden" name="product_id" value="<?php echo esc_attr( $row->product_id ); ?>" />
 									<label for="ipn-stock-<?php echo esc_attr( $row->product_id ); ?>"><?php esc_html_e( 'Adjust total', 'ipn' ); ?></label>
-									<input type="number" id="ipn-stock-<?php echo esc_attr( $row->product_id ); ?>" min="0" value="<?php echo esc_attr( $row->total_stock ); ?>" disabled="disabled" />
-									<button type="button" disabled="disabled"><?php esc_html_e( 'Save', 'ipn' ); ?></button>
-								</div>
+									<input type="number" id="ipn-stock-<?php echo esc_attr( $row->product_id ); ?>" name="total_stock" min="0" value="<?php echo esc_attr( $row->total_stock ); ?>" />
+									<button type="submit"><?php esc_html_e( 'Save', 'ipn' ); ?></button>
+								</form>
 							</div>
 						<?php endforeach; ?>
 					<?php endif; ?>

@@ -1,9 +1,19 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+/**
+ * @var array             $branches
+ * @var true|WP_Error|null $assign_result Result of a branch assignment posted this request, if any.
+ */
 
 $staff = get_users( array( 'role' => IPN_Roles::ROLE ) );
 ?>
 <div class="wrap ipn-admin">
+	<?php if ( $assign_result instanceof WP_Error ) : ?>
+		<div class="notice notice-error"><p><?php echo esc_html( $assign_result->get_error_message() ); ?></p></div>
+	<?php elseif ( true === $assign_result ) : ?>
+		<div class="notice notice-success"><p><?php esc_html_e( 'Branch assignment saved.', 'ipn' ); ?></p></div>
+	<?php endif; ?>
+
 	<div class="section-head">
 		<div class="section-title"><?php esc_html_e( 'Branch staff accounts', 'ipn' ); ?></div>
 		<a class="btn btn-primary" href="<?php echo esc_url( admin_url( 'user-new.php?role=' . IPN_Roles::ROLE ) ); ?>">
@@ -32,14 +42,23 @@ $staff = get_users( array( 'role' => IPN_Roles::ROLE ) );
 					</tr>
 				<?php else : ?>
 					<?php foreach ( $staff as $user ) : ?>
-						<?php
-						$branch_id = IPN_Roles::get_branch_id( $user->ID );
-						$branch    = $branch_id ? IPN_Branch::get( $branch_id ) : null;
-						?>
+						<?php $branch_id = IPN_Roles::get_branch_id( $user->ID ); ?>
 						<tr>
 							<td><span style="font-family:var(--font-mono);font-size:12.5px;"><?php echo esc_html( $user->user_login ); ?></span></td>
 							<td><?php echo esc_html( $user->display_name ); ?></td>
-							<td><?php echo $branch ? esc_html( $branch->name ) : esc_html__( 'Unassigned', 'ipn' ); ?></td>
+							<td>
+								<form method="post" style="display:flex;gap:6px;align-items:center;">
+									<?php wp_nonce_field( 'ipn_assign_staff_branch' ); ?>
+									<input type="hidden" name="ipn_assign_staff_branch" value="1" />
+									<input type="hidden" name="user_id" value="<?php echo esc_attr( $user->ID ); ?>" />
+									<select name="branch_id" onchange="this.form.submit()">
+										<option value="0"><?php esc_html_e( 'Unassigned', 'ipn' ); ?></option>
+										<?php foreach ( $branches as $branch_option ) : ?>
+											<option value="<?php echo esc_attr( $branch_option->id ); ?>" <?php selected( $branch_id, $branch_option->id ); ?>><?php echo esc_html( $branch_option->name ); ?></option>
+										<?php endforeach; ?>
+									</select>
+								</form>
+							</td>
 							<td><span class="chip chip-inactive"><?php esc_html_e( 'Branch Staff', 'ipn' ); ?></span></td>
 							<td><?php echo esc_html( mysql2date( get_option( 'date_format' ), $user->user_registered ) ); ?></td>
 							<td>

@@ -4,10 +4,11 @@ defined( 'ABSPATH' ) || exit;
  * @var int                $branch_id
  * @var object|null        $branch
  * @var int                $order_id
- * @var object|null        $order       See IPN_Staff_Dashboard::get_order_detail() for the expected
- *                                      shape. Always null today — order routing isn't implemented yet.
+ * @var object|null        $order       See IPN_Staff_Dashboard::get_order_detail() for the shape.
+ *                                      Null when the order doesn't exist or isn't this branch's.
  * @var true|WP_Error|null $otp_result  Result of an OTP verification attempt made on this request,
- *                                      if any (IPN_OTP::verify() is real and wired up below).
+ *                                      if any.
+ * @var bool               $resend_sent True when a "resend collection code" action just succeeded.
  */
 
 $statuses = array(
@@ -24,6 +25,12 @@ $next_action_label = array(
 	'accepted'  => __( 'Mark as preparing', 'ipn' ),
 	'preparing' => __( 'Mark ready for collection', 'ipn' ),
 );
+
+$next_status_key = array(
+	'new'       => 'ipn-accepted',
+	'accepted'  => 'ipn-preparing',
+	'preparing' => 'ipn-ready',
+);
 ?>
 <div class="ipn-staff-dashboard">
 	<div class="device">
@@ -38,7 +45,7 @@ $next_action_label = array(
 			<div class="content">
 				<?php if ( ! $order ) : ?>
 					<div class="empty-state">
-						<?php esc_html_e( 'No order to show — order routing is not implemented yet.', 'ipn' ); ?>
+						<?php esc_html_e( 'Order not found, or it does not belong to your branch.', 'ipn' ); ?>
 					</div>
 				<?php else : ?>
 					<div class="detail-header">
@@ -106,7 +113,11 @@ $next_action_label = array(
 							<?php if ( $otp_result instanceof WP_Error ) : ?>
 								<div class="banner banner-danger"><?php echo esc_html( $otp_result->get_error_message() ); ?></div>
 							<?php elseif ( true === $otp_result ) : ?>
-								<div class="banner banner-success"><?php esc_html_e( 'Collection code verified. (Automatically moving the order to Collected is not implemented yet — update it manually if your process needs that today.)', 'ipn' ); ?></div>
+								<div class="banner banner-success"><?php esc_html_e( 'Collection code verified. Order marked Collected.', 'ipn' ); ?></div>
+							<?php endif; ?>
+
+							<?php if ( $resend_sent ) : ?>
+								<div class="banner banner-success"><?php esc_html_e( 'A new collection code was emailed to the customer.', 'ipn' ); ?></div>
 							<?php endif; ?>
 
 							<form method="post" class="otp-form">
@@ -116,25 +127,32 @@ $next_action_label = array(
 									<button type="submit" class="btn btn-primary"><?php esc_html_e( 'Verify', 'ipn' ); ?></button>
 								</div>
 							</form>
+
+							<form method="post" style="margin-top:8px;">
+								<?php wp_nonce_field( 'ipn_resend_otp_' . $order_id, 'ipn_resend_nonce' ); ?>
+								<input type="hidden" name="ipn_resend_otp" value="1" />
+								<button type="submit" class="btn btn-ghost"><?php esc_html_e( "Customer lost their code — resend it", 'ipn' ); ?></button>
+							</form>
 						</div>
 
 						<div class="reject-panel">
 							<button type="button" class="btn btn-danger js-ipn-toggle-reject" aria-expanded="false" aria-controls="ipn-reject-panel">
 								<?php esc_html_e( 'Reject collection instead', 'ipn' ); ?>
 							</button>
-							<div class="js-ipn-reject-panel" id="ipn-reject-panel" hidden="hidden" style="margin-top:10px;">
+							<form method="post" class="js-ipn-reject-panel" id="ipn-reject-panel" hidden="hidden" style="margin-top:10px;">
+								<?php wp_nonce_field( 'ipn_reject_collection_' . $order_id, 'ipn_reject_nonce' ); ?>
 								<div class="field">
 									<label for="ipn-reject-reason"><?php esc_html_e( 'Reason', 'ipn' ); ?></label>
-									<select id="ipn-reject-reason" disabled="disabled">
-										<option><?php esc_html_e( 'Item damaged', 'ipn' ); ?></option>
-										<option><?php esc_html_e( 'Wrong item picked', 'ipn' ); ?></option>
-										<option><?php esc_html_e( 'Customer changed mind', 'ipn' ); ?></option>
-										<option><?php esc_html_e( 'Other', 'ipn' ); ?></option>
+									<select id="ipn-reject-reason" name="ipn_reject_reason">
+										<option value="damaged"><?php esc_html_e( 'Item damaged', 'ipn' ); ?></option>
+										<option value="wrong_item"><?php esc_html_e( 'Wrong item picked', 'ipn' ); ?></option>
+										<option value="customer_changed_mind"><?php esc_html_e( 'Customer changed mind', 'ipn' ); ?></option>
+										<option value="other"><?php esc_html_e( 'Other', 'ipn' ); ?></option>
 									</select>
 								</div>
-								<p class="otp-hint"><?php esc_html_e( 'Rejecting a collection is not implemented yet — this will notify IMANAWORLD admin once dispute handling is built.', 'ipn' ); ?></p>
-								<button type="button" class="btn btn-secondary" disabled="disabled"><?php esc_html_e( 'Confirm rejection', 'ipn' ); ?></button>
-							</div>
+								<p class="otp-hint"><?php esc_html_e( 'Rejecting moves the order to Disputed and notifies IMANAWORLD admin to process the refund.', 'ipn' ); ?></p>
+								<button type="submit" class="btn btn-secondary"><?php esc_html_e( 'Confirm rejection', 'ipn' ); ?></button>
+							</form>
 						</div>
 					<?php endif; ?>
 
@@ -157,12 +175,14 @@ $next_action_label = array(
 				<?php endif; ?>
 			</div>
 
-			<?php if ( $order && isset( $next_action_label[ $order->status ] ) ) : ?>
-				<div class="sticky-actions">
-					<button type="button" class="btn btn-primary" disabled="disabled" title="<?php esc_attr_e( 'Advancing order status is not implemented yet.', 'ipn' ); ?>">
+			<?php if ( $order && isset( $next_action_label[ $order->status ], $next_status_key[ $order->status ] ) ) : ?>
+				<form method="post" class="sticky-actions">
+					<?php wp_nonce_field( 'ipn_advance_status_' . $order_id, 'ipn_advance_nonce' ); ?>
+					<input type="hidden" name="ipn_advance_to" value="<?php echo esc_attr( $next_status_key[ $order->status ] ); ?>" />
+					<button type="submit" class="btn btn-primary">
 						<?php echo esc_html( $next_action_label[ $order->status ] ); ?>
 					</button>
-				</div>
+				</form>
 			<?php endif; ?>
 		</section>
 	</div>

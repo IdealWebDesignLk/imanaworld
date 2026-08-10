@@ -1,29 +1,56 @@
 <?php
 defined( 'ABSPATH' ) || exit;
-/** @var array $recent_runs */
+/**
+ * @var object[]           $recent_runs   Rows from ipn_import_log, each with a ->failed_rows array attached.
+ * @var int|WP_Error|null  $import_result Result of an upload processed this request, if any.
+ */
 ?>
 <div class="wrap ipn-admin">
+	<?php if ( $import_result instanceof WP_Error ) : ?>
+		<div class="notice notice-error"><p><?php echo esc_html( $import_result->get_error_message() ); ?></p></div>
+	<?php elseif ( is_int( $import_result ) ) : ?>
+		<?php $run = current( array_filter( $recent_runs, function ( $r ) use ( $import_result ) { return (int) $r->id === $import_result; } ) ); ?>
+		<div class="notice notice-success">
+			<p>
+				<?php if ( $run ) : ?>
+					<?php
+					printf(
+						/* translators: 1: created count, 2: updated count, 3: failed count */
+						esc_html__( 'Import complete — %1$d created, %2$d updated, %3$d failed. See the log below.', 'ipn' ),
+						(int) $run->created_count,
+						(int) $run->updated_count,
+						(int) $run->failed_count
+					);
+					?>
+				<?php else : ?>
+					<?php esc_html_e( 'Import complete — see the log below.', 'ipn' ); ?>
+				<?php endif; ?>
+			</p>
+		</div>
+	<?php endif; ?>
+
 	<div class="grid cols-2">
 		<div class="panel">
 			<div class="panel-title"><?php esc_html_e( 'CSV / Excel catalogue import', 'ipn' ); ?></div>
 			<div class="panel-sub">
-				<?php esc_html_e( 'Creates or updates Choppies products by SKU. File must include a Branch ID column mapping stock to each branch.', 'ipn' ); ?>
+				<?php esc_html_e( 'Creates or updates Choppies products by SKU. One row per SKU x Branch — see the template for the exact column format.', 'ipn' ); ?>
 			</div>
 
-			<form method="post" enctype="multipart/form-data" data-ipn-toast="<?php esc_attr_e( 'Catalogue import is not implemented yet.', 'ipn' ); ?>" onsubmit="ipnShowToast(this.getAttribute('data-ipn-toast'));return false;">
+			<form method="post" enctype="multipart/form-data">
 				<?php wp_nonce_field( 'ipn_catalogue_import' ); ?>
+				<input type="hidden" name="ipn_run_import" value="1" />
 				<div class="dropzone">
 					<div class="dropzone-ico">⇧</div>
-					<div class="dropzone-title"><?php esc_html_e( 'Drop catalogue file here', 'ipn' ); ?></div>
+					<div class="dropzone-title"><?php esc_html_e( 'Choose catalogue file', 'ipn' ); ?></div>
 					<div class="dropzone-sub">.csv <?php esc_html_e( 'or', 'ipn' ); ?> .xlsx</div>
-					<input type="file" name="ipn_catalogue_file" accept=".csv,.xlsx" style="margin-bottom:12px;" />
+					<input type="file" name="ipn_catalogue_file" accept=".csv,.xlsx" required="required" style="margin-bottom:12px;" />
 					<br />
 					<button type="submit" class="btn btn-secondary"><?php esc_html_e( 'Run import', 'ipn' ); ?></button>
 				</div>
 			</form>
-			<button type="button" class="btn btn-ghost" data-ipn-toast="<?php esc_attr_e( 'Not implemented yet.', 'ipn' ); ?>">
+			<a class="btn btn-ghost" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ipn_download_import_template' ), 'ipn_download_import_template' ) ); ?>">
 				<?php esc_html_e( '⇩ Download IPN import template', 'ipn' ); ?>
-			</button>
+			</a>
 		</div>
 
 		<div class="panel">
@@ -47,6 +74,25 @@ defined( 'ABSPATH' ) || exit;
 							<?php endif; ?>
 						</span>
 					</div>
+					<?php if ( ! empty( $run->failed_rows ) ) : ?>
+						<div class="hint" style="margin:4px 0 10px;padding-left:2px;">
+							<?php foreach ( $run->failed_rows as $failed_row ) : ?>
+								<div>
+									<?php
+									echo esc_html(
+										sprintf(
+											/* translators: 1: row number in the source file, 2: SKU, 3: error message */
+											__( 'Row %1$d (SKU %2$s): %3$s', 'ipn' ),
+											(int) $failed_row->row_number,
+											$failed_row->sku ? $failed_row->sku : '—',
+											$failed_row->message
+										)
+									);
+									?>
+								</div>
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
 				<?php endforeach; ?>
 			<?php endif; ?>
 		</div>

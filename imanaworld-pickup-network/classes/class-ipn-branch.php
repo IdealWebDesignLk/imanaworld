@@ -26,6 +26,17 @@ class IPN_Branch {
 		return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", $branch_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 	}
 
+	/**
+	 * Resolves the human-readable branch code (e.g. "CHP-GBE-01") a
+	 * catalogue import file references, since Choppies has no reason to
+	 * know our internal numeric branch IDs.
+	 */
+	public static function get_by_code( $code ) {
+		global $wpdb;
+		$table = self::table();
+		return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE code = %s", $code ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
 	public static function get_all( $args = array() ) {
 		global $wpdb;
 		$table   = self::table();
@@ -108,6 +119,57 @@ class IPN_Branch {
 		global $wpdb;
 		$table = self::hours_table();
 		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE branch_id = %d ORDER BY day_of_week ASC", $branch_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
+	/**
+	 * Replaces all 7 days of a branch's weekly hours in one call — the admin
+	 * Branches modal always submits the full week, not a single day.
+	 *
+	 * @param int   $branch_id
+	 * @param array $days Keyed 0 (Sunday) through 6 (Saturday), each an
+	 *                     array with is_closed (bool) and, when open,
+	 *                     open_time/close_time ("H:i" strings).
+	 */
+	public static function set_hours( $branch_id, array $days ) {
+		global $wpdb;
+		$table = self::hours_table();
+
+		for ( $day_of_week = 0; $day_of_week <= 6; $day_of_week++ ) {
+			$day       = isset( $days[ $day_of_week ] ) ? $days[ $day_of_week ] : array();
+			$is_closed = ! empty( $day['is_closed'] );
+
+			$wpdb->replace( $table, array( // phpcs:ignore WordPress.DB.PreparedSQL
+				'branch_id'   => (int) $branch_id,
+				'day_of_week' => $day_of_week,
+				'open_time'   => ( ! $is_closed && ! empty( $day['open_time'] ) ) ? $day['open_time'] : null,
+				'close_time'  => ( ! $is_closed && ! empty( $day['close_time'] ) ) ? $day['close_time'] : null,
+				'is_closed'   => $is_closed ? 1 : 0,
+			) );
+		}
+	}
+
+	public static function get_closures( $branch_id ) {
+		global $wpdb;
+		$table = self::closures_table();
+		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE branch_id = %d ORDER BY closure_date ASC", $branch_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
+	public static function add_closure( $branch_id, $closure_date, $reason = '' ) {
+		global $wpdb;
+
+		$wpdb->insert( self::closures_table(), array( // phpcs:ignore WordPress.DB.PreparedSQL
+			'branch_id'    => (int) $branch_id,
+			'closure_date' => $closure_date,
+			'reason'       => $reason,
+			'created_at'   => current_time( 'mysql' ),
+		) );
+
+		return (int) $wpdb->insert_id;
+	}
+
+	public static function delete_closure( $closure_id ) {
+		global $wpdb;
+		return $wpdb->delete( self::closures_table(), array( 'id' => (int) $closure_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 	}
 
 	public static function is_open_now( $branch_id ) {

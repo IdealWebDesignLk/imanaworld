@@ -14,6 +14,13 @@ class IPN_OTP {
 
 	public static function generate( $order_id, $branch_id ) {
 		global $wpdb;
+		$table = self::table();
+
+		// A resend rotates the code — the previous one must stop verifying.
+		$wpdb->update( $table, array( 'status' => 'superseded' ), array( // phpcs:ignore WordPress.DB.PreparedSQL
+			'order_id' => (int) $order_id,
+			'status'   => 'active',
+		) );
 
 		$code       = str_pad( (string) wp_rand( 0, 999999 ), 6, '0', STR_PAD_LEFT );
 		$branch     = IPN_Branch::get( $branch_id );

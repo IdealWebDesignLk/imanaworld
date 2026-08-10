@@ -1,5 +1,16 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+/** @var object[] $orders See IPN_Admin::get_all_ipn_orders() for the shape. */
+
+$ipn_statuses = array(
+	'new'       => __( 'New', 'ipn' ),
+	'accepted'  => __( 'Accepted', 'ipn' ),
+	'preparing' => __( 'Preparing', 'ipn' ),
+	'ready'     => __( 'Ready', 'ipn' ),
+	'collected' => __( 'Collected', 'ipn' ),
+	'disputed'  => __( 'Disputed', 'ipn' ),
+	'expired'   => __( 'Expired', 'ipn' ),
+);
 ?>
 <div class="wrap ipn-admin">
 	<div class="section-head">
@@ -11,13 +22,9 @@ defined( 'ABSPATH' ) || exit;
 		<input type="text" id="ipn-orders-search" placeholder="<?php esc_attr_e( 'Search order ID or customer…', 'ipn' ); ?>" />
 		<select id="ipn-orders-status-filter">
 			<option value="all"><?php esc_html_e( 'All statuses', 'ipn' ); ?></option>
-			<option value="new"><?php esc_html_e( 'New', 'ipn' ); ?></option>
-			<option value="accepted"><?php esc_html_e( 'Accepted', 'ipn' ); ?></option>
-			<option value="preparing"><?php esc_html_e( 'Preparing', 'ipn' ); ?></option>
-			<option value="ready"><?php esc_html_e( 'Ready', 'ipn' ); ?></option>
-			<option value="collected"><?php esc_html_e( 'Collected', 'ipn' ); ?></option>
-			<option value="disputed"><?php esc_html_e( 'Disputed', 'ipn' ); ?></option>
-			<option value="expired"><?php esc_html_e( 'Expired', 'ipn' ); ?></option>
+			<?php foreach ( $ipn_statuses as $key => $label ) : ?>
+				<option value="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></option>
+			<?php endforeach; ?>
 		</select>
 	</div>
 
@@ -34,18 +41,45 @@ defined( 'ABSPATH' ) || exit;
 				</tr>
 			</thead>
 			<tbody id="ipn-orders-tbody">
-				<tr>
-					<td colspan="6">
-						<div class="empty-state"><?php esc_html_e( 'Order routing and dispute review are not implemented yet.', 'ipn' ); ?></div>
-					</td>
-				</tr>
+				<?php if ( empty( $orders ) ) : ?>
+					<tr>
+						<td colspan="6">
+							<div class="empty-state"><?php esc_html_e( 'No Click & Collect orders yet.', 'ipn' ); ?></div>
+						</td>
+					</tr>
+				<?php else : ?>
+					<?php foreach ( $orders as $order ) : ?>
+						<tr
+							data-ipn-row="1"
+							data-status="<?php echo esc_attr( $order->status ); ?>"
+							data-search="<?php echo esc_attr( strtolower( $order->order_number . ' ' . $order->customer_name ) ); ?>"
+							data-order="<?php echo esc_attr( wp_json_encode( $order ) ); ?>"
+							class="ipn-order-row"
+							style="cursor:pointer;"
+						>
+							<td><?php echo esc_html( $order->order_number ); ?></td>
+							<td><?php echo esc_html( $order->branch_name ); ?></td>
+							<td><?php echo esc_html( $order->customer_name ); ?></td>
+							<td>
+								<span class="chip chip-<?php echo esc_attr( $order->type ); ?>">
+									<?php echo 'express' === $order->type ? esc_html__( 'Express', 'ipn' ) : esc_html__( 'Standard', 'ipn' ); ?>
+								</span>
+							</td>
+							<td>
+								<span class="chip chip-<?php echo esc_attr( $order->status ); ?>">
+									<span class="chip-dot"></span><?php echo esc_html( isset( $ipn_statuses[ $order->status ] ) ? $ipn_statuses[ $order->status ] : ucfirst( $order->status ) ); ?>
+								</span>
+							</td>
+							<td class="num"><?php echo esc_html( number_format_i18n( (float) $order->total, 2 ) ); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				<?php endif; ?>
 			</tbody>
 		</table>
 	</div>
 </div>
 
-<!-- Order detail modal — markup only for now; nothing on this page opens it yet
-     because there is no real order data source to populate it from. -->
+<!-- Order detail modal — opens on row click, populated from that row's data-order attribute. -->
 <div class="modal-scrim" id="ipn-order-modal-scrim">
 	<div class="modal">
 		<div class="modal-head">
@@ -54,6 +88,7 @@ defined( 'ABSPATH' ) || exit;
 		</div>
 		<div class="modal-body">
 			<div id="ipn-om-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+			<div class="panel" id="ipn-om-dispute" style="margin-bottom:12px;display:none;"></div>
 			<div class="panel" style="margin-bottom:12px;">
 				<div class="panel-title" style="margin-bottom:8px;"><?php esc_html_e( 'Items', 'ipn' ); ?></div>
 				<div id="ipn-om-items"></div>
@@ -65,6 +100,7 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 		</div>
 		<div class="modal-foot">
+			<a id="ipn-om-edit-link" class="btn btn-secondary" href="#" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Edit / refund in WooCommerce', 'ipn' ); ?></a>
 			<button type="button" class="btn btn-ghost" onclick="ipnCloseModal('ipn-order-modal-scrim')"><?php esc_html_e( 'Close', 'ipn' ); ?></button>
 		</div>
 	</div>

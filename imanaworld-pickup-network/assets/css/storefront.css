@@ -163,6 +163,13 @@
 	padding: 12px 14px;
 	font-size: 13.5px;
 	color: var( --ipn-muted );
+	margin: 0 0 14px;
+}
+
+.ipn-checkout-fields__notice--warn {
+	background: #fbeee0;
+	color: #a8530a;
+	font-weight: 600;
 }
 
 .ipn-checkout-fields__heading {

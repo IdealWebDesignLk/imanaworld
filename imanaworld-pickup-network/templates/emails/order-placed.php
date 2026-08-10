@@ -1,10 +1,11 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 /**
- * Sent the moment payment is confirmed for a Click & Collect order.
+ * Sent the moment payment is confirmed for a Click & Collect order. No
+ * collection code yet — that's only issued once the branch marks the order
+ * Ready for Collection (see ready-for-collection.php).
  *
  * @var WC_Order $order Required.
- * @var string   $otp   Required. The 6-digit collection code from IPN_OTP::generate().
  * @var object   $branch Required. Row from IPN_Branch::get().
  */
 
@@ -16,7 +17,6 @@ include __DIR__ . '/partials/header.php';
 
 $first_name = $order->get_billing_first_name();
 $currency   = $order->get_currency();
-$expiry_hrs = isset( $branch->otp_expiry_hours ) ? (int) $branch->otp_expiry_hours : 72;
 
 $recipient_name = $order->get_meta( '_ipn_nominated_recipient_name' );
 $collection_type = $order->get_meta( '_ipn_collection_type' );
@@ -32,18 +32,7 @@ $collection_type = $order->get_meta( '_ipn_collection_type' );
 	?>
 </h1>
 
-<p style="margin:0 0 14px;color:#3a3934;"><?php esc_html_e( "We've received your Click & Collect order and payment has been confirmed. Here's your collection code — you'll need it when you collect at the branch counter.", 'ipn' ); ?></p>
-
-<?php
-ipn_email_otp_box(
-	isset( $otp ) ? $otp : '',
-	sprintf(
-		/* translators: %d: number of hours the collection code stays valid */
-		esc_html__( 'Valid for %d hours · also visible in My Account', 'ipn' ),
-		$expiry_hrs
-	)
-);
-?>
+<p style="margin:0 0 14px;color:#3a3934;"><?php esc_html_e( "We've received your Click & Collect order and payment has been confirmed. We'll email you a collection code as soon as the branch has it ready.", 'ipn' ); ?></p>
 
 <?php if ( $order->get_items() || $order->get_items( 'fee' ) ) : ?>
 	<?php ipn_email_card_open(); ?>

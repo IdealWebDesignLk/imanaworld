@@ -51,6 +51,11 @@ class IPN_Audit_Log {
 			$params[] = (int) $args['branch_id'];
 		}
 
+		if ( ! empty( $args['event_type'] ) ) {
+			$where[]  = 'event_type = %s';
+			$params[] = $args['event_type'];
+		}
+
 		if ( ! empty( $args['date_from'] ) ) {
 			$where[]  = 'created_at >= %s';
 			$params[] = $args['date_from'];
@@ -68,5 +73,31 @@ class IPN_Audit_Log {
 		}
 
 		return $wpdb->get_results( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
+	/**
+	 * Human label for an event_type value — shared by the staff order-detail
+	 * audit card and the admin Orders/Disputes screens' order-detail modal.
+	 */
+	public static function describe_event( $event_type ) {
+		$labels = array(
+			'stock_reserved'        => __( 'Stock reserved', 'ipn' ),
+			'stock_released'        => __( 'Stock released', 'ipn' ),
+			'stock_sold'            => __( 'Stock deducted (sold)', 'ipn' ),
+			'stock_adjusted'        => __( 'Stock manually adjusted', 'ipn' ),
+			'otp_generated'         => __( 'Collection code generated', 'ipn' ),
+			'otp_verify_failed'     => __( 'Collection code entry failed', 'ipn' ),
+			'otp_verify_success'    => __( 'Collection code verified', 'ipn' ),
+			'order_accepted'        => __( 'Order accepted by branch', 'ipn' ),
+			'order_preparing'       => __( 'Order marked preparing', 'ipn' ),
+			'order_ready'           => __( 'Order marked ready for collection', 'ipn' ),
+			'collection_completed'  => __( 'Order collected', 'ipn' ),
+			'collection_disputed'   => __( 'Collection rejected / disputed', 'ipn' ),
+			'collection_expired'    => __( 'Collection window expired', 'ipn' ),
+			'branch_created'        => __( 'Branch created', 'ipn' ),
+			'branch_updated'        => __( 'Branch updated', 'ipn' ),
+		);
+
+		return isset( $labels[ $event_type ] ) ? $labels[ $event_type ] : ucfirst( str_replace( '_', ' ', $event_type ) );
 	}
 }

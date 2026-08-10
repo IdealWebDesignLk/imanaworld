@@ -14,6 +14,18 @@ defined( 'ABSPATH' ) || exit;
 
 	<?php else : ?>
 
+		<?php if ( ! IPN_Branch::is_open_now( $branch->id ) ) : ?>
+			<p class="ipn-checkout-fields__notice ipn-checkout-fields__notice--warn">
+				<?php
+				printf(
+					/* translators: %s: branch name */
+					esc_html__( '%s is currently closed. You can still place this order — preparation will start once the branch reopens.', 'ipn' ),
+					esc_html( $branch->name )
+				);
+				?>
+			</p>
+		<?php endif; ?>
+
 		<h3 class="ipn-checkout-fields__heading"><?php esc_html_e( 'Collection type', 'ipn' ); ?></h3>
 
 		<label class="ipn-collect-option" for="ipn_collection_type_standard">

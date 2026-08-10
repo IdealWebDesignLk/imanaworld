@@ -150,4 +150,36 @@ class IPN_Branch_Stock {
 		$table = self::table();
 		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE branch_id = %d", $branch_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 	}
+
+	/**
+	 * Product IDs with available (total - reserved) stock at a branch.
+	 */
+	public static function get_in_stock_product_ids( $branch_id ) {
+		global $wpdb;
+		$table = self::table();
+		return $wpdb->get_col( $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL
+			"SELECT product_id FROM {$table} WHERE branch_id = %d AND (total_stock - reserved_stock) > 0", // phpcs:ignore WordPress.DB.PreparedSQL
+			$branch_id
+		) );
+	}
+
+	/**
+	 * Every product a vendor has ever put into the per-branch stock table,
+	 * across all of that vendor's branches — i.e. "every IPN-tracked
+	 * product for this vendor," regardless of which branch. Used to work
+	 * out which of a vendor's products should be hidden from the catalogue
+	 * for a shopper at a branch where that product isn't in stock, without
+	 * touching products this vendor never brought into the IPN stock model
+	 * at all (or products belonging to other vendors entirely).
+	 */
+	public static function get_product_ids_for_vendor( $vendor_id ) {
+		global $wpdb;
+		$stock_table  = self::table();
+		$branch_table = IPN_Branch::table();
+
+		return $wpdb->get_col( $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL
+			"SELECT DISTINCT s.product_id FROM {$stock_table} s INNER JOIN {$branch_table} b ON b.id = s.branch_id WHERE b.vendor_id = %d", // phpcs:ignore WordPress.DB.PreparedSQL
+			$vendor_id
+		) );
+	}
 }

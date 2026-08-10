@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.5.0
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -32,6 +32,38 @@ All custom tables use the `ipn_` prefix (e.g. `wp_ipn_branches`, `wp_ipn_branch_
 `wp_ipn_otp_codes`, `wp_ipn_audit_log`). See classes/class-ipn-install.php for the full schema.
 
 == Changelog ==
+
+= 0.5.0 =
+* Reporting dashboard: all 8 reports now real (orders by branch, collection
+  success rate, uncollected orders, prep/turnaround time, product and branch
+  sales performance, Express/Standard split), with working date-range/branch
+  filters and CSV export.
+* Admin Orders & Disputes and Disputes & Returns screens: real order data,
+  search/status filter, and a detail modal (items, recipient, audit trail).
+* Storefront: catalogue and product availability now reflect real per-branch
+  stock; add-to-cart is validated against it. WooCommerce's native stock is
+  bypassed for IPN-tracked products.
+* Branch admin: add/edit now saves for real, plus a weekly operating-hours
+  editor and a one-off closure-dates manager.
+* Staff-to-branch assignment UI, stock "Adjust" write UI (admin + staff),
+  audit-log CSV export, a disputed-order admin email alert, and a scheduled
+  daily digest email (with preview).
+
+= 0.4.0 =
+* CSV/Excel catalogue import: create/update products by SKU, per-branch
+  stock via the import file, category + image handling on creation,
+  per-row error reporting in the admin log.
+
+= 0.3.0 =
+* Checkout: branch-closed advisory notice, Express Collection surcharge
+  now applied to the cart total live via AJAX.
+
+= 0.2.0 =
+* Order-status wiring (IPN_Order): stock reserve/release/deduct, the
+  wc-ipn-* collection statuses, and checkout/staff-dashboard/My Account
+  now driven by real order data instead of stubs. Email notifications,
+  the uncollected-orders cron, and collection-code resend now work end
+  to end.
 
 = 0.1.0 =
 * Initial plugin scaffold: bootstrap, hook loader, DB schema, custom roles,

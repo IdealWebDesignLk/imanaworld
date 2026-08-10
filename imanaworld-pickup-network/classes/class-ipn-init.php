@@ -21,6 +21,9 @@ class IPN_Init {
 		$i18n = new IPN_I18n();
 		$this->loader->add_action( 'plugins_loaded', $i18n, 'load_plugin_textdomain' );
 
+		$order = new IPN_Order();
+		$order->register_hooks( $this->loader );
+
 		$admin = new IPN_Admin();
 		$admin->register_hooks( $this->loader );
 
