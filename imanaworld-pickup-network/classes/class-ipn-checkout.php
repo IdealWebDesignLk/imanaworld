@@ -31,6 +31,14 @@ class IPN_Checkout {
 
 		$branch = $branch_id ? IPN_Branch::get( $branch_id ) : null;
 
+		// A customer can land on checkout without ever having visited the
+		// shop loop (direct product link, an old cart, session loss) — in
+		// that case there's otherwise no branch selector anywhere on this
+		// page, just a dead-end "please select a branch" notice with no
+		// way to act on it. Give the same branch-picker grid a home here
+		// too rather than only before the shop loop.
+		$branches = $branch ? array() : IPN_Branch::get_all( array( 'status' => 'active' ) );
+
 		include IPN_PLUGIN_DIR . 'templates/storefront/checkout-fields.php';
 	}
 
@@ -63,18 +71,33 @@ class IPN_Checkout {
 	}
 
 	/**
-	 * Requires a branch to be selected, and when the recipient toggle is
-	 * on, that recipient name and phone are present.
+	 * Requires a branch to be selected and still active, re-checks branch
+	 * stock against the cart in case it changed since items were added
+	 * (someone else bought the last unit, admin adjusted it down, etc.),
+	 * and — when the recipient toggle is on — that recipient name and
+	 * phone are present. Runs on woocommerce_checkout_process, i.e. right
+	 * before payment, so this is the last checkpoint before money moves.
 	 */
 	public function validate_collection_fields() {
 		if ( ! $this->nonce_ok() ) {
 			return;
 		}
 
-		if ( ! $this->get_selected_branch_id() ) {
+		$branch_id = $this->get_selected_branch_id();
+
+		if ( ! $branch_id ) {
 			wc_add_notice( __( 'Please select a Click & Collect branch before checking out.', 'ipn' ), 'error' );
 			return;
 		}
+
+		$branch = IPN_Branch::get( $branch_id );
+
+		if ( ! $branch || 'active' !== $branch->status ) {
+			wc_add_notice( __( 'Your selected branch is no longer available for Click & Collect. Please choose a different branch.', 'ipn' ), 'error' );
+			return;
+		}
+
+		$this->revalidate_cart_stock( $branch );
 
 		if ( ! empty( $_POST['ipn_recipient_enabled'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$name  = isset( $_POST['ipn_recipient_name'] ) ? sanitize_text_field( wp_unslash( $_POST['ipn_recipient_name'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -82,6 +105,48 @@ class IPN_Checkout {
 
 			if ( '' === $name || '' === $phone ) {
 				wc_add_notice( __( 'Please provide the nominated recipient\'s name and phone number, or turn off "someone else will collect this order for me".', 'ipn' ), 'error' );
+			}
+		}
+	}
+
+	/**
+	 * Re-checks every IPN-tracked cart item against the branch's current
+	 * stock. IPN_Storefront::validate_branch_stock() already guards
+	 * add-to-cart, but stock can still move between then and checkout
+	 * (another customer buying the last unit, an admin adjustment) — this
+	 * is the last checkpoint before payment.
+	 */
+	protected function revalidate_cart_stock( $branch ) {
+		if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+			return;
+		}
+
+		foreach ( WC()->cart->get_cart() as $cart_item ) {
+			$product_id = (int) $cart_item['product_id'];
+			$quantity   = (int) $cart_item['quantity'];
+
+			if ( (int) get_post_field( 'post_author', $product_id ) !== (int) $branch->vendor_id ) {
+				continue; // Not this branch's vendor — not an IPN-tracked stock concern.
+			}
+
+			if ( ! IPN_Branch_Stock::get_row( $product_id, $branch->id ) ) {
+				continue; // This vendor's product was never brought into the per-branch stock model.
+			}
+
+			$available = IPN_Branch_Stock::get_available( $product_id, $branch->id );
+
+			if ( $quantity > $available ) {
+				$product = wc_get_product( $product_id );
+
+				wc_add_notice(
+					sprintf(
+						/* translators: 1: product name, 2: units available at the branch */
+						__( '%1$s: only %2$d left at your selected branch. Please update the quantity in your cart before continuing.', 'ipn' ),
+						$product ? $product->get_name() : __( 'An item in your cart', 'ipn' ),
+						$available
+					),
+					'error'
+				);
 			}
 		}
 	}

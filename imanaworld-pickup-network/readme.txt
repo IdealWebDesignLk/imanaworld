@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.5.2
+Stable tag: 0.5.3
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -41,6 +41,26 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.5.3 =
+* Fix: hardened the Orders & Disputes / Disputes & Returns admin screens
+  against a critical error (defensive fix — exact root cause unconfirmed
+  without a live error report).
+* Fix: branch-hours and closures modals clipped their own content in a
+  480px-wide modal; widened and made them wrap/scroll instead.
+* Fix: checkout had no way to select a Click & Collect branch if you
+  arrived without one already chosen — the branch picker now also renders
+  inline at checkout.
+* Fix: checkout now re-validates the selected branch is still active and
+  re-checks cart items against current branch stock before payment.
+* Add: "Click & Collect Branch Stock" meta box on the WooCommerce product
+  edit screen — set per-branch stock for any product, not just ones
+  brought in through the CSV importer.
+* Add: branch staff now get an email when a new order lands in their
+  queue, instead of only finding out by opening the dashboard.
+* Change: Partners screen now lists real Dokan vendors instead of a
+  hardcoded row; "Manage branches" scopes the Branches screen to that
+  vendor and pre-fills it as the default when adding another branch.
 
 = 0.5.2 =
 * Fix: every admin screen with a popup (Branches add/edit + closures, Stock

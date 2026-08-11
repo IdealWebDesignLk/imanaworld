@@ -58,12 +58,19 @@ class IPN_Order {
 	 * Shared "who's picking this up" label for an order — used by the staff
 	 * dashboard, admin Orders/Disputes screens, and reports.
 	 */
-	public static function customer_name( WC_Order $order ) {
+	public static function customer_name( $order ) {
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return '';
+		}
 		$name = trim( $order->get_formatted_billing_full_name() );
 		return $name ? $name : $order->get_billing_email();
 	}
 
-	public static function time_label( WC_Order $order ) {
+	public static function time_label( $order ) {
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return '';
+		}
+
 		$created = $order->get_date_created();
 
 		if ( ! $created ) {

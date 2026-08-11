@@ -248,14 +248,15 @@
 .ipn-admin .switch input:checked + .switch-track::before { transform: translateX(16px); }
 
 /* ---------- branch hours editor ---------- */
-.ipn-hours-editor { border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; }
-.ipn-hours-row { display: flex; align-items: center; gap: 10px; padding: 7px 11px; background: var(--surface-sunken); }
+.ipn-hours-editor { border: 1px solid var(--line-strong); border-radius: 9px; overflow-x: auto; }
+.ipn-hours-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 7px 11px; background: var(--surface-sunken); min-width: max-content; }
 .ipn-hours-row + .ipn-hours-row { border-top: 1px solid var(--line-strong); }
-.ipn-hours-day { flex: 0 0 88px; font-size: 12.5px; font-weight: 650; }
-.ipn-hours-closed { display: flex; align-items: center; gap: 5px; flex: 0 0 78px; font-size: 11.5px; color: var(--muted); }
-.ipn-hours-row input[type=time] { border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 5px 7px; font-size: 12.5px; width: 100px; }
+.ipn-hours-day { flex: 0 0 76px; font-size: 12.5px; font-weight: 650; }
+.ipn-hours-closed { display: flex; align-items: center; gap: 5px; flex: 0 0 68px; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.ipn-hours-closed input[type=checkbox] { flex-shrink: 0; width: 14px; height: 14px; margin: 0; accent-color: var(--brand-600); }
+.ipn-hours-row input[type=time] { border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 5px 7px; font-size: 12.5px; width: 92px; flex-shrink: 0; }
 .ipn-hours-row input[type=time]:disabled { opacity: .45; }
-.ipn-hours-sep { color: var(--faint); font-size: 12px; }
+.ipn-hours-sep { color: var(--faint); font-size: 12px; flex-shrink: 0; }
 
 /* ---------- toolbar ---------- */
 .ipn-admin .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
@@ -266,7 +267,7 @@
 /* ---------- modal ---------- */
 .ipn-admin .modal-scrim { position: fixed; inset: 0; background: rgba(20, 20, 16, .45); z-index: 100060; display: none; align-items: center; justify-content: center; padding: 20px; }
 .ipn-admin .modal-scrim.show { display: flex; }
-.ipn-admin .modal { background: var(--surface); border-radius: 14px; max-width: 480px; width: 100%; box-shadow: var(--shadow-lg); max-height: 88vh; overflow-y: auto; }
+.ipn-admin .modal { background: var(--surface); border-radius: 14px; max-width: 560px; width: 100%; box-shadow: var(--shadow-lg); max-height: 88vh; overflow-y: auto; }
 .ipn-admin .modal-head { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
 .ipn-admin .modal-title { font-size: 15px; font-weight: 700; }
 .ipn-admin .modal-close { background: var(--surface-sunken); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; color: var(--muted); }

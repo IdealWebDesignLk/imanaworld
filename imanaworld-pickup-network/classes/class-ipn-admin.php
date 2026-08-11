@@ -20,6 +20,96 @@ class IPN_Admin {
 		$loader->add_action( 'admin_post_ipn_export_reports', $this, 'export_reports' );
 		$loader->add_action( 'admin_post_ipn_export_audit_log', $this, 'export_audit_log' );
 		$loader->add_action( 'admin_post_ipn_preview_digest_email', $this, 'preview_digest_email' );
+		$loader->add_action( 'add_meta_boxes', $this, 'add_branch_stock_meta_box' );
+		$loader->add_action( 'save_post_product', $this, 'save_branch_stock_meta_box' );
+	}
+
+	/**
+	 * A meta box on the WooCommerce product edit screen (wp-admin only —
+	 * Dokan vendors don't get wp-admin access, per IPN_Roles) that shows
+	 * and lets an IMANAWORLD admin set per-branch stock for *any* product,
+	 * not just ones that came in through the CSV importer. This is the
+	 * only way to bring an existing WooCommerce/Dokan product into the
+	 * per-branch stock model without re-importing it — without a stock row
+	 * here, the storefront's branch filtering correctly treats a product
+	 * as "not IPN-tracked" and leaves it fully visible everywhere,
+	 * regardless of branch, which is the gap this closes.
+	 */
+	public function add_branch_stock_meta_box() {
+		add_meta_box(
+			'ipn-branch-stock',
+			__( 'Click & Collect Branch Stock', 'ipn' ),
+			array( $this, 'render_branch_stock_meta_box' ),
+			'product',
+			'normal',
+			'default'
+		);
+	}
+
+	public function render_branch_stock_meta_box( $post ) {
+		$vendor_id = (int) $post->post_author;
+		$branches  = IPN_Branch::get_all( array( 'vendor_id' => $vendor_id ) );
+
+		wp_nonce_field( 'ipn_save_branch_stock_' . $post->ID, 'ipn_branch_stock_nonce' );
+
+		if ( empty( $branches ) ) {
+			echo '<p>' . wp_kses_post(
+				sprintf(
+					/* translators: %s: link to the IPN Branches admin screen */
+					__( 'This product\'s vendor has no Click & Collect branches configured yet. Add some in %s first.', 'ipn' ),
+					'<a href="' . esc_url( admin_url( 'admin.php?page=ipn-branches' ) ) . '">' . esc_html__( 'IPN Branches', 'ipn' ) . '</a>'
+				)
+			) . '</p>';
+			return;
+		}
+
+		echo '<table class="widefat striped"><thead><tr>';
+		echo '<th>' . esc_html__( 'Branch', 'ipn' ) . '</th>';
+		echo '<th>' . esc_html__( 'Total stock', 'ipn' ) . '</th>';
+		echo '<th>' . esc_html__( 'Reserved', 'ipn' ) . '</th>';
+		echo '<th>' . esc_html__( 'Available', 'ipn' ) . '</th>';
+		echo '</tr></thead><tbody>';
+
+		foreach ( $branches as $branch ) {
+			$row       = IPN_Branch_Stock::get_row( $post->ID, $branch->id );
+			$total     = $row ? (int) $row->total_stock : 0;
+			$reserved  = $row ? (int) $row->reserved_stock : 0;
+			$available = max( 0, $total - $reserved );
+
+			echo '<tr>';
+			echo '<td>' . esc_html( $branch->name ) . '</td>';
+			echo '<td><input type="number" min="0" step="1" name="ipn_branch_stock[' . esc_attr( $branch->id ) . ']" value="' . esc_attr( $total ) . '" style="width:90px;" /></td>';
+			echo '<td>' . esc_html( $reserved ) . '</td>';
+			echo '<td>' . esc_html( $available ) . '</td>';
+			echo '</tr>';
+		}
+
+		echo '</tbody></table>';
+		echo '<p class="description">' . esc_html__( 'Setting a total here makes this product available for Click & Collect at that branch — the same effect as importing it via the catalogue importer. Leaving a branch at 0 keeps this product hidden from that branch\'s storefront.', 'ipn' ) . '</p>';
+	}
+
+	public function save_branch_stock_meta_box( $post_id ) {
+		if ( ! isset( $_POST['ipn_branch_stock_nonce'] )
+			|| ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ipn_branch_stock_nonce'] ) ), 'ipn_save_branch_stock_' . $post_id ) ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'edit_product', $post_id ) ) {
+			return;
+		}
+
+		if ( empty( $_POST['ipn_branch_stock'] ) || ! is_array( $_POST['ipn_branch_stock'] ) ) {
+			return;
+		}
+
+		foreach ( $_POST['ipn_branch_stock'] as $branch_id => $total ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce already verified above.
+			$branch_id = absint( $branch_id );
+			$total     = absint( $total );
+
+			if ( $branch_id ) {
+				IPN_Branch_Stock::set_total( $post_id, $branch_id, $total );
+			}
+		}
 	}
 
 	/**
@@ -128,18 +218,68 @@ class IPN_Admin {
 	}
 
 	public function render_partners() {
-		$this->view( 'partners' );
+		$vendors = $this->get_dokan_vendors();
+		$rows    = array();
+
+		foreach ( $vendors as $vendor ) {
+			$branches = IPN_Branch::get_all( array( 'vendor_id' => $vendor->ID ) );
+			$rows[]   = (object) array(
+				'vendor_id'    => $vendor->ID,
+				'display_name' => $vendor->display_name,
+				'branch_count' => count( $branches ),
+				'ipn_enabled'  => count( $branches ) > 0,
+			);
+		}
+
+		$this->view( 'partners', array( 'partners' => $rows ) );
 	}
 
+	/**
+	 * Every C&C partner is one Dokan vendor account (see
+	 * IPN_Project_Context.md) — a branch's vendor is never a free per-branch
+	 * choice, it's inherited from which partner you're adding a branch for.
+	 * `?vendor_id=` (set when arriving from the Partners screen's "Manage
+	 * branches" link) scopes the list and becomes the default for
+	 * "+ Add branch"; with no vendor_id and exactly one vendor already in
+	 * use, that one vendor is still the default so the common case (adding
+	 * another branch to the only partner that exists yet) never shows a
+	 * blank "select vendor" prompt.
+	 */
 	public function render_branches() {
 		$this->maybe_handle_closure_actions();
 		$save_result = $this->maybe_handle_branch_save();
 
+		$vendors          = $this->get_dokan_vendors();
+		$filter_vendor_id = isset( $_GET['vendor_id'] ) ? absint( $_GET['vendor_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$branches         = IPN_Branch::get_all( $filter_vendor_id ? array( 'vendor_id' => $filter_vendor_id ) : array() );
+
+		$default_vendor_id = $filter_vendor_id;
+		if ( ! $default_vendor_id ) {
+			$vendor_ids_in_use = array_unique( wp_list_pluck( IPN_Branch::get_all(), 'vendor_id' ) );
+			if ( 1 === count( $vendor_ids_in_use ) ) {
+				$default_vendor_id = (int) $vendor_ids_in_use[0];
+			}
+		}
+
+		$filter_vendor = $filter_vendor_id ? $this->find_vendor( $vendors, $filter_vendor_id ) : null;
+
 		$this->view( 'branches', array(
-			'branches'    => IPN_Branch::get_all(),
-			'vendors'     => $this->get_dokan_vendors(),
-			'save_result' => $save_result,
+			'branches'          => $branches,
+			'vendors'           => $vendors,
+			'save_result'       => $save_result,
+			'filter_vendor_id'  => $filter_vendor_id,
+			'filter_vendor'     => $filter_vendor,
+			'default_vendor_id' => $default_vendor_id,
 		) );
+	}
+
+	protected function find_vendor( array $vendors, $vendor_id ) {
+		foreach ( $vendors as $vendor ) {
+			if ( (int) $vendor->ID === (int) $vendor_id ) {
+				return $vendor;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -441,79 +581,111 @@ class IPN_Admin {
 	 * @return object[]
 	 */
 	protected function get_all_ipn_orders( $limit = 200 ) {
-		$order_ids = wc_get_orders( array(
-			'return'     => 'ids',
-			'limit'      => $limit,
-			'orderby'    => 'date',
-			'order'      => 'DESC',
-			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery
-				array(
-					'key'     => '_ipn_branch_id',
-					'compare' => 'EXISTS',
+		try {
+			$order_ids = wc_get_orders( array(
+				'return'     => 'ids',
+				'limit'      => $limit,
+				'orderby'    => 'date',
+				'order'      => 'DESC',
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery
+					array(
+						'key'     => '_ipn_branch_id',
+						'compare' => 'EXISTS',
+					),
 				),
-			),
-		) );
+			) );
+		} catch ( \Throwable $e ) {
+			if ( function_exists( 'error_log' ) ) {
+				error_log( '[IPN] wc_get_orders() failed on the admin order list: ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			}
+			return array();
+		}
 
 		$rows = array();
 
 		foreach ( $order_ids as $order_id ) {
-			$order = wc_get_order( $order_id );
-
-			if ( ! $order ) {
-				continue;
+			try {
+				$row = $this->build_ipn_order_row( $order_id );
+			} catch ( \Throwable $e ) {
+				// One malformed/unusual order (e.g. a product referenced by
+				// a line item has since been deleted) shouldn't take down
+				// the whole Orders/Disputes screen with a fatal error —
+				// skip it and keep rendering the rest.
+				$row = null;
+				if ( function_exists( 'error_log' ) ) {
+					error_log( sprintf( '[IPN] Skipped order #%d in admin order list: %s', $order_id, $e->getMessage() ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+				}
 			}
 
-			$status = IPN_Order::display_status( $order->get_status() );
-
-			if ( ! $status ) {
-				continue;
+			if ( $row ) {
+				$rows[] = $row;
 			}
-
-			$meta   = IPN_Order::get_meta( $order_id );
-			$branch = ( $meta && $meta->branch_id ) ? IPN_Branch::get( $meta->branch_id ) : null;
-
-			$items = array();
-			foreach ( $order->get_items() as $item ) {
-				$items[] = array(
-					'name' => $item->get_name(),
-					'qty'  => $item->get_quantity(),
-				);
-			}
-
-			$recipient = null;
-			if ( $meta && ! empty( $meta->nominated_name ) ) {
-				$recipient = array(
-					'name'      => $meta->nominated_name,
-					'phone'     => $meta->nominated_phone,
-					'id_number' => $meta->nominated_id_number,
-				);
-			}
-
-			$audit = array();
-			foreach ( IPN_Audit_Log::for_order( $order_id ) as $entry ) {
-				$audit[] = array(
-					'text' => IPN_Audit_Log::describe_event( $entry->event_type ),
-					'time' => mysql2date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $entry->created_at ),
-				);
-			}
-
-			$rows[] = (object) array(
-				'order_id'       => $order_id,
-				'order_number'   => $order->get_order_number(),
-				'branch_name'    => $branch ? $branch->name : '',
-				'customer_name'  => IPN_Order::customer_name( $order ),
-				'type'           => ( $meta && $meta->collection_type ) ? $meta->collection_type : 'standard',
-				'status'         => $status,
-				'total'          => $order->get_total(),
-				'dispute_reason' => ( $meta && $meta->dispute_reason ) ? IPN_Order::dispute_reason_label( $meta->dispute_reason ) : '',
-				'edit_url'       => $order->get_edit_order_url(),
-				'items'          => $items,
-				'recipient'      => $recipient,
-				'audit'          => $audit,
-			);
 		}
 
 		return $rows;
+	}
+
+	/**
+	 * Builds one row for get_all_ipn_orders(). Split out so the try/catch
+	 * above can guard the whole thing per-order.
+	 *
+	 * @return object|null
+	 */
+	protected function build_ipn_order_row( $order_id ) {
+		$order = wc_get_order( $order_id );
+
+		if ( ! $order ) {
+			return null;
+		}
+
+		$status = IPN_Order::display_status( $order->get_status() );
+
+		if ( ! $status ) {
+			return null;
+		}
+
+		$meta   = IPN_Order::get_meta( $order_id );
+		$branch = ( $meta && $meta->branch_id ) ? IPN_Branch::get( $meta->branch_id ) : null;
+
+		$items = array();
+		foreach ( $order->get_items() as $item ) {
+			$items[] = array(
+				'name' => $item->get_name(),
+				'qty'  => $item->get_quantity(),
+			);
+		}
+
+		$recipient = null;
+		if ( $meta && ! empty( $meta->nominated_name ) ) {
+			$recipient = array(
+				'name'      => $meta->nominated_name,
+				'phone'     => $meta->nominated_phone,
+				'id_number' => $meta->nominated_id_number,
+			);
+		}
+
+		$audit = array();
+		foreach ( IPN_Audit_Log::for_order( $order_id ) as $entry ) {
+			$audit[] = array(
+				'text' => IPN_Audit_Log::describe_event( $entry->event_type ),
+				'time' => mysql2date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $entry->created_at ),
+			);
+		}
+
+		return (object) array(
+			'order_id'       => $order_id,
+			'order_number'   => $order->get_order_number(),
+			'branch_name'    => $branch ? $branch->name : '',
+			'customer_name'  => IPN_Order::customer_name( $order ),
+			'type'           => ( $meta && $meta->collection_type ) ? $meta->collection_type : 'standard',
+			'status'         => $status,
+			'total'          => $order->get_total(),
+			'dispute_reason' => ( $meta && $meta->dispute_reason ) ? IPN_Order::dispute_reason_label( $meta->dispute_reason ) : '',
+			'edit_url'       => $order->get_edit_order_url(),
+			'items'          => $items,
+			'recipient'      => $recipient,
+			'audit'          => $audit,
+		);
 	}
 
 	public function render_digest() {

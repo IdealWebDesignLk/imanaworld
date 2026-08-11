@@ -71,7 +71,7 @@
 	} );
 
 	/* ---------------- branch add/edit modal ---------------- */
-	function ipnOpenBranchModal( trigger ) {
+	function ipnOpenBranchModal( trigger, defaultVendorId ) {
 		var d       = trigger ? trigger.dataset : {};
 		var titleEl = document.getElementById( 'bm-title' );
 
@@ -91,7 +91,12 @@
 
 		var vendorSelect = document.getElementById( 'bm-vendor' );
 		if ( vendorSelect ) {
-			vendorSelect.value = d.vendorId || '';
+			// Editing: always that branch's own vendor. Adding new: the
+			// partner context this page is scoped to (or the only vendor
+			// in use so far) — see IPN_Admin::render_branches() — so the
+			// common case of adding another branch to an existing partner
+			// never shows a blank "select vendor" prompt.
+			vendorSelect.value = d.vendorId || ( defaultVendorId ? String( defaultVendorId ) : '' );
 		}
 
 		var hoursByDay = {};

@@ -108,6 +108,37 @@ class IPN_Notifications {
 				'branch' => $context['branch'],
 			)
 		);
+
+		$this->send_branch_new_order_alert( $context['order'], $context['branch'] );
+	}
+
+	/**
+	 * Tells the branch itself a new order is waiting in their queue —
+	 * previously staff only ever found out by happening to open the
+	 * dashboard. Plain text, sent to the branch's own contact email
+	 * (ipn_branches.email); silently skipped if that's not set, since it's
+	 * not required to create a branch.
+	 */
+	protected function send_branch_new_order_alert( $order, $branch ) {
+		if ( ! $branch || empty( $branch->email ) ) {
+			return;
+		}
+
+		$subject = sprintf(
+			/* translators: %s: order number */
+			__( '[IPN] New order to prepare — %s', 'ipn' ),
+			$order->get_order_number()
+		);
+
+		$body = sprintf(
+			/* translators: 1: order number, 2: customer name, 3: item count */
+			__( "A new Click & Collect order needs accepting.\n\nOrder: %1\$s\nCustomer: %2\$s\nItems: %3\$d\n\nLog in to your branch staff dashboard to accept it.\n", 'ipn' ),
+			$order->get_order_number(),
+			IPN_Order::customer_name( $order ),
+			$order->get_item_count()
+		);
+
+		wp_mail( $branch->email, $subject, $body );
 	}
 
 	public function send_order_accepted( $order_id ) {

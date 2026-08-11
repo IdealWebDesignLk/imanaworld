@@ -2,8 +2,12 @@
 defined( 'ABSPATH' ) || exit;
 /**
  * @var array              $branches
- * @var array              $vendors     WP_User-shaped objects (ID, display_name) — Dokan sellers.
- * @var int|WP_Error|null  $save_result Result of a branch save posted this request, if any.
+ * @var array              $vendors           WP_User-shaped objects (ID, display_name) — Dokan sellers.
+ * @var int|WP_Error|null  $save_result       Result of a branch save posted this request, if any.
+ * @var int                $filter_vendor_id  0 = showing all branches across every vendor.
+ * @var WP_User|null       $filter_vendor     Set when $filter_vendor_id is, from IPN_Admin::find_vendor().
+ * @var int                $default_vendor_id Pre-selected in "+ Add branch" — the filtered vendor, or the
+ *                                             only vendor in use so far, or 0 if neither applies.
  */
 
 $ipn_days = array(
@@ -54,11 +58,28 @@ $ipn_branch_hours_summary = function ( $branch_id ) {
 	<?php endif; ?>
 
 	<div class="section-head">
-		<div class="section-title"><?php esc_html_e( 'Branches — Choppies', 'ipn' ); ?></div>
+		<div>
+			<div class="section-title">
+				<?php if ( $filter_vendor ) : ?>
+					<?php
+					printf(
+						/* translators: %s: partner (Dokan vendor) display name */
+						esc_html__( 'Branches — %s', 'ipn' ),
+						esc_html( $filter_vendor->display_name )
+					);
+					?>
+				<?php else : ?>
+					<?php esc_html_e( 'All branches', 'ipn' ); ?>
+				<?php endif; ?>
+			</div>
+			<?php if ( $filter_vendor ) : ?>
+				<a class="hint" href="<?php echo esc_url( admin_url( 'admin.php?page=ipn-partners' ) ); ?>">&larr; <?php esc_html_e( 'All partners', 'ipn' ); ?></a>
+			<?php endif; ?>
+		</div>
 		<?php if ( empty( $vendors ) ) : ?>
-			<span class="hint"><?php esc_html_e( 'No Dokan vendor accounts found — create the Choppies vendor account first.', 'ipn' ); ?></span>
+			<span class="hint"><?php esc_html_e( 'No Dokan vendor accounts found — create the partner\'s vendor account first.', 'ipn' ); ?></span>
 		<?php else : ?>
-			<button type="button" class="btn btn-primary" onclick="ipnOpenBranchModal(null)">
+			<button type="button" class="btn btn-primary" onclick="ipnOpenBranchModal(null, <?php echo (int) $default_vendor_id; ?>)">
 				<?php esc_html_e( '+ Add branch', 'ipn' ); ?>
 			</button>
 		<?php endif; ?>
@@ -179,13 +200,14 @@ $ipn_branch_hours_summary = function ( $branch_id ) {
 					</div>
 				</div>
 				<div class="field">
-					<label for="bm-vendor"><?php esc_html_e( 'Vendor (Dokan partner account)', 'ipn' ); ?></label>
+					<label for="bm-vendor"><?php esc_html_e( 'Partner (Dokan vendor account)', 'ipn' ); ?></label>
 					<select id="bm-vendor" name="vendor_id" required="required">
-						<option value=""><?php esc_html_e( '— Select vendor —', 'ipn' ); ?></option>
+						<option value=""><?php esc_html_e( '— Select partner —', 'ipn' ); ?></option>
 						<?php foreach ( $vendors as $vendor ) : ?>
 							<option value="<?php echo esc_attr( $vendor->ID ); ?>"><?php echo esc_html( $vendor->display_name ); ?></option>
 						<?php endforeach; ?>
 					</select>
+					<div class="hint"><?php esc_html_e( 'One Dokan vendor account per partner (e.g. Choppies) — every branch belonging to the same partner should use the same one. This is pre-filled when adding another branch to a partner that already has one.', 'ipn' ); ?></div>
 				</div>
 				<div class="field">
 					<label for="bm-address"><?php esc_html_e( 'Address', 'ipn' ); ?></label>
@@ -253,15 +275,13 @@ $ipn_branch_hours_summary = function ( $branch_id ) {
 				<?php wp_nonce_field( 'ipn_add_closure' ); ?>
 				<input type="hidden" name="ipn_add_closure" value="1" />
 				<input type="hidden" name="branch_id" id="cm-branch-id" value="" />
-				<div class="field-row">
-					<div class="field">
-						<label for="cm-date"><?php esc_html_e( 'Date', 'ipn' ); ?></label>
-						<input type="date" id="cm-date" name="closure_date" required="required" />
-					</div>
-					<div class="field">
-						<label for="cm-note"><?php esc_html_e( 'Note (optional)', 'ipn' ); ?></label>
-						<input type="text" id="cm-note" name="note" placeholder="<?php esc_attr_e( 'e.g. Public holiday', 'ipn' ); ?>" />
-					</div>
+				<div class="field">
+					<label for="cm-date"><?php esc_html_e( 'Date', 'ipn' ); ?></label>
+					<input type="date" id="cm-date" name="closure_date" required="required" style="max-width:220px;" />
+				</div>
+				<div class="field">
+					<label for="cm-note"><?php esc_html_e( 'Note (optional)', 'ipn' ); ?></label>
+					<input type="text" id="cm-note" name="note" placeholder="<?php esc_attr_e( 'e.g. Public holiday', 'ipn' ); ?>" />
 				</div>
 				<button type="submit" class="btn btn-primary"><?php esc_html_e( '+ Add closure date', 'ipn' ); ?></button>
 			</form>

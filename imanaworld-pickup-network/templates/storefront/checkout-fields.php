@@ -2,6 +2,7 @@
 defined( 'ABSPATH' ) || exit;
 /** @var WC_Checkout $checkout */
 /** @var object|null $branch */
+/** @var array        $branches Only populated when $branch is null — see IPN_Checkout::render_collection_fields(). */
 ?>
 <div class="ipn-checkout-fields">
 	<?php wp_nonce_field( 'ipn_checkout_fields', 'ipn_checkout_fields_nonce' ); ?>
@@ -9,8 +10,10 @@ defined( 'ABSPATH' ) || exit;
 	<?php if ( ! $branch ) : ?>
 
 		<p class="ipn-checkout-fields__notice">
-			<?php esc_html_e( 'No Click & Collect branch selected. Please choose a branch before checking out.', 'ipn' ); ?>
+			<?php esc_html_e( 'Choose a Click & Collect branch to continue — selecting one below refreshes this page with it applied.', 'ipn' ); ?>
 		</p>
+
+		<?php include IPN_PLUGIN_DIR . 'templates/storefront/branch-selector.php'; ?>
 
 	<?php else : ?>
 
