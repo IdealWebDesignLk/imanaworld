@@ -15,6 +15,7 @@ class IPN_Storefront {
 		$loader->add_action( 'wp_loaded', $this, 'maybe_handle_branch_actions' );
 		$loader->add_action( 'woocommerce_before_main_content', $this, 'render_branch_indicator_bar' );
 		$loader->add_action( 'woocommerce_before_shop_loop', $this, 'render_branch_selector' );
+		$loader->add_action( 'woocommerce_single_product_summary', $this, 'render_product_availability', 25 );
 		$loader->add_action( 'woocommerce_product_query', $this, 'filter_products_by_branch' );
 		$loader->add_filter( 'woocommerce_get_availability', $this, 'filter_product_availability', 10, 2 );
 		$loader->add_filter( 'woocommerce_add_to_cart_validation', $this, 'validate_branch_stock', 10, 3 );
@@ -123,6 +124,40 @@ class IPN_Storefront {
 	}
 
 	/**
+	 * "Available at" panel on the single product page: which branches
+	 * currently have this product, and how many units each has left.
+	 *
+	 * Renders just above the add-to-cart form for any product that's in the
+	 * per-branch stock model at all. Until this existed, a shopper looking
+	 * at a product had no way of telling where they could actually collect
+	 * it (issue #8) — WooCommerce's own "In stock" line is a single global
+	 * number that means nothing under per-branch stock. When no branch is
+	 * selected yet, each row doubles as a branch picker, since a collection
+	 * branch is now required before the item can go in the cart.
+	 */
+	public function render_product_availability() {
+		global $product;
+
+		if ( ! $product instanceof WC_Product ) {
+			return;
+		}
+
+		$product_id = $product->get_id();
+		$rows       = IPN_Branch_Stock::get_availability_by_branch( $product_id );
+
+		// No rows can mean either "not a Click & Collect product" (leave the
+		// page completely alone) or "tracked, but no active branch stocks it"
+		// (say so) — only the second needs the extra lookup to tell apart.
+		if ( ! $rows && ! IPN_Branch_Stock::is_tracked( $product_id ) ) {
+			return;
+		}
+
+		$selected_branch_id = $this->get_selected_branch_id();
+
+		include IPN_PLUGIN_DIR . 'templates/storefront/product-availability.php';
+	}
+
+	/**
 	 * Hides a branch's vendor's out-of-stock-at-this-branch products from
 	 * whatever product query is currently running, by adding to
 	 * post__not_in rather than forcing author/post__in — that way this
@@ -216,6 +251,23 @@ class IPN_Storefront {
 		$branch_id = $this->get_selected_branch_id();
 
 		if ( ! $branch_id ) {
+			// "In stock" is meaningless for a Click & Collect product until
+			// we know which branch it's being collected from, so the branch
+			// has to be chosen before the item can go in the cart at all
+			// (issue #8) — otherwise the customer only discovers the
+			// requirement at checkout, with a cart already built.
+			if ( IPN_Branch_Stock::is_tracked( $product_id ) ) {
+				wc_add_notice(
+					sprintf(
+						/* translators: %s: link to the shop page, where the branch selector lives */
+						__( 'Please choose a collection branch before adding this item to your cart. %s', 'ipn' ),
+						'<a href="' . esc_url( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/' ) ) . '">' . esc_html__( 'Choose a branch', 'ipn' ) . '</a>'
+					),
+					'error'
+				);
+				return false;
+			}
+
 			return $passed;
 		}
 

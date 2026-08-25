@@ -198,10 +198,86 @@ class IPN_Order {
 
 		// Mirrored onto the WC order itself (not just ipn_order_meta) because
 		// the email templates under templates/emails/ read collection type
-		// and recipient name via $order->get_meta() directly.
-		update_post_meta( $order_id, '_ipn_branch_id', (int) $data['branch_id'] );
-		update_post_meta( $order_id, '_ipn_collection_type', $row['collection_type'] );
-		update_post_meta( $order_id, '_ipn_nominated_recipient_name', $row['nominated_name'] );
+		// and recipient name via $order->get_meta() directly. Written through
+		// the order CRUD rather than update_post_meta() so it lands in the
+		// right place under HPOS too — with custom order tables on, post meta
+		// is not where WooCommerce (or wc_get_orders()' meta_query) looks.
+		$order = wc_get_order( $order_id );
+
+		if ( $order ) {
+			$order->update_meta_data( '_ipn_branch_id', (int) $data['branch_id'] );
+			$order->update_meta_data( '_ipn_collection_type', $row['collection_type'] );
+			$order->update_meta_data( '_ipn_nominated_recipient_name', $row['nominated_name'] );
+			$order->save();
+		} else {
+			update_post_meta( $order_id, '_ipn_branch_id', (int) $data['branch_id'] );
+			update_post_meta( $order_id, '_ipn_collection_type', $row['collection_type'] );
+			update_post_meta( $order_id, '_ipn_nominated_recipient_name', $row['nominated_name'] );
+		}
+	}
+
+	/**
+	 * The collection branch for an order, from whichever of the two places
+	 * it was recorded.
+	 *
+	 * ipn_order_meta is authoritative, but the branch is also mirrored onto
+	 * the order itself, and the admin order list was reading only the former
+	 * — so any order whose ipn_order_meta row never got written showed a
+	 * blank Branch column with no way to tell which branch it belonged to
+	 * (issue #16). Checking both means the column is populated whenever
+	 * *either* source has it.
+	 *
+	 * @param WC_Order|int $order
+	 * @return int 0 when this isn't a Click & Collect order at all.
+	 */
+	public static function branch_id_for( $order ) {
+		$order_object = is_object( $order ) ? $order : wc_get_order( $order );
+		$order_id     = is_object( $order ) && method_exists( $order, 'get_id' ) ? $order->get_id() : (int) $order;
+
+		$meta = self::get_meta( $order_id );
+
+		if ( $meta && $meta->branch_id ) {
+			return (int) $meta->branch_id;
+		}
+
+		if ( $order_object && method_exists( $order_object, 'get_meta' ) ) {
+			$mirrored = (int) $order_object->get_meta( '_ipn_branch_id' );
+
+			if ( $mirrored ) {
+				return $mirrored;
+			}
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Order IDs that have an ipn_order_meta row, most recent first —
+	 * optionally scoped to one branch. Filtering here rather than in PHP is
+	 * what makes the admin list's branch filter reach the whole order
+	 * history instead of only the most recent page of it.
+	 *
+	 * @param array $args branch_id, limit.
+	 * @return int[]
+	 */
+	public static function get_order_ids( array $args = array() ) {
+		global $wpdb;
+
+		$args   = wp_parse_args( $args, array( 'branch_id' => 0, 'limit' => 200 ) );
+		$table  = self::table();
+		$where  = array( '1=1' );
+		$params = array();
+
+		if ( ! empty( $args['branch_id'] ) ) {
+			$where[]  = 'branch_id = %d';
+			$params[] = (int) $args['branch_id'];
+		}
+
+		$params[] = max( 1, (int) $args['limit'] );
+
+		$sql = "SELECT order_id FROM {$table} WHERE " . implode( ' AND ', $where ) . ' ORDER BY order_id DESC LIMIT %d';
+
+		return array_map( 'intval', $wpdb->get_col( $wpdb->prepare( $sql, $params ) ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 	}
 
 	protected static function set_fields( $order_id, array $fields ) {

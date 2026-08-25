@@ -173,15 +173,40 @@ class IPN_Branch {
 	}
 
 	public static function is_open_now( $branch_id ) {
+		$state = self::open_state( $branch_id );
+		return $state->is_open;
+	}
+
+	/**
+	 * Whether a branch is open *right now*, and why not when it isn't.
+	 *
+	 * This is deliberately separate from the branch's `status` column:
+	 * `status` is the lifecycle flag an admin sets ("this branch is part of
+	 * the network" vs. "taken offline"), while this is today's operating
+	 * hours plus any one-off closure date. A branch can perfectly well be
+	 * Active and Closed now — orders placed while it's closed are simply
+	 * prepared once it reopens (operating hours are advisory, confirmed
+	 * decision) — but the two were previously indistinguishable in the
+	 * admin, where a branch shut for the day still read only as "Active".
+	 *
+	 * @return object {
+	 *     @type bool        $is_open
+	 *     @type string      $reason  One of: open, closure, day_closed, outside_hours, no_hours.
+	 *     @type string      $label   Short human-readable state, e.g. "Closed now".
+	 *     @type string      $detail  Why, e.g. "Public holiday" or "Opens 08:00".
+	 *     @type object|null $hours   Today's ipn_branch_hours row, when there is one.
+	 * }
+	 */
+	public static function open_state( $branch_id ) {
 		global $wpdb;
 
 		$closures_table = self::closures_table();
 		$today          = current_time( 'Y-m-d' );
 
-		$closed_today = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$closures_table} WHERE branch_id = %d AND closure_date = %s", $branch_id, $today ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+		$closure = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$closures_table} WHERE branch_id = %d AND closure_date = %s", $branch_id, $today ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 
-		if ( $closed_today ) {
-			return false;
+		if ( $closure ) {
+			return self::open_state_result( false, 'closure', $closure->reason ? $closure->reason : __( 'Closed for the day', 'ipn' ) );
 		}
 
 		$hours_table = self::hours_table();
@@ -190,10 +215,38 @@ class IPN_Branch {
 
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$hours_table} WHERE branch_id = %d AND day_of_week = %d", $branch_id, $day ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 
-		if ( ! $row || $row->is_closed ) {
-			return false;
+		if ( ! $row ) {
+			return self::open_state_result( false, 'no_hours', __( 'Opening hours not set', 'ipn' ) );
 		}
 
-		return $now >= $row->open_time && $now <= $row->close_time;
+		if ( $row->is_closed || ! $row->open_time || ! $row->close_time ) {
+			return self::open_state_result( false, 'day_closed', __( 'Closed today', 'ipn' ), $row );
+		}
+
+		$open  = substr( (string) $row->open_time, 0, 5 );
+		$close = substr( (string) $row->close_time, 0, 5 );
+
+		if ( $now < $row->open_time ) {
+			/* translators: %s: today's opening time, e.g. "08:00" */
+			return self::open_state_result( false, 'outside_hours', sprintf( __( 'Opens %s', 'ipn' ), $open ), $row );
+		}
+
+		if ( $now > $row->close_time ) {
+			/* translators: %s: today's closing time, e.g. "19:00" */
+			return self::open_state_result( false, 'outside_hours', sprintf( __( 'Closed since %s', 'ipn' ), $close ), $row );
+		}
+
+		/* translators: %s: today's closing time, e.g. "19:00" */
+		return self::open_state_result( true, 'open', sprintf( __( 'Until %s', 'ipn' ), $close ), $row );
+	}
+
+	protected static function open_state_result( $is_open, $reason, $detail, $hours = null ) {
+		return (object) array(
+			'is_open' => (bool) $is_open,
+			'reason'  => $reason,
+			'label'   => $is_open ? __( 'Open now', 'ipn' ) : __( 'Closed now', 'ipn' ),
+			'detail'  => $detail,
+			'hours'   => $hours,
+		);
 	}
 }

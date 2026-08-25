@@ -119,6 +119,109 @@
 	margin-top: 8px;
 }
 
+/* ---------- single product: per-branch availability ---------- */
+
+.ipn-product-availability {
+	border: 1px solid var( --ipn-line );
+	border-radius: var( --ipn-radius );
+	background: var( --ipn-surface );
+	padding: 14px 16px;
+	margin: 0 0 20px;
+}
+
+.ipn-product-availability__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-bottom: 10px;
+}
+
+.ipn-product-availability__title {
+	font-size: 13px;
+	font-weight: 700;
+	color: var( --ipn-ink );
+}
+
+.ipn-product-availability__count {
+	font-size: 12px;
+	color: var( --ipn-muted );
+}
+
+.ipn-product-availability__prompt,
+.ipn-product-availability__note,
+.ipn-product-availability__empty {
+	font-size: 12.5px;
+	color: var( --ipn-muted );
+	margin: 0 0 10px;
+	line-height: 1.5;
+}
+
+.ipn-product-availability__note {
+	margin: 10px 0 0;
+	color: var( --ipn-faint );
+}
+
+.ipn-availability-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.ipn-availability-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	padding: 9px 0;
+	border-top: 1px solid var( --ipn-line );
+}
+
+.ipn-availability-row:first-child {
+	border-top: none;
+}
+
+.ipn-availability-row--selected {
+	background: var( --ipn-brand-100 );
+	border-radius: 9px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.ipn-availability-row__branch {
+	flex: 1 1 160px;
+	display: flex;
+	flex-direction: column;
+}
+
+.ipn-availability-row__name {
+	font-size: 13.5px;
+	font-weight: 650;
+	color: var( --ipn-ink );
+}
+
+.ipn-availability-row__address {
+	font-size: 12px;
+	color: var( --ipn-muted );
+	margin-top: 1px;
+}
+
+.ipn-availability-row__selected {
+	font-size: 11.5px;
+	font-weight: 700;
+	color: var( --ipn-brand-700 );
+	white-space: nowrap;
+}
+
+.ipn-availability-row__select {
+	font-size: 12.5px;
+	font-weight: 650;
+	color: var( --ipn-brand-700 );
+	text-decoration: underline;
+	white-space: nowrap;
+}
+
 /* ---------- persistent branch indicator bar ---------- */
 
 .ipn-branch-indicator-bar {

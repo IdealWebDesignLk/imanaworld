@@ -217,21 +217,106 @@ class IPN_Admin {
 		$this->view( 'dashboard' );
 	}
 
+	/**
+	 * Partners = Dokan vendor accounts. Alongside each partner's branches
+	 * and IPN mode, this screen now carries the vendor lifecycle controls
+	 * that previously only existed inside Dokan's own admin — approve a
+	 * pending signup, suspend or re-enable an existing partner, and create
+	 * a partner account outright (issue #15) — so onboarding and suspending
+	 * a C&C partner can be done in one place.
+	 *
+	 * The list is searched and paged server-side: a real marketplace has far
+	 * more vendor accounts than the handful of C&C partners, and the old
+	 * unbounded get_users() rendered every one of them onto the page.
+	 */
 	public function render_partners() {
-		$vendors = $this->get_dokan_vendors();
-		$rows    = array();
+		$action_result = $this->maybe_handle_vendor_actions();
 
-		foreach ( $vendors as $vendor ) {
+		$per_page = 25;
+		$search   = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$page     = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		$query = IPN_Vendor::query( array(
+			'search'   => $search,
+			'per_page' => $per_page,
+			'page'     => $page,
+		) );
+
+		$rows = array();
+
+		foreach ( $query['vendors'] as $vendor ) {
 			$branches = IPN_Branch::get_all( array( 'vendor_id' => $vendor->ID ) );
-			$rows[]   = (object) array(
-				'vendor_id'    => $vendor->ID,
+
+			$rows[] = (object) array(
+				'vendor_id'    => (int) $vendor->ID,
 				'display_name' => $vendor->display_name,
+				'store_name'   => IPN_Vendor::store_name( $vendor->ID ),
+				'email'        => $vendor->user_email,
+				'state'        => IPN_Vendor::state( $vendor->ID ),
 				'branch_count' => count( $branches ),
 				'ipn_enabled'  => count( $branches ) > 0,
 			);
 		}
 
-		$this->view( 'partners', array( 'partners' => $rows ) );
+		$this->view( 'partners', array(
+			'partners'      => $rows,
+			'total_vendors' => $query['total'],
+			'search'        => $search,
+			'page'          => $page,
+			'per_page'      => $per_page,
+			'action_result' => $action_result,
+		) );
+	}
+
+	/**
+	 * Partners screen writes: the per-row approve/enable/disable toggle and
+	 * the "Add vendor" modal.
+	 *
+	 * @return string|WP_Error|null Success message, an error, or null if nothing was posted this request.
+	 */
+	protected function maybe_handle_vendor_actions() {
+		if ( ! empty( $_POST['ipn_vendor_status'] ) ) {
+			check_admin_referer( 'ipn_vendor_status' );
+
+			$vendor_id = isset( $_POST['vendor_id'] ) ? absint( $_POST['vendor_id'] ) : 0;
+			$enable    = ! empty( $_POST['enable'] );
+
+			if ( ! $vendor_id ) {
+				return new WP_Error( 'ipn_vendor_invalid', __( 'No vendor was selected.', 'ipn' ) );
+			}
+
+			$result = IPN_Vendor::set_selling_enabled( $vendor_id, $enable );
+
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
+
+			return $enable
+				? __( 'Vendor can now sell.', 'ipn' )
+				: __( 'Vendor selling disabled.', 'ipn' );
+		}
+
+		if ( ! empty( $_POST['ipn_add_vendor'] ) ) {
+			check_admin_referer( 'ipn_add_vendor' );
+
+			$result = IPN_Vendor::create( array(
+				'store_name'     => isset( $_POST['store_name'] ) ? sanitize_text_field( wp_unslash( $_POST['store_name'] ) ) : '',
+				'email'          => isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '',
+				'username'       => isset( $_POST['username'] ) ? sanitize_user( wp_unslash( $_POST['username'] ) ) : '',
+				'first_name'     => isset( $_POST['first_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_name'] ) ) : '',
+				'last_name'      => isset( $_POST['last_name'] ) ? sanitize_text_field( wp_unslash( $_POST['last_name'] ) ) : '',
+				'phone'          => isset( $_POST['phone'] ) ? sanitize_text_field( wp_unslash( $_POST['phone'] ) ) : '',
+				'enable_selling' => ! empty( $_POST['enable_selling'] ),
+			) );
+
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
+
+			return __( 'Vendor created. They have been emailed a link to set their own password.', 'ipn' );
+		}
+
+		return null;
 	}
 
 	/**
@@ -318,11 +403,7 @@ class IPN_Admin {
 	 * Dokan vendor; branches are that vendor's collection points).
 	 */
 	protected function get_dokan_vendors() {
-		return get_users( array(
-			'role'    => 'seller',
-			'orderby' => 'display_name',
-			'fields'  => array( 'ID', 'display_name' ),
-		) );
+		return IPN_Vendor::get_all();
 	}
 
 	/**
@@ -428,12 +509,40 @@ class IPN_Admin {
 		return true;
 	}
 
+	/**
+	 * Stock overview. Everything the table shows is now resolved in SQL —
+	 * aggregated per product, scoped to a branch, searched, and paged —
+	 * rather than loading every product-branch pair into the page and
+	 * filtering it in the browser, which stopped being viable the moment
+	 * the catalogue outgrew the pilot (issue #7).
+	 */
 	public function render_stock() {
 		$result = $this->maybe_handle_stock_adjust();
 
+		$per_page  = 25;
+		$branch_id = isset( $_GET['branch_id'] ) ? absint( $_GET['branch_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$search    = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$page      = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		$query_args = array(
+			'branch_id' => $branch_id,
+			'search'    => $search,
+			'per_page'  => $per_page,
+			'page'      => $page,
+		);
+
+		$products = IPN_Branch_Stock::query_products( $query_args );
+
 		$this->view( 'stock', array(
-			'branches'      => IPN_Branch::get_all(),
-			'adjust_result' => $result,
+			'branches'         => IPN_Branch::get_all(),
+			'stock_products'   => $products,
+			'stock_breakdown'  => IPN_Branch_Stock::get_branch_breakdown( wp_list_pluck( $products, 'product_id' ), $branch_id ),
+			'total_products'   => IPN_Branch_Stock::count_products( $query_args ),
+			'filter_branch_id' => $branch_id,
+			'search'           => $search,
+			'page'             => $page,
+			'per_page'         => $per_page,
+			'adjust_result'    => $result,
 		) );
 	}
 
@@ -559,8 +668,29 @@ class IPN_Admin {
 		exit;
 	}
 
+	/**
+	 * Orders & Disputes. The branch filter is a real server-side query
+	 * (scoping ipn_order_meta), not a filter over whatever happened to be
+	 * on the page — with several branches, filtering only the most recent
+	 * 200 orders client-side would silently hide a branch's older orders
+	 * (issue #16). Search and status stay client-side over the loaded set,
+	 * as before.
+	 */
 	public function render_orders() {
-		$this->view( 'orders', array( 'orders' => $this->get_all_ipn_orders() ) );
+		$branch_id = isset( $_GET['branch_id'] ) ? absint( $_GET['branch_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$orders    = $this->get_all_ipn_orders( 200, $branch_id );
+
+		$counts = array();
+		foreach ( $orders as $order ) {
+			$counts[ $order->status ] = isset( $counts[ $order->status ] ) ? $counts[ $order->status ] + 1 : 1;
+		}
+
+		$this->view( 'orders', array(
+			'orders'           => $orders,
+			'branches'         => IPN_Branch::get_all(),
+			'filter_branch_id' => $branch_id,
+			'status_counts'    => $counts,
+		) );
 	}
 
 	public function render_disputes() {
@@ -572,34 +702,37 @@ class IPN_Admin {
 	}
 
 	/**
-	 * Every IPN order (has _ipn_branch_id order meta), most recent first —
-	 * backs both the Orders & Disputes list and the Disputes & Returns
-	 * queue (which just filters this down to status === 'disputed').
-	 * Same wc_get_orders() + real order meta pattern IPN_Reports uses, so
-	 * this works on HPOS and legacy post-based orders alike.
+	 * Every Click & Collect order, most recent first — backs both the
+	 * Orders & Disputes list and the Disputes & Returns queue (which just
+	 * filters this down to status === 'disputed').
 	 *
+	 * Two sources are consulted: the ipn_order_meta table (authoritative,
+	 * and where the branch filter is applied in SQL) and the mirrored
+	 * _ipn_branch_id order meta, so an order recorded in only one of them
+	 * still lists — and still shows its branch.
+	 *
+	 * @param int $limit     Maximum rows returned.
+	 * @param int $branch_id Restrict to one branch (0 = all).
 	 * @return object[]
 	 */
-	protected function get_all_ipn_orders( $limit = 200 ) {
-		try {
-			$order_ids = wc_get_orders( array(
-				'return'     => 'ids',
-				'limit'      => $limit,
-				'orderby'    => 'date',
-				'order'      => 'DESC',
-				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery
-					array(
-						'key'     => '_ipn_branch_id',
-						'compare' => 'EXISTS',
-					),
-				),
-			) );
-		} catch ( \Throwable $e ) {
-			if ( function_exists( 'error_log' ) ) {
-				error_log( '[IPN] wc_get_orders() failed on the admin order list: ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			}
-			return array();
-		}
+	protected function get_all_ipn_orders( $limit = 200, $branch_id = 0 ) {
+		// ipn_order_meta is the authoritative record of which orders are
+		// Click & Collect orders and which branch each belongs to, so it
+		// leads here — it also survives HPOS, where the mirrored order meta
+		// this used to rely on exclusively may not be queryable the same way.
+		$order_ids = IPN_Order::get_order_ids( array(
+			'limit'     => $limit,
+			'branch_id' => $branch_id,
+		) );
+
+		// Anything carrying only the mirrored _ipn_branch_id order meta (an
+		// order placed before ipn_order_meta existed, or one whose row
+		// didn't get written) is still picked up here and then matched to a
+		// branch through IPN_Order::branch_id_for(). On a healthy install
+		// this adds nothing — both queries describe the same orders — so
+		// the usual cost is one extra query, not a second set of rows.
+		$fallback  = array_diff( $this->get_mirrored_ipn_order_ids( $limit ), $order_ids );
+		$order_ids = array_slice( array_merge( $order_ids, $fallback ), 0, $limit * 2 );
 
 		$rows = array();
 
@@ -617,12 +750,52 @@ class IPN_Admin {
 				}
 			}
 
-			if ( $row ) {
-				$rows[] = $row;
+			if ( ! $row ) {
+				continue;
 			}
+
+			if ( $branch_id && (int) $row->branch_id !== (int) $branch_id ) {
+				continue;
+			}
+
+			$rows[] = $row;
 		}
 
-		return $rows;
+		usort( $rows, function ( $a, $b ) {
+			return $b->created_at <=> $a->created_at;
+		} );
+
+		return array_slice( $rows, 0, $limit );
+	}
+
+	/**
+	 * Order IDs found via the mirrored _ipn_branch_id order meta, as a
+	 * safety net beside ipn_order_meta. Isolated in its own try/catch
+	 * because an unexpected WC/HPOS query response here previously took the
+	 * whole Orders screen down with it.
+	 *
+	 * @return int[]
+	 */
+	protected function get_mirrored_ipn_order_ids( $limit ) {
+		try {
+			return array_map( 'intval', wc_get_orders( array(
+				'return'     => 'ids',
+				'limit'      => $limit,
+				'orderby'    => 'date',
+				'order'      => 'DESC',
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery
+					array(
+						'key'     => '_ipn_branch_id',
+						'compare' => 'EXISTS',
+					),
+				),
+			) ) );
+		} catch ( \Throwable $e ) {
+			if ( function_exists( 'error_log' ) ) {
+				error_log( '[IPN] wc_get_orders() failed on the admin order list: ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			}
+			return array();
+		}
 	}
 
 	/**
@@ -644,8 +817,9 @@ class IPN_Admin {
 			return null;
 		}
 
-		$meta   = IPN_Order::get_meta( $order_id );
-		$branch = ( $meta && $meta->branch_id ) ? IPN_Branch::get( $meta->branch_id ) : null;
+		$meta      = IPN_Order::get_meta( $order_id );
+		$branch_id = IPN_Order::branch_id_for( $order );
+		$branch    = $branch_id ? IPN_Branch::get( $branch_id ) : null;
 
 		$items = array();
 		foreach ( $order->get_items() as $item ) {
@@ -672,10 +846,16 @@ class IPN_Admin {
 			);
 		}
 
+		$created = $order->get_date_created();
+
 		return (object) array(
 			'order_id'       => $order_id,
 			'order_number'   => $order->get_order_number(),
-			'branch_name'    => $branch ? $branch->name : '',
+			'branch_id'      => $branch_id,
+			'branch_name'    => $branch ? $branch->name : ( $branch_id ? sprintf( /* translators: %d: branch ID of a branch that has since been deleted */ __( 'Branch #%d (removed)', 'ipn' ), $branch_id ) : '' ),
+			'created_at'     => $created ? $created->getTimestamp() : 0,
+			'date_label'     => IPN_Order::time_label( $order ),
+			'age_label'      => $created ? sprintf( /* translators: %s: human-readable time difference, e.g. "20 mins" */ __( '%s ago', 'ipn' ), human_time_diff( $created->getTimestamp(), time() ) ) : '',
 			'customer_name'  => IPN_Order::customer_name( $order ),
 			'type'           => ( $meta && $meta->collection_type ) ? $meta->collection_type : 'standard',
 			'status'         => $status,

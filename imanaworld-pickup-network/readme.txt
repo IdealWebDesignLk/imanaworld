@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.5.3
+Stable tag: 0.6.0
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -41,6 +41,33 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.6.0 =
+* Fix: the Branch column on Orders & Disputes was blank for every order —
+  the branch is now resolved from either ipn_order_meta or the mirrored
+  order meta, and that mirror is written through the WooCommerce order CRUD
+  so it also works with HPOS (custom order tables) enabled.
+* Add: Orders & Disputes now shows when each order was placed, counters for
+  the statuses still needing action (New / Accepted / Preparing / Ready /
+  Disputed), a highlight on new orders, and a real server-side branch
+  filter that reaches a branch's whole order history.
+* Change: Stock overview is now one row per product with a per-branch
+  drill-down, searched, branch-filtered, and paged in SQL instead of
+  loading every product-branch combination into the page. The branch staff
+  dashboard's stock screen is paged the same way.
+* Add: Partners screen can create a Dokan vendor account, approve a vendor
+  pending approval, and activate/deactivate an existing one. No password is
+  handled in the form — the vendor is emailed a link to set their own.
+* Change: Partners screen is searched and paged rather than listing every
+  vendor account on the site at once.
+* Add: single product pages show which branches have the item and how many
+  units each has left; picking a collection branch is now required before
+  a Click & Collect item can be added to the cart, instead of the customer
+  only finding out at checkout.
+* Fix: the Branches admin list showed a branch as "Active" with no
+  indication it was closed for the day — lifecycle status and today's
+  operating state (with the reason: closure date, closed today, outside
+  hours) are now shown separately.
 
 = 0.5.3 =
 * Fix: hardened the Orders & Disputes / Disputes & Returns admin screens

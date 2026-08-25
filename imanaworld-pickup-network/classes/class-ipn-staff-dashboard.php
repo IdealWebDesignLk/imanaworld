@@ -71,7 +71,24 @@ class IPN_Staff_Dashboard {
 				if ( $branch_id ) {
 					$this->maybe_handle_stock_adjust( $branch_id );
 				}
-				$stock = $branch_id ? IPN_Branch_Stock::get_stock_for_branch( $branch_id ) : array();
+
+				// Searched and paged in SQL, same as the admin Stock screen —
+				// this used to load every stock row for the branch and then
+				// filter it in PHP with a wc_get_product() call per row, which
+				// only works while the catalogue is pilot-sized (issue #7).
+				$stock_per_page = 20;
+				$stock_search   = isset( $_GET['stock_q'] ) ? sanitize_text_field( wp_unslash( $_GET['stock_q'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$stock_page     = isset( $_GET['stock_page'] ) ? max( 1, absint( $_GET['stock_page'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$stock_args     = array(
+					'branch_id' => $branch_id,
+					'search'    => $stock_search,
+					'per_page'  => $stock_per_page,
+					'page'      => $stock_page,
+				);
+
+				$stock       = $branch_id ? IPN_Branch_Stock::query_products( $stock_args ) : array();
+				$stock_total = $branch_id ? IPN_Branch_Stock::count_products( $stock_args ) : 0;
+
 				include IPN_PLUGIN_DIR . 'templates/staff/stock.php';
 				break;
 

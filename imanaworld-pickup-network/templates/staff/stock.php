@@ -3,26 +3,16 @@ defined( 'ABSPATH' ) || exit;
 /**
  * @var int         $branch_id
  * @var object|null $branch
- * @var array       $stock  Rows from IPN_Branch_Stock::get_stock_for_branch(). Each row has
- *                          ->product_id, ->total_stock, ->reserved_stock, ->updated_at — this
- *                          is real backing data, unlike the queue/detail screens.
+ * @var object[]    $stock          Current page of rows from IPN_Branch_Stock::query_products(),
+ *                                   scoped to this branch. Each row has ->product_id,
+ *                                   ->product_name, ->total_stock, ->reserved_stock.
+ * @var int         $stock_total    Total products matching the search, for the pager.
+ * @var int         $stock_page     1-based current page.
+ * @var int         $stock_per_page
+ * @var string      $stock_search
  */
 
-$search = isset( $_GET['stock_q'] ) ? sanitize_text_field( wp_unslash( $_GET['stock_q'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-
-$rows = $stock;
-if ( '' !== $search ) {
-	$rows = array_values(
-		array_filter(
-			$stock,
-			function ( $row ) use ( $search ) {
-				$product = wc_get_product( $row->product_id );
-				$name    = $product ? $product->get_name() : '';
-				return false !== stripos( $name . ' ' . $row->product_id, $search );
-			}
-		)
-	);
-}
+$ipn_total_pages = (int) ceil( $stock_total / max( 1, $stock_per_page ) );
 ?>
 <div class="ipn-staff-dashboard">
 	<div class="device">
@@ -43,37 +33,39 @@ if ( '' !== $search ) {
 			<?php else : ?>
 				<div class="stock-search">
 					<form method="get">
-						<?php foreach ( $_GET as $key => $value ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+						<?php foreach ( $_GET as $ipn_key => $ipn_value ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 							<?php
-							if ( 'stock_q' === $key || ! is_scalar( $value ) ) {
+							// stock_page is dropped as well as stock_q — a new
+							// search starts back at page 1 rather than landing
+							// on a page number that no longer exists.
+							if ( in_array( $ipn_key, array( 'stock_q', 'stock_page' ), true ) || ! is_scalar( $ipn_value ) ) {
 								continue;
 							}
 							?>
-							<input type="hidden" name="<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( wp_unslash( $value ) ); ?>" />
+							<input type="hidden" name="<?php echo esc_attr( $ipn_key ); ?>" value="<?php echo esc_attr( wp_unslash( $ipn_value ) ); ?>" />
 						<?php endforeach; ?>
-						<input type="text" name="stock_q" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Search products…', 'ipn' ); ?>" />
+						<input type="text" name="stock_q" value="<?php echo esc_attr( $stock_search ); ?>" placeholder="<?php esc_attr_e( 'Search products…', 'ipn' ); ?>" />
 					</form>
 				</div>
 
 				<div class="content" style="padding-top:0;">
-					<?php if ( empty( $rows ) ) : ?>
+					<?php if ( empty( $stock ) ) : ?>
 						<div class="empty-state">
-							<?php if ( empty( $stock ) ) : ?>
+							<?php if ( '' === $stock_search ) : ?>
 								<?php esc_html_e( 'No stock records for this branch yet.', 'ipn' ); ?>
 							<?php else : ?>
 								<?php
 								/* translators: %s: the search term that matched nothing. */
-								echo esc_html( sprintf( __( 'No products match "%s".', 'ipn' ), $search ) );
+								echo esc_html( sprintf( __( 'No products match "%s".', 'ipn' ), $stock_search ) );
 								?>
 							<?php endif; ?>
 						</div>
 					<?php else : ?>
-						<?php foreach ( $rows as $row ) : ?>
+						<?php foreach ( $stock as $row ) : ?>
 							<?php
 							$available = max( 0, (int) $row->total_stock - (int) $row->reserved_stock );
-							$product   = wc_get_product( $row->product_id );
-							/* translators: %d: product ID, used when the product itself can't be loaded. */
-							$name = $product ? $product->get_name() : sprintf( __( 'Product #%d', 'ipn' ), $row->product_id );
+							/* translators: %d: product ID, used when the product has no title. */
+							$name = $row->product_name ? $row->product_name : sprintf( __( 'Product #%d', 'ipn' ), $row->product_id );
 							?>
 							<div class="stock-row">
 								<div class="stock-name"><?php echo esc_html( $name ); ?></div>
@@ -92,6 +84,31 @@ if ( '' !== $search ) {
 								</form>
 							</div>
 						<?php endforeach; ?>
+
+						<?php if ( $ipn_total_pages > 1 ) : ?>
+							<div class="stock-pager">
+								<?php if ( $stock_page > 1 ) : ?>
+									<a href="<?php echo IPN_Staff_Dashboard::screen_url( 'stock', array( 'stock_page' => $stock_page - 1 ) ); // phpcs:ignore WordPress.Security.EscapeOutput -- screen_url() returns an escaped URL. ?>">&larr; <?php esc_html_e( 'Previous', 'ipn' ); ?></a>
+								<?php else : ?>
+									<span></span>
+								<?php endif; ?>
+								<span class="stock-pager-pos">
+									<?php
+									printf(
+										/* translators: 1: current page number, 2: total pages */
+										esc_html__( 'Page %1$d of %2$d', 'ipn' ),
+										(int) $stock_page,
+										(int) $ipn_total_pages
+									);
+									?>
+								</span>
+								<?php if ( $stock_page < $ipn_total_pages ) : ?>
+									<a href="<?php echo IPN_Staff_Dashboard::screen_url( 'stock', array( 'stock_page' => $stock_page + 1 ) ); // phpcs:ignore WordPress.Security.EscapeOutput -- screen_url() returns an escaped URL. ?>"><?php esc_html_e( 'Next', 'ipn' ); ?> &rarr;</a>
+								<?php else : ?>
+									<span></span>
+								<?php endif; ?>
+							</div>
+						<?php endif; ?>
 					<?php endif; ?>
 				</div>
 			<?php endif; ?>

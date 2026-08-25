@@ -208,6 +208,42 @@
 .ipn-admin table.data tr:hover td { background: var(--surface-sunken); }
 .ipn-admin .num { font-variant-numeric: tabular-nums; text-align: right; }
 
+/* ---------- status counters (Orders & Disputes) ---------- */
+.ipn-admin .status-counters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.ipn-admin .status-counter {
+	appearance: none; cursor: pointer; text-align: left; min-width: 92px;
+	background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 13px;
+	display: flex; flex-direction: column; gap: 2px; color: var(--ink); transition: border-color .12s ease;
+}
+.ipn-admin .status-counter:hover { border-color: var(--line-strong); }
+.ipn-admin .status-counter__n { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.ipn-admin .status-counter__l { font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.ipn-admin .status-counter--new { background: var(--new-bg); border-color: transparent; }
+.ipn-admin .status-counter--new .status-counter__n,
+.ipn-admin .status-counter--new .status-counter__l { color: var(--new); }
+.ipn-admin .status-counter--preparing .status-counter__n { color: var(--preparing); }
+.ipn-admin .status-counter--ready .status-counter__n { color: var(--ready); }
+.ipn-admin .status-counter--disputed .status-counter__n { color: var(--danger); }
+
+/* A new order is one nobody has picked up yet — worth spotting without
+   reading the Status column of every row. */
+.ipn-admin tr.ipn-order-row--new td:first-child { box-shadow: inset 3px 0 0 var(--new); }
+
+/* ---------- inline row actions ---------- */
+.ipn-admin .row-actions-inline { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ipn-admin .row-actions-inline form { margin: 0; }
+
+/* ---------- pagination ---------- */
+.ipn-admin .pager { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+.ipn-admin .pager .hint { margin-top: 0; }
+
+/* ---------- stock per-branch drill-down ---------- */
+.ipn-admin [hidden] { display: none !important; }
+.ipn-admin tr.ipn-stock-detail > td,
+.ipn-admin tr.ipn-stock-detail:hover > td { padding: 0 14px 12px; background: var(--surface-sunken); }
+.ipn-admin table.ipn-stock-detail-table { border: 1px solid var(--line); border-radius: 9px; background: var(--surface); overflow: hidden; }
+.ipn-admin table.ipn-stock-detail-table th { background: transparent; }
+
 /* ---------- chips ---------- */
 .ipn-admin .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 20px; white-space: nowrap; line-height: 1.5; }
 .ipn-admin .chip-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }

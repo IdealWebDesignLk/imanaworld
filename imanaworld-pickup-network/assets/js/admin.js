@@ -221,6 +221,32 @@
 	}
 	window.ipnOpenStockAdjustModal = ipnOpenStockAdjustModal;
 
+	/* ---------------- stock per-branch drill-down ---------------- */
+	/**
+	 * Expands/collapses a product's per-branch stock rows on the Stock
+	 * screen. The rows are already server-rendered for the current page
+	 * (one query for the whole page), so this is pure show/hide — no
+	 * request, nothing to load.
+	 */
+	function ipnToggleStockBranches( button, detailRowId ) {
+		var row = document.getElementById( detailRowId );
+
+		if ( ! row ) {
+			return;
+		}
+
+		var opening = row.hasAttribute( 'hidden' );
+
+		if ( opening ) {
+			row.removeAttribute( 'hidden' );
+		} else {
+			row.setAttribute( 'hidden', 'hidden' );
+		}
+
+		button.setAttribute( 'aria-expanded', opening ? 'true' : 'false' );
+	}
+	window.ipnToggleStockBranches = ipnToggleStockBranches;
+
 	/* ---------------- order detail modal (Orders & Disputes / Disputes & Returns) ---------------- */
 	function ipnOpenOrderModal( row ) {
 		var data;
@@ -310,6 +336,23 @@
 		span.textContent = text;
 		return span;
 	}
+
+	/**
+	 * Drives the status filter from the counter tiles above the Orders
+	 * table, so "3 New" is something you can click rather than a number you
+	 * then have to go and reproduce in the dropdown.
+	 */
+	function ipnSetOrderStatusFilter( status ) {
+		var select = document.getElementById( 'ipn-orders-status-filter' );
+
+		if ( ! select ) {
+			return;
+		}
+
+		select.value = status;
+		select.dispatchEvent( new Event( 'change' ) );
+	}
+	window.ipnSetOrderStatusFilter = ipnSetOrderStatusFilter;
 
 	/* ---------------- table / list filtering ---------------- */
 	/**
@@ -405,18 +448,12 @@
 			} );
 		} );
 
-		// Stock overview: search + branch filter over server-rendered rows.
-		ipnBindFilters( 'ipn-stock-tbody', 'tr[data-ipn-row]', {
-			searchInputId: 'ipn-stock-search',
-			selects: [ { id: 'ipn-stock-branch-filter', attr: 'branch' } ],
-			emptyHtml: '<tr class="ipn-filter-empty"><td colspan="6"><div class="empty-state">No matching stock rows.</div></td></tr>'
-		} );
-
 		// All orders: search + status filter over server-rendered rows.
+		// (Branch is filtered server-side — see templates/admin/orders.php.)
 		ipnBindFilters( 'ipn-orders-tbody', 'tr[data-ipn-row]', {
 			searchInputId: 'ipn-orders-search',
 			selects: [ { id: 'ipn-orders-status-filter', attr: 'status' } ],
-			emptyHtml: '<tr class="ipn-filter-empty"><td colspan="6"><div class="empty-state">No orders match.</div></td></tr>'
+			emptyHtml: '<tr class="ipn-filter-empty"><td colspan="7"><div class="empty-state">No orders match.</div></td></tr>'
 		} );
 
 		// Audit trail: branch + event type filter over server-rendered rows.

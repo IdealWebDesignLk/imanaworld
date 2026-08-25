@@ -108,6 +108,13 @@ $ipn_branch_hours_summary = function ( $branch_id ) {
 						<?php
 						$is_active = 'active' === $branch->status;
 						$gps       = ( $branch->latitude && $branch->longitude ) ? $branch->latitude . ', ' . $branch->longitude : '';
+
+						// Lifecycle status ("is this branch part of the network")
+						// and today's operating state ("is it open right now")
+						// are two different things — a branch shut for the day
+						// used to read only as "Active" here, which is what
+						// prompted issue #12's follow-up.
+						$open_state = IPN_Branch::open_state( $branch->id );
 						?>
 						<tr>
 							<td>
@@ -128,6 +135,12 @@ $ipn_branch_hours_summary = function ( $branch_id ) {
 								<span class="chip <?php echo $is_active ? 'chip-active' : 'chip-inactive'; ?>">
 									<span class="chip-dot"></span><?php echo esc_html( ucfirst( $branch->status ) ); ?>
 								</span>
+								<?php if ( $is_active ) : ?>
+									<span class="chip <?php echo $open_state->is_open ? 'chip-ready' : 'chip-disputed'; ?>" style="margin-left:4px;">
+										<span class="chip-dot"></span><?php echo esc_html( $open_state->label ); ?>
+									</span>
+									<div class="hint"><?php echo esc_html( $open_state->detail ); ?></div>
+								<?php endif; ?>
 								<?php if ( ! empty( $branch->disabled_reason ) ) : ?>
 									<div class="hint"><?php echo esc_html( $branch->disabled_reason ); ?></div>
 								<?php endif; ?>

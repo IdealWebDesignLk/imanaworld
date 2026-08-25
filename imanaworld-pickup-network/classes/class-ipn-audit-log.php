@@ -94,6 +94,9 @@ class IPN_Audit_Log {
 			'collection_completed'  => __( 'Order collected', 'ipn' ),
 			'collection_disputed'   => __( 'Collection rejected / disputed', 'ipn' ),
 			'collection_expired'    => __( 'Collection window expired', 'ipn' ),
+			'vendor_created'        => __( 'Partner (vendor) created', 'ipn' ),
+			'vendor_enabled'        => __( 'Partner selling enabled', 'ipn' ),
+			'vendor_disabled'       => __( 'Partner selling disabled', 'ipn' ),
 			'branch_created'        => __( 'Branch created', 'ipn' ),
 			'branch_updated'        => __( 'Branch updated', 'ipn' ),
 		);
