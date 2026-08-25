@@ -119,23 +119,10 @@ $new_count = $status_count( 'new' );
 				</div>
 			<?php endif; ?>
 
-			<div class="tabbar">
-				<a class="tab active" href="<?php echo IPN_Staff_Dashboard::screen_url( 'queue' ); ?>">
-					<span class="tab-ico" aria-hidden="true">&#128203;</span>
-					<span class="tab-lbl"><?php esc_html_e( 'Queue', 'ipn' ); ?></span>
-					<?php if ( $new_count > 0 ) : ?>
-						<span class="tab-badge"><?php echo esc_html( $new_count ); ?></span>
-					<?php endif; ?>
-				</a>
-				<a class="tab" href="<?php echo IPN_Staff_Dashboard::screen_url( 'stock' ); ?>">
-					<span class="tab-ico" aria-hidden="true">&#128230;</span>
-					<span class="tab-lbl"><?php esc_html_e( 'Branch stock', 'ipn' ); ?></span>
-				</a>
-				<a class="tab" href="<?php echo esc_url( wp_logout_url( get_permalink() ) ); ?>">
-					<span class="tab-ico" aria-hidden="true">&#8617;</span>
-					<span class="tab-lbl"><?php esc_html_e( 'Sign out', 'ipn' ); ?></span>
-				</a>
-			</div>
+			<?php
+			$ipn_active_tab = 'queue';
+			include IPN_PLUGIN_DIR . 'templates/staff/partials/tabbar.php';
+			?>
 		</section>
 	</div>
 </div>

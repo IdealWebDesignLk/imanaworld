@@ -64,6 +64,50 @@ class IPN_Branch_Stock {
 	}
 
 	/**
+	 * Removes a product from a branch entirely — not the same as setting its
+	 * total to zero. With no row at all the product falls out of the IPN
+	 * stock model for that branch, which is what "this branch doesn't carry
+	 * this line" should mean.
+	 *
+	 * Refused while units are reserved, because a reservation is stock a
+	 * customer has already paid for and is waiting to collect.
+	 *
+	 * @return true|WP_Error
+	 */
+	public static function delete_row( $product_id, $branch_id ) {
+		global $wpdb;
+
+		$row = self::get_row( $product_id, $branch_id );
+
+		if ( ! $row ) {
+			return new WP_Error( 'ipn_stock_missing', __( 'That product is not stocked at this branch.', 'ipn' ) );
+		}
+
+		if ( (int) $row->reserved_stock > 0 ) {
+			return new WP_Error(
+				'ipn_stock_reserved',
+				sprintf(
+					/* translators: %d: units reserved against unfulfilled orders */
+					__( 'Cannot remove this product: %d unit(s) are reserved for orders that have not been collected yet.', 'ipn' ),
+					(int) $row->reserved_stock
+				)
+			);
+		}
+
+		$wpdb->delete( self::table(), array( // phpcs:ignore WordPress.DB.PreparedSQL
+			'product_id' => (int) $product_id,
+			'branch_id'  => (int) $branch_id,
+		) );
+
+		IPN_Audit_Log::log( 'stock_removed', array(
+			'branch_id' => $branch_id,
+			'data'      => array( 'product_id' => (int) $product_id ),
+		) );
+
+		return true;
+	}
+
+	/**
 	 * Moves quantity from available into reserved. Fails (returns false)
 	 * rather than oversell if two customers race for the last unit —
 	 * the UPDATE ... WHERE guard makes the check-and-reserve atomic.

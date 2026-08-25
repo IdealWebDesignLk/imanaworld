@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.6.0
+Stable tag: 0.7.0
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -26,6 +26,75 @@ See the full scope document for the complete requirements list.
 * WooCommerce
 * Dokan (Lite or Pro)
 
+== User roles ==
+
+Three roles reach IPN, each with its own surface and its own slice of the data:
+
+* **WordPress admin** (`manage_woocommerce`) — the "IPN" menu in wp-admin. Every
+  partner, branch, and order. Also where a vendor is promoted to a Click &
+  Collect partner: tick "Make IPN Partner" on their user profile.
+* **Vendor** (Dokan seller, flagged as a partner) — a "Click & Collect" section
+  inside Dokan's own vendor dashboard at /dashboard/. Their own branches, the
+  staff running them, per-branch stock, and their orders. Never another
+  vendor's.
+* **IPN Branch Staff** — the `[ipn_staff_dashboard]` page below, locked to the
+  single branch they are assigned to.
+
+Scoping is enforced server-side on every read and write (see
+classes/class-ipn-access.php), not by which options a screen happens to render.
+
+== Shortcodes ==
+
+The plugin registers exactly one shortcode. Everything else customers see is
+attached to WooCommerce's own templates through hooks, so there is nothing to
+place on a page by hand — see "Front-end surfaces" below.
+
+`[ipn_staff_dashboard]`
+
+    The branch staff order dashboard: today's order queue, an order detail
+    screen with the collection-code (OTP) check, and that branch's stock.
+    Takes no attributes.
+
+    Put it on one page (e.g. /branch-staff/) and give branch staff that URL.
+    Branch staff never get wp-admin access, so this page *is* their entire
+    interface.
+
+    Who sees what:
+    * Logged out, or logged in as anyone other than an IPN Branch Staff user
+      — a sign-in prompt. Nothing about any branch is exposed.
+    * Logged in as IPN Branch Staff — the dashboard, scoped to the single
+      branch that user is assigned to under IPN → Staff. There is no way to
+      reach another branch's orders from here.
+    * IPN Branch Staff with no branch assigned yet — a notice telling them
+      to contact an admin.
+
+    The dashboard drives itself with query parameters on whatever page holds
+    the shortcode; you never need to write these by hand, but they are worth
+    knowing when reading a support link a staff member has pasted you:
+
+    * `?ipn_screen=queue`   Order queue (the default).
+    * `?ipn_screen=detail&order_id=123`  One order, with the collection-code
+      check and the Accept / Preparing / Ready / Reject actions.
+    * `?ipn_screen=stock`   That branch's stock, with `stock_q` (search) and
+      `stock_page` (pagination).
+
+== Front-end surfaces ==
+
+These are not shortcodes and need no page setup — they hook onto WooCommerce
+templates and appear wherever those already render:
+
+* Branch selector — before the shop loop, shown until a branch is chosen.
+* Branch indicator bar ("Shopping at X · Change branch") — above every
+  WooCommerce template once a branch is selected.
+* Click & Collect availability panel — on the single product page, above the
+  add-to-cart button, for products that are in the per-branch stock model.
+* Collection type, nominated recipient, and (when no branch is selected yet)
+  the branch picker — on the checkout page.
+* Order tracker — under the order table in My Account → Orders.
+
+The admin side lives under the "IPN" menu in wp-admin and needs the
+`manage_woocommerce` capability.
+
 == Database ==
 
 All custom tables use the `ipn_` prefix (e.g. `wp_ipn_branches`, `wp_ipn_branch_stock`,
@@ -41,6 +110,29 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.7.0 =
+* Add: vendors now get a "Click & Collect" section inside Dokan's vendor
+  dashboard — their branches (add/edit/delete, opening hours, collection
+  settings), their staff (add/move/remove), per-branch stock
+  (add/update/remove), and their orders, filterable by branch. Everything is
+  restricted to that vendor's own branches.
+* Add: a "Make IPN Partner" checkbox on a vendor's user profile. Only vendors
+  flagged there appear on IPN → Partners or can be picked as a branch's
+  partner — a marketplace has far more vendors than pickup partners.
+* Add: the branch edit form now names the partner a branch belongs to
+  ("Selected Partner: …") and lets it be reassigned.
+* Add: branch staff can now add products to their branch and remove them, not
+  only edit the total of a row that already existed, and can keep their own
+  branch's opening hours up to date from a new Hours screen.
+* Add: branches and per-branch stock rows can be deleted. Both are guarded — a
+  branch with orders still in progress, or a product with units reserved
+  against an unfulfilled order, is refused rather than silently orphaned.
+* Change: the Add Vendor button and the activate/deactivate toggle added to
+  IPN → Partners in 0.6.0 are no longer shown. The underlying methods remain,
+  so they can be restored without a rebuild.
+* Change: all role scoping now runs through one place (IPN_Access), so a
+  vendor or staff member cannot reach another branch by editing a form field.
 
 = 0.6.0 =
 * Fix: the Branch column on Orders & Disputes was blank for every order —

@@ -97,6 +97,7 @@
 			// common case of adding another branch to an existing partner
 			// never shows a blank "select vendor" prompt.
 			vendorSelect.value = d.vendorId || ( defaultVendorId ? String( defaultVendorId ) : '' );
+			ipnSyncSelectedPartner();
 		}
 
 		var hoursByDay = {};
@@ -132,6 +133,33 @@
 
 		ipnOpenModal( 'ipn-branch-modal-scrim' );
 	}
+
+	/**
+	 * Mirrors the partner dropdown into a plain "Selected Partner: X" line, so
+	 * the branch you are editing states who it belongs to rather than making
+	 * you read it out of a <select>. Kept in sync on change, since the partner
+	 * can be reassigned from the same control.
+	 */
+	function ipnSyncSelectedPartner() {
+		var select = document.getElementById( 'bm-vendor' );
+		var wrap   = document.getElementById( 'bm-partner-current' );
+		var name   = document.getElementById( 'bm-partner-name' );
+
+		if ( ! select || ! wrap || ! name ) {
+			return;
+		}
+
+		var chosen = select.options[ select.selectedIndex ];
+
+		if ( select.value && chosen ) {
+			name.textContent = chosen.textContent.trim();
+			wrap.removeAttribute( 'hidden' );
+		} else {
+			name.textContent = '';
+			wrap.setAttribute( 'hidden', 'hidden' );
+		}
+	}
+	window.ipnSyncSelectedPartner = ipnSyncSelectedPartner;
 
 	/**
 	 * Greys out (and stops requiring) a day's open/close time inputs while
@@ -434,6 +462,11 @@
 	$( function () {
 		// Any button/link that only has a visual affordance so far shows a
 		// toast instead of silently doing nothing or faking a save.
+		var ipnPartnerSelect = document.getElementById( 'bm-vendor' );
+		if ( ipnPartnerSelect ) {
+			ipnPartnerSelect.addEventListener( 'change', ipnSyncSelectedPartner );
+		}
+
 		document.querySelectorAll( '[data-ipn-toast]' ).forEach( function ( el ) {
 			el.addEventListener( 'click', function ( e ) {
 				e.preventDefault();

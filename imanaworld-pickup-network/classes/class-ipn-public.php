@@ -18,6 +18,13 @@ class IPN_Public {
 			wp_enqueue_script( 'ipn-storefront', IPN_PLUGIN_URL . 'assets/js/storefront.js', array( 'jquery' ), IPN_VERSION, true );
 		}
 
+		// Dokan's vendor dashboard, where IPN adds its "Click & Collect"
+		// section. Guarded on the function existing so a site running IPN
+		// without Dokan's dashboard doesn't fatal here.
+		if ( function_exists( 'dokan_is_seller_dashboard' ) && dokan_is_seller_dashboard() ) {
+			wp_enqueue_style( 'ipn-vendor-dashboard', IPN_PLUGIN_URL . 'assets/css/vendor-dashboard.css', array(), IPN_VERSION );
+		}
+
 		if ( is_page() || is_singular() ) {
 			global $post;
 			if ( $post && has_shortcode( $post->post_content, 'ipn_staff_dashboard' ) ) {

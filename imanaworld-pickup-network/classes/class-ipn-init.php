@@ -27,6 +27,9 @@ class IPN_Init {
 		$admin = new IPN_Admin();
 		$admin->register_hooks( $this->loader );
 
+		$user_profile = new IPN_User_Profile();
+		$user_profile->register_hooks( $this->loader );
+
 		$public = new IPN_Public();
 		$public->register_hooks( $this->loader );
 
@@ -41,6 +44,9 @@ class IPN_Init {
 
 		$staff_dashboard = new IPN_Staff_Dashboard();
 		$staff_dashboard->register_hooks( $this->loader );
+
+		$vendor_dashboard = new IPN_Vendor_Dashboard();
+		$vendor_dashboard->register_hooks( $this->loader );
 
 		$notifications = new IPN_Notifications();
 		$notifications->register_hooks( $this->loader );

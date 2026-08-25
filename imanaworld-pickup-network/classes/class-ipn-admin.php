@@ -218,28 +218,26 @@ class IPN_Admin {
 	}
 
 	/**
-	 * Partners = Dokan vendor accounts. Alongside each partner's branches
-	 * and IPN mode, this screen now carries the vendor lifecycle controls
-	 * that previously only existed inside Dokan's own admin — approve a
-	 * pending signup, suspend or re-enable an existing partner, and create
-	 * a partner account outright (issue #15) — so onboarding and suspending
-	 * a C&C partner can be done in one place.
+	 * Partners = the Dokan vendor accounts an admin has explicitly flagged as
+	 * Click & Collect partners, via "Make IPN Partner" on the vendor's user
+	 * profile. A marketplace carries far more vendors than pickup partners,
+	 * so this screen deliberately shows only the flagged ones rather than
+	 * every seller account on the site.
 	 *
-	 * The list is searched and paged server-side: a real marketplace has far
-	 * more vendor accounts than the handful of C&C partners, and the old
-	 * unbounded get_users() rendered every one of them onto the page.
+	 * Vendor creation and the activate/deactivate toggle built for issue #15
+	 * are intentionally not surfaced here for now — IPN_Vendor still carries
+	 * those methods, so restoring them is a template change, not a rebuild.
 	 */
 	public function render_partners() {
-		$action_result = $this->maybe_handle_vendor_actions();
-
 		$per_page = 25;
 		$search   = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$page     = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		$query = IPN_Vendor::query( array(
-			'search'   => $search,
-			'per_page' => $per_page,
-			'page'     => $page,
+			'search'        => $search,
+			'partners_only' => true,
+			'per_page'      => $per_page,
+			'page'          => $page,
 		) );
 
 		$rows = array();
@@ -264,7 +262,6 @@ class IPN_Admin {
 			'search'        => $search,
 			'page'          => $page,
 			'per_page'      => $per_page,
-			'action_result' => $action_result,
 		) );
 	}
 
@@ -334,7 +331,7 @@ class IPN_Admin {
 		$this->maybe_handle_closure_actions();
 		$save_result = $this->maybe_handle_branch_save();
 
-		$vendors          = $this->get_dokan_vendors();
+		$vendors          = IPN_Vendor::get_partners();
 		$filter_vendor_id = isset( $_GET['vendor_id'] ) ? absint( $_GET['vendor_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$branches         = IPN_Branch::get_all( $filter_vendor_id ? array( 'vendor_id' => $filter_vendor_id ) : array() );
 

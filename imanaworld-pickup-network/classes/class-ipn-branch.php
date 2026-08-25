@@ -108,6 +108,85 @@ class IPN_Branch {
 		return $updated;
 	}
 
+	/**
+	 * Permanently removes a branch, along with its hours and closure dates.
+	 *
+	 * Refused while the branch still has orders that haven't reached a final
+	 * state: those orders point at this branch for their collection address,
+	 * their stock reservation, and their collection code, and deleting it
+	 * would leave a customer holding a code for somewhere that no longer
+	 * exists. Retiring a branch is what the Active toggle is for; delete is
+	 * for one created by mistake.
+	 *
+	 * @return true|WP_Error
+	 */
+	public static function delete( $branch_id ) {
+		global $wpdb;
+
+		$branch_id = (int) $branch_id;
+		$branch    = self::get( $branch_id );
+
+		if ( ! $branch ) {
+			return new WP_Error( 'ipn_branch_missing', __( 'That branch no longer exists.', 'ipn' ) );
+		}
+
+		$open_orders = self::count_open_orders( $branch_id );
+
+		if ( $open_orders ) {
+			return new WP_Error(
+				'ipn_branch_has_orders',
+				sprintf(
+					/* translators: %d: number of orders still in progress at this branch */
+					_n(
+						'This branch still has %d order that has not been collected or cancelled. Deactivate it instead, or finish that order first.',
+						'This branch still has %d orders that have not been collected or cancelled. Deactivate it instead, or finish those orders first.',
+						$open_orders,
+						'ipn'
+					),
+					$open_orders
+				)
+			);
+		}
+
+		$wpdb->delete( self::hours_table(), array( 'branch_id' => $branch_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+		$wpdb->delete( self::closures_table(), array( 'branch_id' => $branch_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+		$wpdb->delete( IPN_Branch_Stock::table(), array( 'branch_id' => $branch_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+		$wpdb->delete( self::table(), array( 'id' => $branch_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+
+		IPN_Audit_Log::log( 'branch_deleted', array(
+			'branch_id' => $branch_id,
+			'data'      => array( 'name' => $branch->name, 'code' => $branch->code ),
+		) );
+
+		return true;
+	}
+
+	/**
+	 * Orders at a branch that are still in flight — anything not collected,
+	 * cancelled, refunded, or expired. Read from ipn_order_meta joined to the
+	 * order's status, so it works the same on HPOS and legacy storage.
+	 */
+	public static function count_open_orders( $branch_id ) {
+		$order_ids = IPN_Order::get_order_ids( array( 'branch_id' => (int) $branch_id, 'limit' => 1000 ) );
+
+		if ( ! $order_ids ) {
+			return 0;
+		}
+
+		$finished = array( 'completed', 'cancelled', 'refunded', 'failed', 'ipn-expired' );
+		$open     = 0;
+
+		foreach ( $order_ids as $order_id ) {
+			$order = wc_get_order( $order_id );
+
+			if ( $order && ! in_array( $order->get_status(), $finished, true ) ) {
+				$open++;
+			}
+		}
+
+		return $open;
+	}
+
 	public static function set_status( $branch_id, $status, $reason = '' ) {
 		return self::update( $branch_id, array(
 			'status'          => $status,

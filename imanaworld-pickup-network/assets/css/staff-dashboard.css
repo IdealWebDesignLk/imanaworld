@@ -310,6 +310,64 @@
 .ipn-staff-dashboard .sticky-actions { flex-shrink: 0; padding: 12px 16px 16px; border-top: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
 
 /* ---------- stock ---------- */
+/* ---------- notices ---------- */
+.ipn-staff-dashboard .staff-notice {
+	border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 12.5px; line-height: 1.45;
+}
+.ipn-staff-dashboard .staff-notice--ok { background: var(--ready-bg); color: var(--ready); }
+.ipn-staff-dashboard .staff-notice--error { background: var(--danger-bg); color: var(--danger); }
+
+/* ---------- add a product to this branch ---------- */
+.ipn-staff-dashboard .stock-add {
+	border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 14px; background: var(--surface-sunken);
+}
+.ipn-staff-dashboard .stock-add__title { font-size: 12px; font-weight: 700; margin-bottom: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.ipn-staff-dashboard .stock-add__row { display: flex; align-items: center; gap: 8px; padding: 7px 0; flex-wrap: wrap; }
+.ipn-staff-dashboard .stock-add__row + .stock-add__row { border-top: 1px solid var(--line); }
+.ipn-staff-dashboard .stock-add__name { flex: 1 1 140px; font-size: 13px; }
+.ipn-staff-dashboard .stock-add__done { font-size: 11.5px; color: var(--faint); }
+.ipn-staff-dashboard .stock-add__form { display: flex; gap: 6px; align-items: center; margin: 0; }
+.ipn-staff-dashboard .stock-add__form input {
+	width: 72px; border: 1px solid var(--line-strong); border-radius: 8px; padding: 6px 8px; font-size: 13px;
+	background: var(--surface); color: var(--ink);
+}
+.ipn-staff-dashboard .stock-add__form button {
+	border: none; background: var(--brand-600); color: var(--on-brand); border-radius: 8px; padding: 7px 12px;
+	font-size: 12.5px; font-weight: 650; cursor: pointer;
+}
+
+/* ---------- remove a product from this branch ---------- */
+.ipn-staff-dashboard .stock-remove { margin: 6px 0 0; }
+.ipn-staff-dashboard .stock-remove button {
+	background: transparent; border: none; color: var(--danger); font-size: 11.5px; font-weight: 650;
+	cursor: pointer; padding: 2px 0; text-decoration: underline;
+}
+
+/* ---------- opening hours ---------- */
+.ipn-staff-dashboard .hours-now { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.ipn-staff-dashboard .hours-now__pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+.ipn-staff-dashboard .hours-now__pill.is-open { background: var(--ready-bg); color: var(--ready); }
+.ipn-staff-dashboard .hours-now__pill.is-closed { background: var(--danger-bg); color: var(--danger); }
+.ipn-staff-dashboard .hours-now__detail { font-size: 12.5px; color: var(--muted); }
+
+.ipn-staff-dashboard .hours-form { display: block; }
+.ipn-staff-dashboard .hours-row {
+	display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+	padding: 9px 0; border-bottom: 1px solid var(--line);
+}
+.ipn-staff-dashboard .hours-row__day { flex: 0 0 86px; font-size: 13px; font-weight: 650; }
+.ipn-staff-dashboard .hours-row__closed { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.ipn-staff-dashboard .hours-row__times { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+.ipn-staff-dashboard .hours-row__times input {
+	border: 1px solid var(--line-strong); border-radius: 8px; padding: 6px 7px; font-size: 12.5px;
+	background: var(--surface); color: var(--ink); width: 104px;
+}
+.ipn-staff-dashboard .hours-note { font-size: 12px; color: var(--faint); margin: 12px 0; line-height: 1.5; }
+.ipn-staff-dashboard .hours-save {
+	width: 100%; border: none; background: var(--brand-600); color: var(--on-brand);
+    border-radius: 11px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+
 .ipn-staff-dashboard .stock-search { padding: 12px 16px 4px; flex-shrink: 0; }
 .ipn-staff-dashboard .stock-search input {
 	width: 100%; border: 1px solid var(--line-strong); background: var(--surface-sunken); color: var(--ink);

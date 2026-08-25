@@ -229,6 +229,10 @@
    reading the Status column of every row. */
 .ipn-admin tr.ipn-order-row--new td:first-child { box-shadow: inset 3px 0 0 var(--new); }
 
+/* ---------- selected partner line (branch modal) ---------- */
+.ipn-admin .selected-partner { font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+.ipn-admin .selected-partner b { color: var(--ink); }
+
 /* ---------- inline row actions ---------- */
 .ipn-admin .row-actions-inline { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ipn-admin .row-actions-inline form { margin: 0; }

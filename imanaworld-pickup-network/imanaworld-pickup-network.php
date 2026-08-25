@@ -3,7 +3,7 @@
  * Plugin Name:       IMANAWORLD Pickup Network
  * Plugin URI:         https://imanaworld.com
  * Description:        Click & Collect fulfilment network for IMANAWORLD — per-branch inventory, branch staff order dashboard, OTP collection verification, and operational reporting on top of WooCommerce/Dokan. Pilot partner: Choppies.
- * Version:            0.6.0
+ * Version:            0.7.0
  * Requires PHP:       7.4
  * Requires Plugins:   woocommerce, dokan-lite
  * Author:             Ideal Web Design
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'IPN_VERSION', '0.6.0' );
+define( 'IPN_VERSION', '0.7.0' );
 define( 'IPN_DB_VERSION', '1.2.0' );
 define( 'IPN_PLUGIN_FILE', __FILE__ );
 define( 'IPN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -29,6 +29,7 @@ require_once IPN_PLUGIN_DIR . 'classes/class-ipn-roles.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-activator.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-deactivator.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-vendor.php';
+require_once IPN_PLUGIN_DIR . 'classes/class-ipn-access.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-branch.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-branch-stock.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-otp.php';
@@ -42,7 +43,9 @@ require_once IPN_PLUGIN_DIR . 'classes/class-ipn-storefront.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-checkout.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-my-account.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-staff-dashboard.php';
+require_once IPN_PLUGIN_DIR . 'classes/class-ipn-vendor-dashboard.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-admin.php';
+require_once IPN_PLUGIN_DIR . 'classes/class-ipn-user-profile.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-public.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-init.php';
 

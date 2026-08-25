@@ -33,7 +33,7 @@ class IPN_Staff_Dashboard {
 	 * There is no client-side router here (unlike the mockup this dashboard
 	 * is built from) — each screen is a full page render.
 	 */
-	const SCREENS = array( 'queue', 'detail', 'stock' );
+	const SCREENS = array( 'queue', 'detail', 'stock', 'hours' );
 
 	public function render() {
 		if ( ! is_user_logged_in() || ! IPN_Roles::is_branch_staff( get_current_user_id() ) ) {
@@ -68,8 +68,11 @@ class IPN_Staff_Dashboard {
 				break;
 
 			case 'stock':
+				$stock_result = null;
+
 				if ( $branch_id ) {
 					$this->maybe_handle_stock_adjust( $branch_id );
+					$stock_result = $this->maybe_handle_stock_row_actions( $branch_id );
 				}
 
 				// Searched and paged in SQL, same as the admin Stock screen —
@@ -89,7 +92,19 @@ class IPN_Staff_Dashboard {
 				$stock       = $branch_id ? IPN_Branch_Stock::query_products( $stock_args ) : array();
 				$stock_total = $branch_id ? IPN_Branch_Stock::count_products( $stock_args ) : 0;
 
+				// Only offered while searching: the branch's own vendor may
+				// have a catalogue far too large to list, and staff adding a
+				// line are always looking for a specific product.
+				$stock_addable = ( $branch_id && '' !== $stock_search ) ? $this->searchable_products( $branch_id, $stock_search ) : array();
+
 				include IPN_PLUGIN_DIR . 'templates/staff/stock.php';
+				break;
+
+			case 'hours':
+				$hours_result = $branch_id ? $this->maybe_handle_hours_save( $branch_id ) : null;
+				$hours        = $branch_id ? IPN_Branch::get_hours( $branch_id ) : array();
+
+				include IPN_PLUGIN_DIR . 'templates/staff/hours.php';
 				break;
 
 			default:
@@ -99,6 +114,141 @@ class IPN_Staff_Dashboard {
 		}
 
 		return ob_get_clean();
+	}
+
+	/**
+	 * Adding a product to this branch, or removing one from it — the two
+	 * stock actions the dashboard previously had no way to perform (it could
+	 * only edit the total of a row that already existed).
+	 *
+	 * Both are branch-scoped through IPN_Access rather than trusting the
+	 * branch the form posted, so a staff member cannot reach a second branch
+	 * by editing a hidden field.
+	 *
+	 * @return string|WP_Error|null
+	 */
+	protected function maybe_handle_stock_row_actions( $branch_id ) {
+		if ( empty( $_POST['ipn_staff_stock_action'] ) ) {
+			return null;
+		}
+
+		$action = sanitize_key( wp_unslash( $_POST['ipn_staff_stock_action'] ) );
+
+		if ( ! isset( $_POST['ipn_staff_stock_nonce'] )
+			|| ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ipn_staff_stock_nonce'] ) ), 'ipn_staff_stock_' . $action . '_' . $branch_id ) ) {
+			return null;
+		}
+
+		$branch = IPN_Access::require_branch( $branch_id );
+
+		if ( is_wp_error( $branch ) ) {
+			return $branch;
+		}
+
+		$product_id = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
+
+		if ( ! $product_id ) {
+			return new WP_Error( 'ipn_stock_invalid', __( 'No product was selected.', 'ipn' ) );
+		}
+
+		if ( 'delete' === $action ) {
+			$deleted = IPN_Branch_Stock::delete_row( $product_id, $branch->id );
+
+			return is_wp_error( $deleted ) ? $deleted : __( 'Product removed from this branch.', 'ipn' );
+		}
+
+		// Adding: the product must belong to this branch's own vendor.
+		if ( (int) get_post_field( 'post_author', $product_id ) !== (int) $branch->vendor_id ) {
+			return new WP_Error( 'ipn_stock_forbidden', __( 'That product does not belong to this store.', 'ipn' ) );
+		}
+
+		$total = isset( $_POST['total_stock'] ) ? absint( $_POST['total_stock'] ) : 0;
+
+		IPN_Branch_Stock::set_total( $product_id, $branch->id, $total );
+
+		IPN_Audit_Log::log( 'stock_adjusted', array(
+			'branch_id' => $branch->id,
+			'data'      => array( 'product_id' => $product_id, 'new_total' => $total ),
+		) );
+
+		return __( 'Product added to this branch.', 'ipn' );
+	}
+
+	/**
+	 * This branch's vendor's products matching a search, flagged with whether
+	 * the branch already stocks them.
+	 *
+	 * @return object[]
+	 */
+	protected function searchable_products( $branch_id, $search ) {
+		$branch = IPN_Branch::get( $branch_id );
+
+		if ( ! $branch ) {
+			return array();
+		}
+
+		$products = get_posts( array(
+			'post_type'      => 'product',
+			'post_status'    => array( 'publish', 'draft', 'private' ),
+			'author'         => (int) $branch->vendor_id,
+			's'              => $search,
+			'posts_per_page' => 15,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+		) );
+
+		$rows = array();
+
+		foreach ( $products as $product ) {
+			$rows[] = (object) array(
+				'product_id' => (int) $product->ID,
+				'name'       => $product->post_title,
+				'stocked'    => (bool) IPN_Branch_Stock::get_row( $product->ID, $branch_id ),
+			);
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * Saves this branch's weekly operating hours from the staff dashboard.
+	 * Hours are the one branch setting the people actually standing in the
+	 * shop are best placed to keep accurate — everything else about a branch
+	 * stays with the vendor and the admin.
+	 *
+	 * @return string|WP_Error|null
+	 */
+	protected function maybe_handle_hours_save( $branch_id ) {
+		if ( empty( $_POST['ipn_staff_save_hours'] ) ) {
+			return null;
+		}
+
+		if ( ! isset( $_POST['ipn_staff_hours_nonce'] )
+			|| ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ipn_staff_hours_nonce'] ) ), 'ipn_staff_save_hours_' . $branch_id ) ) {
+			return null;
+		}
+
+		$branch = IPN_Access::require_branch( $branch_id );
+
+		if ( is_wp_error( $branch ) ) {
+			return $branch;
+		}
+
+		$days = array();
+
+		for ( $day = 0; $day <= 6; $day++ ) {
+			$days[ $day ] = array(
+				'is_closed'  => ! empty( $_POST[ 'hours_closed_' . $day ] ),
+				'open_time'  => isset( $_POST[ 'hours_open_' . $day ] ) ? sanitize_text_field( wp_unslash( $_POST[ 'hours_open_' . $day ] ) ) : '',
+				'close_time' => isset( $_POST[ 'hours_close_' . $day ] ) ? sanitize_text_field( wp_unslash( $_POST[ 'hours_close_' . $day ] ) ) : '',
+			);
+		}
+
+		IPN_Branch::set_hours( $branch->id, $days );
+
+		IPN_Audit_Log::log( 'branch_hours_updated', array( 'branch_id' => $branch->id ) );
+
+		return __( 'Opening hours updated.', 'ipn' );
 	}
 
 	/**

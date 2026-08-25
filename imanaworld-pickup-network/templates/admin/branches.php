@@ -24,6 +24,23 @@ $ipn_days = array(
  * Summarises a branch's weekly opening hours from ipn_branch_hours into a
  * single readable string for the table — real data, not a mock.
  */
+/**
+ * Display name for a branch's partner. Falls back to the raw account when the
+ * vendor is no longer flagged as a partner (or has been deleted), so an
+ * existing branch never silently loses the label of who it belongs to.
+ */
+$ipn_partner_name = function ( $vendor_id ) use ( $vendors ) {
+	foreach ( $vendors as $ipn_v ) {
+		if ( (int) $ipn_v->ID === (int) $vendor_id ) {
+			return $ipn_v->display_name;
+		}
+	}
+
+	$ipn_user = get_userdata( $vendor_id );
+
+	return $ipn_user ? $ipn_user->display_name : '';
+};
+
 $ipn_branch_hours_summary = function ( $branch_id ) {
 	$hours = IPN_Branch::get_hours( $branch_id );
 
@@ -77,7 +94,15 @@ $ipn_branch_hours_summary = function ( $branch_id ) {
 			<?php endif; ?>
 		</div>
 		<?php if ( empty( $vendors ) ) : ?>
-			<span class="hint"><?php esc_html_e( 'No Dokan vendor accounts found — create the partner\'s vendor account first.', 'ipn' ); ?></span>
+			<span class="hint">
+				<?php
+				printf(
+					/* translators: %s: link to the WordPress users list */
+					wp_kses_post( __( 'No IPN partners yet. Tick "Make IPN Partner" on a vendor profile under %s first.', 'ipn' ) ),
+					'<a href="' . esc_url( admin_url( 'users.php' ) ) . '">' . esc_html__( 'Users', 'ipn' ) . '</a>'
+				);
+				?>
+			</span>
 		<?php else : ?>
 			<button type="button" class="btn btn-primary" onclick="ipnOpenBranchModal(null, <?php echo (int) $default_vendor_id; ?>)">
 				<?php esc_html_e( '+ Add branch', 'ipn' ); ?>
@@ -154,6 +179,7 @@ $ipn_branch_hours_summary = function ( $branch_id ) {
 									data-name="<?php echo esc_attr( $branch->name ); ?>"
 									data-code="<?php echo esc_attr( $branch->code ); ?>"
 									data-vendor-id="<?php echo esc_attr( $branch->vendor_id ); ?>"
+									data-vendor-name="<?php echo esc_attr( $ipn_partner_name( $branch->vendor_id ) ); ?>"
 									data-address="<?php echo esc_attr( $branch->address ); ?>"
 									data-phone="<?php echo esc_attr( $branch->phone ); ?>"
 									data-email="<?php echo esc_attr( $branch->email ); ?>"
@@ -213,14 +239,18 @@ $ipn_branch_hours_summary = function ( $branch_id ) {
 					</div>
 				</div>
 				<div class="field">
-					<label for="bm-vendor"><?php esc_html_e( 'Partner (Dokan vendor account)', 'ipn' ); ?></label>
+					<label for="bm-vendor"><?php esc_html_e( 'Select partner', 'ipn' ); ?></label>
+					<div class="selected-partner" id="bm-partner-current" hidden="hidden">
+						<?php esc_html_e( 'Selected Partner:', 'ipn' ); ?>
+						<b id="bm-partner-name"></b>
+					</div>
 					<select id="bm-vendor" name="vendor_id" required="required">
 						<option value=""><?php esc_html_e( '— Select partner —', 'ipn' ); ?></option>
 						<?php foreach ( $vendors as $vendor ) : ?>
 							<option value="<?php echo esc_attr( $vendor->ID ); ?>"><?php echo esc_html( $vendor->display_name ); ?></option>
 						<?php endforeach; ?>
 					</select>
-					<div class="hint"><?php esc_html_e( 'One Dokan vendor account per partner (e.g. Choppies) — every branch belonging to the same partner should use the same one. This is pre-filled when adding another branch to a partner that already has one.', 'ipn' ); ?></div>
+					<div class="hint"><?php esc_html_e( 'Only vendors flagged "Make IPN Partner" on their user profile appear here. Every branch of the same partner uses the same account; you can change the partner if a branch was filed under the wrong one.', 'ipn' ); ?></div>
 				</div>
 				<div class="field">
 					<label for="bm-address"><?php esc_html_e( 'Address', 'ipn' ); ?></label>

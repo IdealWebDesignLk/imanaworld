@@ -24,15 +24,17 @@ class IPN_Vendor {
 	const SELLING_META   = 'dokan_enable_selling';
 	const PROFILE_META   = 'dokan_profile_settings';
 	const DISABLED_MARKER = 'ipn_vendor_disabled_at';
+	const PARTNER_META   = '_ipn_is_partner';
 
 	/**
 	 * One page of vendor accounts, newest registrations last (Dokan's own
 	 * admin orders by display name, and so does the branch dropdown).
 	 *
 	 * @param array $args {
-	 *     @type string $search   Matches display name, login, or email.
+	 *     @type string $search        Matches display name, login, or email.
+	 *     @type bool   $partners_only Restrict to vendors flagged as C&C partners.
 	 *     @type int    $per_page
-	 *     @type int    $page     1-based.
+	 *     @type int    $page          1-based.
 	 * }
 	 * @return array { @type WP_User[] $vendors, @type int $total }
 	 */
@@ -58,6 +60,11 @@ class IPN_Vendor {
 			$query_args['search_columns'] = array( 'user_login', 'user_email', 'user_nicename', 'display_name' );
 		}
 
+		if ( ! empty( $args['partners_only'] ) ) {
+			$query_args['meta_key']   = self::PARTNER_META; // phpcs:ignore WordPress.DB.SlowDBQuery
+			$query_args['meta_value'] = 1; // phpcs:ignore WordPress.DB.SlowDBQuery
+		}
+
 		$query = new WP_User_Query( $query_args );
 
 		return array(
@@ -75,6 +82,61 @@ class IPN_Vendor {
 			'role'    => self::ROLE,
 			'orderby' => 'display_name',
 			'fields'  => array( 'ID', 'display_name' ),
+		) );
+	}
+
+	/**
+	 * Whether a vendor has been marked as a Click & Collect partner.
+	 *
+	 * Being a Dokan vendor and being an IPN partner are deliberately not the
+	 * same thing: a marketplace has far more vendors than it has C&C partners,
+	 * and only the handful an admin explicitly opts in should show up on the
+	 * IPN Partners screen or be selectable when creating a branch. The flag is
+	 * set from the vendor's own user profile in wp-admin.
+	 */
+	public static function is_partner( $user_id ) {
+		return (bool) get_user_meta( (int) $user_id, self::PARTNER_META, true );
+	}
+
+	/**
+	 * @return true|WP_Error
+	 */
+	public static function set_partner( $user_id, $is_partner ) {
+		$user = get_userdata( $user_id );
+
+		if ( ! $user || ! in_array( self::ROLE, (array) $user->roles, true ) ) {
+			return new WP_Error( 'ipn_vendor_not_found', __( 'That vendor account no longer exists.', 'ipn' ) );
+		}
+
+		if ( $is_partner ) {
+			update_user_meta( (int) $user_id, self::PARTNER_META, 1 );
+		} else {
+			delete_user_meta( (int) $user_id, self::PARTNER_META );
+		}
+
+		IPN_Audit_Log::log( $is_partner ? 'partner_enabled' : 'partner_disabled', array(
+			'data' => array(
+				'vendor_id' => (int) $user_id,
+				'vendor'    => $user->display_name,
+			),
+		) );
+
+		return true;
+	}
+
+	/**
+	 * Every vendor flagged as a C&C partner. Used for the branch screen's
+	 * "Select partner" control, which must never offer a vendor that isn't
+	 * actually part of the pickup network.
+	 *
+	 * @return WP_User[]
+	 */
+	public static function get_partners() {
+		return get_users( array(
+			'role'       => self::ROLE,
+			'orderby'    => 'display_name',
+			'meta_key'   => self::PARTNER_META, // phpcs:ignore WordPress.DB.SlowDBQuery
+			'meta_value' => 1, // phpcs:ignore WordPress.DB.SlowDBQuery
 		) );
 	}
 

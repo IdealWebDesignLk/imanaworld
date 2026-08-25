@@ -1,0 +1,239 @@
+/**
+ * "Click & Collect" section inside Dokan's vendor dashboard.
+ *
+ * Everything is scoped under .ipn-vd so it cannot leak into the rest of the
+ * dashboard, and the palette is expressed as custom properties on that root
+ * rather than the :root variables the storefront uses — the vendor dashboard
+ * is Dokan's page, and IPN is a guest on it.
+ */
+
+.ipn-vd {
+	--ipn-vd-ink: #1c1b18;
+	--ipn-vd-muted: #6b6b63;
+	--ipn-vd-faint: #9a988e;
+	--ipn-vd-line: #e1dfd7;
+	--ipn-vd-line-strong: #cfcdc2;
+	--ipn-vd-surface: #ffffff;
+	--ipn-vd-sunken: #f6f5f0;
+	--ipn-vd-brand: #2e7d32;
+	--ipn-vd-brand-dark: #1b5e20;
+	--ipn-vd-brand-soft: #e8f5e9;
+	--ipn-vd-danger: #b3261e;
+	--ipn-vd-danger-soft: #fbeae9;
+	--ipn-vd-warn: #a8530a;
+	--ipn-vd-warn-soft: #fbeee0;
+	--ipn-vd-info: #1565c0;
+	--ipn-vd-info-soft: #e8f0fb;
+	--ipn-vd-radius: 10px;
+
+	color: var( --ipn-vd-ink );
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.ipn-vd *,
+.ipn-vd *::before,
+.ipn-vd *::after { box-sizing: border-box; }
+
+.ipn-vd__head { margin-bottom: 16px; }
+.ipn-vd__title { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+.ipn-vd__sub { color: var( --ipn-vd-muted ); margin: 0; font-size: 13.5px; }
+
+/* ---------- notices ---------- */
+.ipn-vd__notice {
+	border-radius: var( --ipn-vd-radius );
+	padding: 11px 14px;
+	margin-bottom: 16px;
+	font-size: 13.5px;
+	border: 1px solid transparent;
+}
+.ipn-vd__notice--ok { background: var( --ipn-vd-brand-soft ); color: var( --ipn-vd-brand-dark ); border-color: #cde8cf; }
+.ipn-vd__notice--error { background: var( --ipn-vd-danger-soft ); color: var( --ipn-vd-danger ); border-color: #f2cfcd; }
+
+/* ---------- tabs ---------- */
+.ipn-vd__tabs {
+	display: flex;
+	gap: 4px;
+	flex-wrap: wrap;
+	border-bottom: 1px solid var( --ipn-vd-line );
+	margin-bottom: 18px;
+}
+.ipn-vd__tab {
+	padding: 9px 14px;
+	font-size: 13.5px;
+	font-weight: 600;
+	color: var( --ipn-vd-muted );
+	text-decoration: none;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -1px;
+}
+.ipn-vd__tab:hover { color: var( --ipn-vd-ink ); }
+.ipn-vd__tab.is-active { color: var( --ipn-vd-brand-dark ); border-bottom-color: var( --ipn-vd-brand ); }
+
+/* ---------- bars, panels, empties ---------- */
+.ipn-vd__bar {
+	display: flex;
+	align-items: flex-end;
+	gap: 12px;
+	flex-wrap: wrap;
+	margin-bottom: 14px;
+}
+.ipn-vd__count { font-size: 13px; color: var( --ipn-vd-muted ); margin-left: auto; }
+.ipn-vd__panel {
+	border: 1px solid var( --ipn-vd-line );
+	border-radius: var( --ipn-vd-radius );
+	padding: 14px 16px;
+	margin-bottom: 18px;
+	background: var( --ipn-vd-sunken );
+}
+.ipn-vd__empty {
+	border: 1px dashed var( --ipn-vd-line-strong );
+	border-radius: var( --ipn-vd-radius );
+	padding: 28px 20px;
+	text-align: center;
+	color: var( --ipn-vd-muted );
+}
+.ipn-vd__empty p { margin: 0 0 10px; }
+.ipn-vd__hint { font-size: 12.5px; color: var( --ipn-vd-faint ); margin-top: 10px; }
+.ipn-vd__muted { font-size: 12.5px; color: var( --ipn-vd-muted ); }
+
+/* ---------- tables ---------- */
+.ipn-vd__table-wrap {
+	overflow-x: auto;
+	border: 1px solid var( --ipn-vd-line );
+	border-radius: var( --ipn-vd-radius );
+	background: var( --ipn-vd-surface );
+}
+.ipn-vd__table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.ipn-vd__table th {
+	text-align: left;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: .05em;
+	color: var( --ipn-vd-muted );
+	background: var( --ipn-vd-sunken );
+	padding: 9px 12px;
+	border-bottom: 1px solid var( --ipn-vd-line );
+	white-space: nowrap;
+}
+.ipn-vd__table td { padding: 10px 12px; border-bottom: 1px solid var( --ipn-vd-line ); vertical-align: middle; }
+.ipn-vd__table tr:last-child td { border-bottom: none; }
+.ipn-vd__num { text-align: right; font-variant-numeric: tabular-nums; }
+.ipn-vd__actions { white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.ipn-vd__actions form { margin: 0; }
+
+/* ---------- pills ---------- */
+.ipn-vd__pill {
+	display: inline-block;
+	font-size: 10.5px;
+	font-weight: 700;
+	padding: 3px 8px;
+	border-radius: 20px;
+	white-space: nowrap;
+	background: #eeede6;
+	color: var( --ipn-vd-muted );
+}
+.ipn-vd__pill.is-on { background: var( --ipn-vd-brand-soft ); color: var( --ipn-vd-brand-dark ); }
+.ipn-vd__pill.is-off { background: var( --ipn-vd-danger-soft ); color: var( --ipn-vd-danger ); }
+.ipn-vd__pill.is-express { background: #f2e7f8; color: #6a1b9a; }
+.ipn-vd__pill.is-status-new,
+.ipn-vd__pill.is-status-accepted { background: var( --ipn-vd-info-soft ); color: var( --ipn-vd-info ); }
+.ipn-vd__pill.is-status-preparing { background: var( --ipn-vd-warn-soft ); color: var( --ipn-vd-warn ); }
+.ipn-vd__pill.is-status-ready { background: var( --ipn-vd-brand-soft ); color: var( --ipn-vd-brand-dark ); }
+.ipn-vd__pill.is-status-disputed,
+.ipn-vd__pill.is-status-expired { background: var( --ipn-vd-danger-soft ); color: var( --ipn-vd-danger ); }
+
+/* ---------- buttons ---------- */
+.ipn-vd__btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	border: 1px solid var( --ipn-vd-line-strong );
+	background: var( --ipn-vd-surface );
+	color: var( --ipn-vd-muted );
+	border-radius: 8px;
+	padding: 7px 12px;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	text-decoration: none;
+	white-space: nowrap;
+}
+.ipn-vd__btn:hover { background: var( --ipn-vd-sunken ); color: var( --ipn-vd-ink ); }
+.ipn-vd__btn--primary { background: var( --ipn-vd-brand ); border-color: var( --ipn-vd-brand ); color: #fff; }
+.ipn-vd__btn--primary:hover { background: var( --ipn-vd-brand-dark ); border-color: var( --ipn-vd-brand-dark ); color: #fff; }
+.ipn-vd__btn--danger { color: var( --ipn-vd-danger ); border-color: #f2cfcd; }
+.ipn-vd__btn--danger:hover { background: var( --ipn-vd-danger-soft ); color: var( --ipn-vd-danger ); }
+
+/* ---------- forms ---------- */
+.ipn-vd__form {
+	border: 1px solid var( --ipn-vd-line );
+	border-radius: var( --ipn-vd-radius );
+	padding: 18px;
+	margin-top: 18px;
+	background: var( --ipn-vd-surface );
+}
+.ipn-vd__form-title { font-size: 16px; font-weight: 700; margin: 0 0 14px; }
+.ipn-vd__form-sub { font-size: 13px; font-weight: 700; margin: 18px 0 10px; color: var( --ipn-vd-muted ); text-transform: uppercase; letter-spacing: .04em; }
+.ipn-vd__form-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+.ipn-vd__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 700px) { .ipn-vd__grid { grid-template-columns: 1fr; } }
+.ipn-vd__field--wide { grid-column: 1 / -1; }
+
+.ipn-vd__field { display: flex; flex-direction: column; gap: 5px; }
+.ipn-vd__field > span { font-size: 12.5px; font-weight: 600; color: var( --ipn-vd-muted ); }
+.ipn-vd__field small { font-size: 11.5px; color: var( --ipn-vd-faint ); }
+.ipn-vd__field input[type="text"],
+.ipn-vd__field input[type="email"],
+.ipn-vd__field input[type="number"],
+.ipn-vd__field input[type="time"],
+.ipn-vd__field select {
+	border: 1px solid var( --ipn-vd-line-strong );
+	border-radius: 8px;
+	padding: 8px 10px;
+	font-size: 13.5px;
+	background: var( --ipn-vd-surface );
+	color: var( --ipn-vd-ink );
+	width: 100%;
+}
+.ipn-vd__field--check { flex-direction: row; align-items: center; gap: 8px; }
+.ipn-vd__field--check input { width: auto; }
+.ipn-vd__field--inline { flex-direction: row; align-items: center; gap: 8px; }
+.ipn-vd__field--inline > span { white-space: nowrap; }
+
+.ipn-vd__inline-form { display: flex; align-items: center; gap: 6px; margin: 0; }
+.ipn-vd__inline-form select,
+.ipn-vd__qty {
+	border: 1px solid var( --ipn-vd-line-strong );
+	border-radius: 8px;
+	padding: 6px 8px;
+	font-size: 13px;
+}
+.ipn-vd__qty { width: 82px; }
+
+/* ---------- hours editor ---------- */
+.ipn-vd__hours { border: 1px solid var( --ipn-vd-line ); border-radius: var( --ipn-vd-radius ); overflow: hidden; }
+.ipn-vd__hours-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	padding: 8px 12px;
+	background: var( --ipn-vd-sunken );
+}
+.ipn-vd__hours-row + .ipn-vd__hours-row { border-top: 1px solid var( --ipn-vd-line ); }
+.ipn-vd__hours-day { flex: 0 0 90px; font-size: 13px; font-weight: 600; }
+.ipn-vd__hours-closed { display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: var( --ipn-vd-muted ); white-space: nowrap; }
+.ipn-vd__hours-row input[type="time"] {
+	border: 1px solid var( --ipn-vd-line-strong );
+	border-radius: 7px;
+	padding: 5px 7px;
+	font-size: 12.5px;
+	background: var( --ipn-vd-surface );
+	width: 110px;
+}
+.ipn-vd__hours-sep { color: var( --ipn-vd-faint ); }
+
+/* ---------- pager ---------- */
+.ipn-vd__pager { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 12px; }
