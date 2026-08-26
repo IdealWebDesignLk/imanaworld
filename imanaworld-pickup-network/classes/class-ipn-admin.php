@@ -208,7 +208,14 @@ class IPN_Admin {
 		wp_enqueue_script( 'ipn-admin', IPN_PLUGIN_URL . 'assets/js/admin.js', array( 'jquery' ), IPN_VERSION, true );
 	}
 
+	/**
+	 * Every IPN screen is rendered through here, so the partner context bar
+	 * goes in one place rather than being pasted into eleven templates and
+	 * forgotten in the twelfth.
+	 */
 	protected function view( $template, array $vars = array() ) {
+		include IPN_PLUGIN_DIR . 'templates/admin/partials/partner-bar.php';
+
 		extract( $vars ); // phpcs:ignore WordPress.PHP.DontExtract
 		include IPN_PLUGIN_DIR . 'templates/admin/' . $template . '.php';
 	}
@@ -331,8 +338,11 @@ class IPN_Admin {
 		$this->maybe_handle_closure_actions();
 		$save_result = $this->maybe_handle_branch_save();
 
-		$vendors          = IPN_Vendor::get_partners();
-		$filter_vendor_id = isset( $_GET['vendor_id'] ) ? absint( $_GET['vendor_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$vendors = IPN_Vendor::get_partners();
+
+		// An explicit ?vendor_id= still wins (the Partners screen links that
+		// way), but otherwise the partner in context decides what is listed.
+		$filter_vendor_id = isset( $_GET['vendor_id'] ) ? absint( $_GET['vendor_id'] ) : IPN_Admin_Context::get_partner_id(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$branches         = IPN_Branch::get_all( $filter_vendor_id ? array( 'vendor_id' => $filter_vendor_id ) : array() );
 
 		$default_vendor_id = $filter_vendor_id;
@@ -477,7 +487,7 @@ class IPN_Admin {
 		$result = $this->maybe_handle_staff_branch_assign();
 
 		$this->view( 'staff', array(
-			'branches'      => IPN_Branch::get_all(),
+			'branches'      => IPN_Admin_Context::branches(),
 			'assign_result' => $result,
 		) );
 	}
@@ -521,17 +531,23 @@ class IPN_Admin {
 		$search    = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$page      = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
+		// A branch_id left over in a bookmark must not reach across partners.
+		if ( $branch_id && ! IPN_Admin_Context::is_branch_in_scope( $branch_id ) ) {
+			$branch_id = 0;
+		}
+
 		$query_args = array(
-			'branch_id' => $branch_id,
-			'search'    => $search,
-			'per_page'  => $per_page,
-			'page'      => $page,
+			'branch_id'  => $branch_id,
+			'branch_ids' => $branch_id ? array() : IPN_Admin_Context::branch_ids(),
+			'search'     => $search,
+			'per_page'   => $per_page,
+			'page'       => $page,
 		);
 
 		$products = IPN_Branch_Stock::query_products( $query_args );
 
 		$this->view( 'stock', array(
-			'branches'         => IPN_Branch::get_all(),
+			'branches'         => IPN_Admin_Context::branches(),
 			'stock_products'   => $products,
 			'stock_breakdown'  => IPN_Branch_Stock::get_branch_breakdown( wp_list_pluck( $products, 'product_id' ), $branch_id ),
 			'total_products'   => IPN_Branch_Stock::count_products( $query_args ),
@@ -675,7 +691,12 @@ class IPN_Admin {
 	 */
 	public function render_orders() {
 		$branch_id = isset( $_GET['branch_id'] ) ? absint( $_GET['branch_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$orders    = $this->get_all_ipn_orders( 200, $branch_id );
+
+		if ( $branch_id && ! IPN_Admin_Context::is_branch_in_scope( $branch_id ) ) {
+			$branch_id = 0;
+		}
+
+		$orders = $this->get_all_ipn_orders( 200, $branch_id );
 
 		$counts = array();
 		foreach ( $orders as $order ) {
@@ -684,7 +705,7 @@ class IPN_Admin {
 
 		$this->view( 'orders', array(
 			'orders'           => $orders,
-			'branches'         => IPN_Branch::get_all(),
+			'branches'         => IPN_Admin_Context::branches(),
 			'filter_branch_id' => $branch_id,
 			'status_counts'    => $counts,
 		) );
@@ -717,9 +738,12 @@ class IPN_Admin {
 		// Click & Collect orders and which branch each belongs to, so it
 		// leads here — it also survives HPOS, where the mirrored order meta
 		// this used to rely on exclusively may not be queryable the same way.
+		$scope = IPN_Admin_Context::branch_ids();
+
 		$order_ids = IPN_Order::get_order_ids( array(
-			'limit'     => $limit,
-			'branch_id' => $branch_id,
+			'limit'      => $limit,
+			'branch_id'  => $branch_id,
+			'branch_ids' => $branch_id ? array() : $scope,
 		) );
 
 		// Anything carrying only the mirrored _ipn_branch_id order meta (an
@@ -752,6 +776,12 @@ class IPN_Admin {
 			}
 
 			if ( $branch_id && (int) $row->branch_id !== (int) $branch_id ) {
+				continue;
+			}
+
+			// The mirrored-meta fallback is not partner-aware on its own, so
+			// anything it drags in from another partner is dropped here.
+			if ( ! $branch_id && $scope && ! in_array( (int) $row->branch_id, $scope, true ) ) {
 				continue;
 			}
 
@@ -907,7 +937,12 @@ class IPN_Admin {
 
 			$meta   = IPN_Order::get_meta( $row->order_id );
 			$branch = ( $meta && $meta->branch_id ) ? IPN_Branch::get( $meta->branch_id ) : null;
-			$name   = trim( $order->get_formatted_billing_full_name() );
+
+			if ( $branch && ! IPN_Admin_Context::is_branch_in_scope( $branch->id ) ) {
+				continue;
+			}
+
+			$name = trim( $order->get_formatted_billing_full_name() );
 
 			$digest[] = (object) array(
 				'order_number'  => $order->get_order_number(),
@@ -925,8 +960,8 @@ class IPN_Admin {
 
 	public function render_audit_log() {
 		$this->view( 'audit-log', array(
-			'entries'  => IPN_Audit_Log::query(),
-			'branches' => IPN_Branch::get_all(),
+			'entries'  => IPN_Audit_Log::query( array( 'branch_ids' => IPN_Admin_Context::branch_ids() ) ),
+			'branches' => IPN_Admin_Context::branches(),
 		) );
 	}
 
@@ -943,6 +978,10 @@ class IPN_Admin {
 		$range     = isset( $_GET['range'] ) ? sanitize_key( wp_unslash( $_GET['range'] ) ) : '7'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$range     = in_array( $range, array( '7', '30', '90' ), true ) ? $range : '7';
 		$branch_id = isset( $_GET['branch_id'] ) ? absint( $_GET['branch_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( $branch_id && ! IPN_Admin_Context::is_branch_in_scope( $branch_id ) ) {
+			$branch_id = 0;
+		}
 
 		return array(
 			'range'     => $range,

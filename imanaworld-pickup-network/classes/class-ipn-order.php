@@ -263,7 +263,7 @@ class IPN_Order {
 	public static function get_order_ids( array $args = array() ) {
 		global $wpdb;
 
-		$args   = wp_parse_args( $args, array( 'branch_id' => 0, 'limit' => 200 ) );
+		$args   = wp_parse_args( $args, array( 'branch_id' => 0, 'branch_ids' => array(), 'limit' => 200 ) );
 		$table  = self::table();
 
 		// A row with branch_id 0 is not a Click & Collect order — it is a row
@@ -276,6 +276,11 @@ class IPN_Order {
 		if ( ! empty( $args['branch_id'] ) ) {
 			$where[]  = 'branch_id = %d';
 			$params[] = (int) $args['branch_id'];
+		} elseif ( ! empty( $args['branch_ids'] ) ) {
+			$ids          = array_map( 'intval', (array) $args['branch_ids'] );
+			$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
+			$where[]      = "branch_id IN ( {$placeholders} )";
+			$params       = array_merge( $params, $ids );
 		}
 
 		$params[] = max( 1, (int) $args['limit'] );

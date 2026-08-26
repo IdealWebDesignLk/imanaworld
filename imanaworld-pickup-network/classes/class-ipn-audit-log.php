@@ -49,6 +49,14 @@ class IPN_Audit_Log {
 		if ( ! empty( $args['branch_id'] ) ) {
 			$where[]  = 'branch_id = %d';
 			$params[] = (int) $args['branch_id'];
+		} elseif ( ! empty( $args['branch_ids'] ) ) {
+			// Scoped to a partner. Entries with no branch at all (a vendor
+			// being flagged, say) are kept, because they are network-level
+			// events an admin still needs to see.
+			$ids          = array_map( 'intval', (array) $args['branch_ids'] );
+			$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
+			$where[]      = "( branch_id IN ( {$placeholders} ) OR branch_id IS NULL )";
+			$params       = array_merge( $params, $ids );
 		}
 
 		if ( ! empty( $args['event_type'] ) ) {

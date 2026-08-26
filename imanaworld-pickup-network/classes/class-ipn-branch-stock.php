@@ -204,6 +204,13 @@ class IPN_Branch_Stock {
 		if ( ! empty( $args['branch_id'] ) ) {
 			$where[]  = 's.branch_id = %d';
 			$params[] = (int) $args['branch_id'];
+		} elseif ( ! empty( $args['branch_ids'] ) ) {
+			// Scoping to a partner rather than a single branch: restrict to
+			// that partner's branches instead of showing the whole network.
+			$ids          = array_map( 'intval', (array) $args['branch_ids'] );
+			$placeholders = implode( ', ', array_fill( 0, count( $ids ), '%d' ) );
+			$where[]      = "s.branch_id IN ( {$placeholders} )";
+			$params       = array_merge( $params, $ids );
 		}
 
 		if ( ! empty( $args['search'] ) ) {
@@ -226,8 +233,10 @@ class IPN_Branch_Stock {
 	 * and paging all happen in SQL here instead.
 	 *
 	 * @param array $args {
-	 *     @type int    $branch_id Restrict to one branch (0 = all branches).
-	 *     @type string $search    Product-title substring.
+	 *     @type int    $branch_id  Restrict to one branch (0 = all branches).
+	 *     @type int[]  $branch_ids Restrict to a set of branches, used when a
+	 *                              partner is selected but no single branch is.
+	 *     @type string $search     Product-title substring.
 	 *     @type int    $per_page
 	 *     @type int    $page      1-based.
 	 * }

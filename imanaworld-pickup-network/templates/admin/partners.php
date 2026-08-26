@@ -91,9 +91,13 @@ $ipn_page_url = function ( $page_number ) use ( $search ) {
 				</thead>
 				<tbody>
 					<?php foreach ( $partners as $partner ) : ?>
+						<?php $ipn_is_current = ( (int) $partner->vendor_id === (int) IPN_Admin_Context::get_partner_id() ); ?>
 						<tr>
 							<td>
 								<b><?php echo esc_html( $partner->store_name ? $partner->store_name : $partner->display_name ); ?></b>
+								<?php if ( $ipn_is_current ) : ?>
+									<span class="chip chip-active"><span class="chip-dot"></span><?php esc_html_e( 'Selected', 'ipn' ); ?></span>
+								<?php endif; ?>
 								<div class="hint"><?php echo esc_html( $partner->email ); ?></div>
 							</td>
 							<td>
@@ -106,6 +110,11 @@ $ipn_page_url = function ( $page_number ) use ( $search ) {
 							<td><?php echo esc_html( number_format_i18n( $partner->branch_count ) ); ?></td>
 							<td>
 								<div class="row-actions-inline">
+									<?php if ( ! $ipn_is_current ) : ?>
+										<a class="btn btn-primary btn-sm" href="<?php echo esc_url( IPN_Admin_Context::switch_url( $partner->vendor_id ) ); ?>">
+											<?php esc_html_e( 'Work on this partner', 'ipn' ); ?>
+										</a>
+									<?php endif; ?>
 									<a class="btn btn-ghost btn-sm" href="<?php echo esc_url( admin_url( 'admin.php?page=ipn-branches&vendor_id=' . $partner->vendor_id ) ); ?>">
 										<?php echo $partner->branch_count > 0 ? esc_html__( 'Manage branches', 'ipn' ) : esc_html__( 'Add first branch', 'ipn' ); ?>
 									</a>
@@ -141,6 +150,9 @@ $ipn_page_url = function ( $page_number ) use ( $search ) {
 			</div>
 		<?php endif; ?>
 
+		<p class="hint">
+			<?php esc_html_e( 'Choosing "Work on this partner" scopes every other IPN screen — Branches, Staff, Stock, Orders, Disputes, Digest, Audit Trail and Reports — to that partner until you change it.', 'ipn' ); ?>
+		</p>
 		<p class="hint">
 			<?php esc_html_e( '"IPN mode" is on automatically as soon as a partner has at least one branch — there is no separate toggle. To remove a partner from the network, untick "Make IPN Partner" on their user profile; their branches are kept, not deleted.', 'ipn' ); ?>
 		</p>

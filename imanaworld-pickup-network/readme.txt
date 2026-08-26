@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.7.5
+Stable tag: 0.7.6
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,24 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.7.6 =
+* Add: the IPN admin now works on one partner at a time. Pick a partner from
+  IPN -> Partners ("Work on this partner"), or from the bar that now sits at
+  the top of every IPN screen, and Branches, Staff, Stock, Orders & Disputes,
+  Disputes & Returns, Daily Digest, Audit Trail and Reports all narrow to that
+  partner's branches. The bar always states who is selected.
+* Note: "All partners" remains selectable on purpose — questions like "is
+  anything disputed anywhere" are network-wide, and forcing a partner would
+  make them unanswerable. With exactly one partner configured, that partner is
+  selected automatically rather than asking you to choose from a list of one.
+* Note: the choice is stored per administrator, so it survives a logout and
+  two admins can work on different partners at once. A branch id left over in
+  a bookmark is ignored when it belongs to a partner that is not selected,
+  rather than quietly showing another partner's data.
+* Note: Settings and Catalogue Import are shown with the bar but are not
+  themselves partner-scoped — their options are site-wide and the importer is
+  keyed by branch code.
 
 = 0.7.5 =
 * Fix: the branch staff order queue still showed "order routing is not

@@ -24,6 +24,9 @@ class IPN_Init {
 		$order = new IPN_Order();
 		$order->register_hooks( $this->loader );
 
+		$admin_context = new IPN_Admin_Context();
+		$admin_context->register_hooks( $this->loader );
+
 		$admin = new IPN_Admin();
 		$admin->register_hooks( $this->loader );
 

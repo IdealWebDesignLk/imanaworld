@@ -233,6 +233,22 @@
 .ipn-admin .selected-partner { font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
 .ipn-admin .selected-partner b { color: var(--ink); }
 
+/* ---------- partner context bar ---------- */
+.ipn-admin.ipn-context { margin-bottom: 0; }
+.ipn-admin .partner-bar {
+	display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+	background: var(--brand-100); border: 1px solid var(--line); border-left: 4px solid var(--brand-600);
+	border-radius: var(--radius); padding: 10px 14px; margin: 10px 0 4px;
+}
+.ipn-admin .partner-bar__label { font-size: 12px; color: var(--muted); font-weight: 650; }
+.ipn-admin .partner-bar__name { font-size: 14px; color: var(--brand-700); }
+.ipn-admin .partner-bar__name--all { color: var(--muted); }
+.ipn-admin .partner-bar__hint { font-size: 12px; color: var(--faint); }
+.ipn-admin .partner-bar__switch select {
+	border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+	border-radius: 9px; padding: 6px 10px; font-size: 13px;
+}
+
 /* ---------- inline row actions ---------- */
 .ipn-admin .row-actions-inline { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ipn-admin .row-actions-inline form { margin: 0; }
