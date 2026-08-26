@@ -11,6 +11,11 @@ class IPN_Activator {
 
 		self::add_default_options();
 
+		// The staff dashboard is a front-end page; shipping the dashboard
+		// without the page it lives on leaves branch staff with no way in.
+		IPN_Pages::ensure_staff_dashboard_page();
+		update_option( 'ipn_pages_version', IPN_VERSION );
+
 		flush_rewrite_rules();
 		update_option( 'ipn_rewrite_version', IPN_VERSION );
 	}

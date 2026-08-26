@@ -94,6 +94,7 @@ class IPN_Audit_Log {
 			'collection_completed'  => __( 'Order collected', 'ipn' ),
 			'collection_disputed'   => __( 'Collection rejected / disputed', 'ipn' ),
 			'collection_expired'    => __( 'Collection window expired', 'ipn' ),
+			'staff_page_created'    => __( 'Staff dashboard page created', 'ipn' ),
 			'staff_created'         => __( 'Branch staff account created', 'ipn' ),
 			'staff_removed'         => __( 'Branch staff access removed', 'ipn' ),
 			'branch_hours_updated'  => __( 'Branch operating hours updated', 'ipn' ),

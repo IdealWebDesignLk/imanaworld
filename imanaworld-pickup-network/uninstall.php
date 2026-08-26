@@ -29,7 +29,25 @@ if ( 'yes' === get_option( 'ipn_delete_data_on_uninstall' ) ) {
 		'ipn_auto_cancel_enabled',
 		'ipn_auto_refund_mode',
 		'ipn_delete_data_on_uninstall',
+		'ipn_pages_version',
+		'ipn_rewrite_version',
 	);
+
+	// The auto-created staff dashboard page goes only under the same opt-in,
+	// and only if it still carries nothing but our shortcode — an admin may
+	// have built real content around it.
+	$ipn_page_id = (int) get_option( 'ipn_staff_dashboard_page_id' );
+
+	if ( $ipn_page_id ) {
+		$ipn_page = get_post( $ipn_page_id );
+
+		if ( $ipn_page && false !== strpos( $ipn_page->post_content, '[ipn_staff_dashboard]' )
+			&& '' === trim( str_replace( '[ipn_staff_dashboard]', '', $ipn_page->post_content ) ) ) {
+			wp_delete_post( $ipn_page_id, true );
+		}
+
+		delete_option( 'ipn_staff_dashboard_page_id' );
+	}
 
 	foreach ( $options as $option ) {
 		delete_option( $option );

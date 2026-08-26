@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.7.2
+Stable tag: 0.7.3
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,20 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.7.3 =
+* Add: the branch staff dashboard page is now created by the plugin instead
+  of being a manual setup step. Branch staff have no wp-admin access, so that
+  page is their entire interface — shipping the dashboard without it left
+  them with no way in. Created on activation and, for installs updating in
+  place, on the next admin page load.
+* Add: IPN -> Staff shows the staff sign-in URL, with a note that opening it
+  as an administrator shows a sign-in prompt rather than the dashboard,
+  because the gate is the IPN Branch Staff role.
+* Note: if a page carrying the [ipn_staff_dashboard] shortcode already
+  exists, it is adopted rather than duplicated, so a hand-made page keeps
+  working. On uninstall the page is removed only under the existing
+  "delete data" opt-in, and only if it carries nothing but the shortcode.
 
 = 0.7.2 =
 * Fix: Orders & Disputes listed ordinary WooCommerce orders as Click & Collect

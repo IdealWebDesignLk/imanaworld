@@ -14,6 +14,24 @@ $staff = get_users( array( 'role' => IPN_Roles::ROLE ) );
 		<div class="notice notice-success"><p><?php esc_html_e( 'Branch assignment saved.', 'ipn' ); ?></p></div>
 	<?php endif; ?>
 
+	<?php
+	$ipn_staff_url = IPN_Pages::staff_dashboard_url();
+	?>
+	<?php if ( $ipn_staff_url ) : ?>
+		<div class="panel" style="margin-bottom:16px;">
+			<div class="panel-title"><?php esc_html_e( 'Staff sign-in link', 'ipn' ); ?></div>
+			<div class="panel-sub">
+				<?php esc_html_e( 'This is the whole interface for branch staff — they have no wp-admin access. Give them this URL.', 'ipn' ); ?>
+			</div>
+			<code style="display:block;padding:8px 10px;user-select:all;"><?php echo esc_html( $ipn_staff_url ); ?></code>
+			<div class="hint">
+				<?php esc_html_e( 'Created automatically by the plugin. Opening it while signed in as an administrator shows a sign-in prompt, not the dashboard — the gate is the IPN Branch Staff role, so preview it in a private window signed in as a staff account.', 'ipn' ); ?>
+			</div>
+		</div>
+	<?php else : ?>
+		<div class="notice notice-warning"><p><?php esc_html_e( 'The branch staff dashboard page could not be created automatically. Create a page containing the [ipn_staff_dashboard] shortcode and it will be picked up here.', 'ipn' ); ?></p></div>
+	<?php endif; ?>
+
 	<div class="section-head">
 		<div class="section-title"><?php esc_html_e( 'Branch staff accounts', 'ipn' ); ?></div>
 		<a class="btn btn-primary" href="<?php echo esc_url( admin_url( 'user-new.php?role=' . IPN_Roles::ROLE ) ); ?>">

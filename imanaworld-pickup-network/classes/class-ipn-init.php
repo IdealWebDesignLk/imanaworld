@@ -30,6 +30,9 @@ class IPN_Init {
 		$user_profile = new IPN_User_Profile();
 		$user_profile->register_hooks( $this->loader );
 
+		$pages = new IPN_Pages();
+		$pages->register_hooks( $this->loader );
+
 		$public = new IPN_Public();
 		$public->register_hooks( $this->loader );
 
