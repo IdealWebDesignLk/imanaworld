@@ -35,6 +35,35 @@ class IPN_Vendor_Dashboard {
 		$loader->add_filter( 'dokan_get_dashboard_nav', $this, 'register_nav' );
 		$loader->add_action( 'dokan_load_custom_template', $this, 'load_template' );
 		$loader->add_action( 'template_redirect', $this, 'maybe_handle_actions' );
+
+		// Priority 999: Dokan registers its own dashboard rewrite rules on
+		// init, and ours has to be regenerated after those exist.
+		$loader->add_action( 'init', $this, 'maybe_flush_rewrites', 999 );
+	}
+
+	/**
+	 * Regenerates rewrite rules once per plugin version.
+	 *
+	 * Dokan turns every query var from `dokan_query_var_filter` into a rewrite
+	 * endpoint, and WordPress only learns about a new endpoint when the rules
+	 * are regenerated. Activation does that; an in-place *update* does not,
+	 * because the activation hook never fires for one. The visible symptom is
+	 * exact and misleading: the nav item appears (that is only a filter) while
+	 * /dashboard/ipn/ returns a 404, which reads like a broken integration
+	 * rather than a stale rules table.
+	 *
+	 * Flushing is expensive, so it is keyed to the plugin version and happens
+	 * once per upgrade rather than on every request. The soft flush is
+	 * deliberate: endpoints live in the `rewrite_rules` option, and there is no
+	 * reason to rewrite the server's .htaccess for this.
+	 */
+	public function maybe_flush_rewrites() {
+		if ( get_option( 'ipn_rewrite_version' ) === IPN_VERSION ) {
+			return;
+		}
+
+		flush_rewrite_rules( false );
+		update_option( 'ipn_rewrite_version', IPN_VERSION );
 	}
 
 	public function register_query_var( $query_vars ) {

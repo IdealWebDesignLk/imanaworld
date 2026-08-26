@@ -12,6 +12,7 @@ class IPN_Activator {
 		self::add_default_options();
 
 		flush_rewrite_rules();
+		update_option( 'ipn_rewrite_version', IPN_VERSION );
 	}
 
 	protected static function add_default_options() {

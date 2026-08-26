@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.7.0
+Stable tag: 0.7.1
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,15 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.7.1 =
+* Fix: the vendor dashboard's "Click & Collect" link returned a 404 after
+  updating from an earlier version. The nav item is added by a filter and so
+  appeared immediately, but the /dashboard/ipn/ route is a rewrite endpoint,
+  and rewrite rules are only regenerated on activation — never on an
+  in-place plugin update. Rules are now regenerated once per plugin version,
+  so an update heals itself. Confirmed against a live install, where the nav
+  item rendered but the route 404'd.
 
 = 0.7.0 =
 * Add: vendors now get a "Click & Collect" section inside Dokan's vendor
