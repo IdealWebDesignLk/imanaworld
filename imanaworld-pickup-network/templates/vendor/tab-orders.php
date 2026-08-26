@@ -1,25 +1,36 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 /**
- * Vendor dashboard → Orders. Read-only across this vendor's branches, or
- * narrowed to one. Advancing an order's status is deliberately not here:
- * that belongs to the branch actually preparing and handing it over, and
- * happens on the staff dashboard against the collection code.
+ * Vendor dashboard -> Orders. Every Click & Collect order across this
+ * vendor's branches, or narrowed to one, with the next step available inline.
+ *
+ * Advancing an order is shared with the branch staff dashboard rather than
+ * owned by either: a branch may have no staff account of its own, and its
+ * queue still has to be workable. Both surfaces read the same transition
+ * table (IPN_Order::NEXT_STATUS), so neither can move an order somewhere the
+ * other would not.
+ *
+ * The last step is the exception, and stays on the staff dashboard: an order
+ * becomes Collected only against the collection code the customer presents at
+ * the counter.
  *
  * @var array    $branches         This vendor's branches.
  * @var int      $orders_branch_id 0 = all of this vendor's branches.
  * @var object[] $orders
  */
 
-$ipn_status_labels = array(
-	'awaiting-payment' => __( 'Awaiting payment', 'ipn' ),
-	'new'       => __( 'New', 'ipn' ),
-	'accepted'  => __( 'Accepted', 'ipn' ),
-	'preparing' => __( 'Preparing', 'ipn' ),
-	'ready'     => __( 'Ready', 'ipn' ),
-	'collected' => __( 'Collected', 'ipn' ),
-	'disputed'  => __( 'Disputed', 'ipn' ),
-	'expired'   => __( 'Expired', 'ipn' ),
+$ipn_next_steps = IPN_Order::NEXT_STATUS;
+
+$ipn_next_labels = array(
+	'new'       => __( 'Accept order', 'ipn' ),
+	'accepted'  => __( 'Mark as preparing', 'ipn' ),
+	'preparing' => __( 'Mark ready for collection', 'ipn' ),
+);
+
+// Why a row has no button, where the reason is worth saying out loud.
+$ipn_no_action_hint = array(
+	'awaiting-payment' => __( 'Payment first', 'ipn' ),
+	'ready'            => __( 'Collection code', 'ipn' ),
 );
 ?>
 <form method="get" class="ipn-vd__bar">
@@ -61,10 +72,12 @@ $ipn_status_labels = array(
 					<th><?php esc_html_e( 'Customer', 'ipn' ); ?></th>
 					<th><?php esc_html_e( 'Status', 'ipn' ); ?></th>
 					<th class="ipn-vd__num"><?php esc_html_e( 'Total', 'ipn' ); ?></th>
+					<th><?php esc_html_e( 'Next step', 'ipn' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php foreach ( $orders as $ipn_o ) : ?>
+					<?php $ipn_step = isset( $ipn_next_steps[ $ipn_o->status ] ) ? $ipn_next_steps[ $ipn_o->status ] : null; ?>
 					<tr>
 						<td>
 							<b><?php echo esc_html( $ipn_o->order_number ); ?></b>
@@ -77,16 +90,36 @@ $ipn_status_labels = array(
 						<td><?php echo esc_html( $ipn_o->customer_name ); ?></td>
 						<td>
 							<span class="ipn-vd__pill is-status-<?php echo esc_attr( $ipn_o->status ); ?>">
-								<?php echo esc_html( isset( $ipn_status_labels[ $ipn_o->status ] ) ? $ipn_status_labels[ $ipn_o->status ] : $ipn_o->status ); ?>
+								<?php echo esc_html( IPN_Order::status_label( $ipn_o->status ) ); ?>
 							</span>
 						</td>
 						<td class="ipn-vd__num"><?php echo wp_kses_post( wc_price( $ipn_o->total ) ); ?></td>
+						<td class="ipn-vd__actions">
+							<?php if ( $ipn_step ) : ?>
+								<form method="post">
+									<?php wp_nonce_field( 'ipn_vendor_advance_order' ); ?>
+									<input type="hidden" name="ipn_vendor_action" value="advance_order" />
+									<input type="hidden" name="order_id" value="<?php echo esc_attr( $ipn_o->order_id ); ?>" />
+									<input type="hidden" name="to_status" value="<?php echo esc_attr( $ipn_step[1] ); ?>" />
+									<button type="submit" class="ipn-vd__btn ipn-vd__btn--small ipn-vd__btn--primary">
+										<?php echo esc_html( $ipn_next_labels[ $ipn_o->status ] ); ?>
+									</button>
+								</form>
+							<?php elseif ( isset( $ipn_no_action_hint[ $ipn_o->status ] ) ) : ?>
+								<span class="ipn-vd__muted"><?php echo esc_html( $ipn_no_action_hint[ $ipn_o->status ] ); ?></span>
+							<?php else : ?>
+								<span class="ipn-vd__muted">&mdash;</span>
+							<?php endif; ?>
+						</td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>
 		</table>
 	</div>
 	<p class="ipn-vd__hint">
-		<?php esc_html_e( 'Order status is advanced by the branch handling the collection, from their own dashboard.', 'ipn' ); ?>
+		<?php esc_html_e( 'You and your branch staff work the same queue, and either of you can move an order along. The last step is different: an order is only marked Collected once the collection code the customer brings to the counter has been checked, which happens on the branch dashboard.', 'ipn' ); ?>
+	</p>
+	<p class="ipn-vd__hint">
+		<?php esc_html_e( 'An order awaiting payment has no next step yet. Its stock is not reserved until payment lands, so it should not be prepared.', 'ipn' ); ?>
 	</p>
 <?php endif; ?>

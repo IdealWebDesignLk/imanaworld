@@ -82,7 +82,7 @@ place on a page:
 
 | Where | What appears |
 |-------|--------------|
-| Dokan vendor dashboard | A "Click & Collect" section: branches, staff, per-branch stock, orders |
+| Dokan vendor dashboard | A "Click & Collect" section: branches, staff, per-branch stock, products, orders |
 | Before the shop loop | Branch selector, until a branch is chosen |
 | Above every WooCommerce template | "Shopping at X · Change branch" indicator bar |
 | Single product page | Click & Collect availability per branch, above add-to-cart |
@@ -106,6 +106,20 @@ screen for setting per-branch stock on any product without going through the imp
 4. Add branch staff and assign each to a branch — again either from **IPN → Staff**, or by the vendor from their own dashboard.
 5. Publish a page containing `[ipn_staff_dashboard]` and give staff its URL.
 6. Load stock — **IPN → Catalogue Import**, per product from the product edit screen, or per branch from the vendor dashboard.
+
+## Who moves an order along
+
+An order runs New → Accepted → Preparing → Ready → Collected. Both the vendor and the
+branch staff assigned to that branch can take the first three steps, from the Orders tab
+of the vendor dashboard or from the branch dashboard; a branch that has no staff account
+of its own is therefore still workable by the partner.
+
+The last step is not shared. An order becomes Collected only when the collection code the
+customer brings to the counter is checked on the branch dashboard, because that code is
+the only evidence the right person took the goods.
+
+An order awaiting payment has no next step at all: its stock is not reserved until payment
+lands, so it must not be prepared.
 
 ## Database
 

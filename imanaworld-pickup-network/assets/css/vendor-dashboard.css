@@ -165,6 +165,13 @@
 .ipn-vd__btn--primary:hover { background: var( --ipn-vd-brand-dark ); border-color: var( --ipn-vd-brand-dark ); color: #fff; }
 .ipn-vd__btn--danger { color: var( --ipn-vd-danger ); border-color: #f2cfcd; }
 .ipn-vd__btn--danger:hover { background: var( --ipn-vd-danger-soft ); color: var( --ipn-vd-danger ); }
+.ipn-vd__btn--small { padding: 5px 10px; font-size: 12.5px; border-radius: 7px; }
+
+/* The next-step cell in the orders table. Each button is its own POST form,
+   which would otherwise inherit a block form's margins and push the row
+   taller than every other cell in it. */
+.ipn-vd__actions form { margin: 0; }
+.ipn-vd__actions { white-space: nowrap; }
 
 /* ---------- forms ---------- */
 .ipn-vd__form {

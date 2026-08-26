@@ -12,6 +12,32 @@ class IPN_Audit_Log {
 		return IPN_Install::table( 'audit_log' );
 	}
 
+	/**
+	 * What kind of account is behind this entry.
+	 *
+	 * Read off the user's actual role rather than off is_admin(), which only
+	 * reports which screen the request came from. Both the vendor dashboard
+	 * and the branch dashboard are front-end, so is_admin() labelled every
+	 * vendor action "staff" — and once vendors could advance orders (0.8.0)
+	 * that would have made the audit trail say the branch did something the
+	 * partner did.
+	 */
+	protected static function actor_type() {
+		if ( is_admin() || current_user_can( 'manage_options' ) ) {
+			return 'admin';
+		}
+
+		if ( IPN_Roles::is_branch_staff( get_current_user_id() ) ) {
+			return 'staff';
+		}
+
+		if ( IPN_Access::current_vendor_id() ) {
+			return 'vendor';
+		}
+
+		return 'staff';
+	}
+
 	public static function log( $event_type, array $args = array() ) {
 		global $wpdb;
 
@@ -19,7 +45,7 @@ class IPN_Audit_Log {
 			'order_id'   => null,
 			'branch_id'  => null,
 			'actor_id'   => get_current_user_id() ?: null,
-			'actor_type' => is_admin() ? 'admin' : 'staff',
+			'actor_type' => self::actor_type(),
 			'data'       => array(),
 		) );
 

@@ -13,12 +13,11 @@ class IPN_Staff_Dashboard {
 	/**
 	 * Display-status => [ expected current WC status, target WC status ]
 	 * for the "Accept / Mark preparing / Mark ready" sticky action button.
+	 *
+	 * Aliased rather than restated: the vendor dashboard walks an order
+	 * through the same three steps, and IPN_Order owns the one definition.
 	 */
-	const NEXT_STATUS = array(
-		'new'       => array( 'processing', 'ipn-accepted' ),
-		'accepted'  => array( 'ipn-accepted', 'ipn-preparing' ),
-		'preparing' => array( 'ipn-preparing', 'ipn-ready' ),
-	);
+	const NEXT_STATUS = IPN_Order::NEXT_STATUS;
 
 	public function register_hooks( IPN_Loader $loader ) {
 		$loader->add_action( 'init', $this, 'register_shortcode' );

@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.7.9
+Stable tag: 0.8.0
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,25 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.8.0 =
+* Vendors can now move their own orders along. The Orders tab gains a "Next
+  step" column offering Accept order, Mark as preparing, and Mark ready for
+  collection, for orders at any of that vendor's branches. Previously only
+  branch staff could advance an order, which left a branch with no staff
+  account of its own holding a queue that nobody could work.
+* Marking an order Collected stays on the branch dashboard, behind the
+  customer's collection code. That code is the only evidence the right person
+  actually took the goods, so there is deliberately no vendor button that
+  skips it.
+* The vendor and staff dashboards now share one transition table, so an order
+  cannot be moved to a stage from one screen that the other would refuse. The
+  step taken is worked out from the order's real status rather than from the
+  page the button was on, so two people working the same queue cannot skip a
+  stage or repeat one.
+* The audit log now records whether an action was taken by an administrator,
+  a vendor, or branch staff, based on the account's role rather than on which
+  screen the request came from.
 
 = 0.7.9 =
 * Fix: an order paid by an offline method never appeared for the vendor or

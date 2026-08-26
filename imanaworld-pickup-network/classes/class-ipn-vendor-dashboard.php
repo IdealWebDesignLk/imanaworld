@@ -374,6 +374,9 @@ class IPN_Vendor_Dashboard {
 			case 'import_products':
 				$this->result = $this->handle_import_products();
 				break;
+			case 'advance_order':
+				$this->result = $this->handle_advance_order();
+				break;
 		}
 	}
 
@@ -856,6 +859,66 @@ class IPN_Vendor_Dashboard {
 			(int) $run->created_count,
 			(int) $run->updated_count,
 			(int) $run->failed_count
+		);
+	}
+
+	/**
+	 * Moves one of this vendor's orders on to the next collection step.
+	 *
+	 * Until 0.8.0 only branch staff could move an order at all, which left a
+	 * branch with no staff account of its own — a small store, a partner still
+	 * setting up — with a queue nobody could work. The vendor now gets the
+	 * same three steps: accept, preparing, ready.
+	 *
+	 * They deliberately do not get the fourth. An order is only marked
+	 * collected against the customer's collection code, which is the sole
+	 * evidence that the right person actually took the goods; a button here
+	 * that skipped it would turn a real control into a formality.
+	 *
+	 * The branch is read back off the order rather than taken from the form,
+	 * so order_id is the only posted value trusted, and it is checked against
+	 * this vendor's own branches before anything moves.
+	 *
+	 * @return string|WP_Error
+	 */
+	protected function handle_advance_order() {
+		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+		$to       = isset( $_POST['to_status'] ) ? sanitize_key( wp_unslash( $_POST['to_status'] ) ) : '';
+		$order    = $order_id ? wc_get_order( $order_id ) : false;
+
+		if ( ! $order ) {
+			return new WP_Error( 'ipn_order_missing', __( 'That order could not be found.', 'ipn' ) );
+		}
+
+		$branch = IPN_Access::require_branch( IPN_Order::branch_id_for( $order ) );
+
+		if ( is_wp_error( $branch ) ) {
+			return $branch;
+		}
+
+		$steps   = IPN_Order::NEXT_STATUS;
+		$current = IPN_Order::display_status( $order->get_status() );
+		$step    = isset( $steps[ $current ] ) ? $steps[ $current ] : null;
+
+		// The step comes from where the order actually is, not from the page
+		// the button was on, so two people working the same queue cannot skip
+		// a stage or repeat one. The posted target only has to agree with it.
+		if ( ! $step || $step[1] !== $to ) {
+			return new WP_Error(
+				'ipn_order_moved',
+				__( 'That order has already moved on. Reload the page to see where it is now.', 'ipn' )
+			);
+		}
+
+		if ( ! IPN_Order::advance( $order_id, $step[0], $step[1] ) ) {
+			return new WP_Error( 'ipn_advance_failed', __( 'Could not update that order. Please reload the page and try again.', 'ipn' ) );
+		}
+
+		return sprintf(
+			/* translators: 1: order number, 2: the status it moved to */
+			__( 'Order %1$s is now %2$s.', 'ipn' ),
+			$order->get_order_number(),
+			IPN_Order::status_label( IPN_Order::display_status( $step[1] ) )
 		);
 	}
 

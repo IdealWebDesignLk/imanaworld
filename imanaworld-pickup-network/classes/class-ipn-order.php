@@ -15,6 +15,27 @@ defined( 'ABSPATH' ) || exit;
  */
 class IPN_Order {
 
+	/**
+	 * The collection fulfilment machine, as
+	 * display status => [ expected current WC status, target WC status ].
+	 *
+	 * One definition, shared by every surface that can move an order along:
+	 * the branch staff dashboard, and since 0.8.0 the vendor dashboard too.
+	 * Two copies of a state machine drift, and a drifted copy here would let
+	 * one dashboard skip a stage the other still enforces.
+	 *
+	 * It deliberately stops at "ready". The last step — ready to collected —
+	 * is not a transition anyone can simply choose: it needs the customer's
+	 * collection code, and so it lives with IPN_OTP on the staff dashboard.
+	 * Nothing maps "awaiting-payment" either, which is what withholds the
+	 * Accept action until payment has landed and stock is actually reserved.
+	 */
+	const NEXT_STATUS = array(
+		'new'       => array( 'processing', 'ipn-accepted' ),
+		'accepted'  => array( 'ipn-accepted', 'ipn-preparing' ),
+		'preparing' => array( 'ipn-preparing', 'ipn-ready' ),
+	);
+
 	public static function table() {
 		return IPN_Install::table( 'order_meta' );
 	}
@@ -37,6 +58,26 @@ class IPN_Order {
 	}
 
 	/**
+	 * The human name for a display status, for any screen that shows one.
+	 *
+	 * @param string $display_status As returned by display_status().
+	 */
+	public static function status_label( $display_status ) {
+		$labels = array(
+			'awaiting-payment' => __( 'Awaiting payment', 'ipn' ),
+			'new'              => __( 'New', 'ipn' ),
+			'accepted'         => __( 'Accepted', 'ipn' ),
+			'preparing'        => __( 'Preparing', 'ipn' ),
+			'ready'            => __( 'Ready', 'ipn' ),
+			'collected'        => __( 'Collected', 'ipn' ),
+			'disputed'         => __( 'Disputed', 'ipn' ),
+			'expired'          => __( 'Expired', 'ipn' ),
+		);
+
+		return isset( $labels[ $display_status ] ) ? $labels[ $display_status ] : $display_status;
+	}
+
+	/**
 	 * Maps a WooCommerce order status (no wc- prefix) to the simplified
 	 * display status the staff dashboard and My Account tracker render.
 	 *
@@ -46,8 +87,8 @@ class IPN_Order {
 	 * orders are listed so a branch can see them, and are deliberately given
 	 * their own display status rather than being folded into "new": stock is
 	 * only reserved once payment lands (see on_processing), so a branch must
-	 * not start preparing one. IPN_Staff_Dashboard::NEXT_STATUS has no entry
-	 * for it, which is what withholds the Accept action.
+	 * not start preparing one. self::NEXT_STATUS has no entry for it, which
+	 * is what withholds the Accept action.
 	 */
 	public static function display_status( $wc_status ) {
 		$map = array(
