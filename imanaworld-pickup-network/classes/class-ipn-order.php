@@ -39,9 +39,26 @@ class IPN_Order {
 	/**
 	 * Maps a WooCommerce order status (no wc- prefix) to the simplified
 	 * display status the staff dashboard and My Account tracker render.
+	 *
+	 * Anything not listed here is not shown as an IPN order at all, so the
+	 * map is a deliberate allow-list rather than an oversight — but it has to
+	 * include the states an order genuinely passes through. Awaiting-payment
+	 * orders are listed so a branch can see them, and are deliberately given
+	 * their own display status rather than being folded into "new": stock is
+	 * only reserved once payment lands (see on_processing), so a branch must
+	 * not start preparing one. IPN_Staff_Dashboard::NEXT_STATUS has no entry
+	 * for it, which is what withholds the Accept action.
 	 */
 	public static function display_status( $wc_status ) {
 		$map = array(
+			// An order awaiting payment is still a real Click & Collect order
+			// and the branch needs to know it exists. WooCommerce puts every
+			// offline payment method here — bank transfer, cheque, cash on
+			// delivery — so leaving these unmapped made those orders invisible
+			// to the vendor and to branch staff alike, which is exactly what
+			// issue #24 reported.
+			'on-hold'       => 'awaiting-payment',
+			'pending'       => 'awaiting-payment',
 			'processing'    => 'new',
 			'ipn-accepted'  => 'accepted',
 			'ipn-preparing' => 'preparing',

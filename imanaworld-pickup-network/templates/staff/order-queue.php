@@ -9,6 +9,7 @@ defined( 'ABSPATH' ) || exit;
 
 $statuses = array(
 	'all'       => __( 'All', 'ipn' ),
+	'awaiting-payment' => __( 'Awaiting payment', 'ipn' ),
 	'new'       => __( 'New', 'ipn' ),
 	'accepted'  => __( 'Accepted', 'ipn' ),
 	'preparing' => __( 'Preparing', 'ipn' ),

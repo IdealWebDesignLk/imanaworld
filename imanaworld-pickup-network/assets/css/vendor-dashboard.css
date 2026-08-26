@@ -138,7 +138,8 @@
 .ipn-vd__pill.is-express { background: #f2e7f8; color: #6a1b9a; }
 .ipn-vd__pill.is-status-new,
 .ipn-vd__pill.is-status-accepted { background: var( --ipn-vd-info-soft ); color: var( --ipn-vd-info ); }
-.ipn-vd__pill.is-status-preparing { background: var( --ipn-vd-warn-soft ); color: var( --ipn-vd-warn ); }
+.ipn-vd__pill.is-status-preparing,
+.ipn-vd__pill.is-status-awaiting-payment { background: var( --ipn-vd-warn-soft ); color: var( --ipn-vd-warn ); }
 .ipn-vd__pill.is-status-ready { background: var( --ipn-vd-brand-soft ); color: var( --ipn-vd-brand-dark ); }
 .ipn-vd__pill.is-status-disputed,
 .ipn-vd__pill.is-status-expired { background: var( --ipn-vd-danger-soft ); color: var( --ipn-vd-danger ); }

@@ -8,6 +8,7 @@ defined( 'ABSPATH' ) || exit;
  */
 
 $ipn_statuses = array(
+	'awaiting-payment' => __( 'Awaiting payment', 'ipn' ),
 	'new'       => __( 'New', 'ipn' ),
 	'accepted'  => __( 'Accepted', 'ipn' ),
 	'preparing' => __( 'Preparing', 'ipn' ),
@@ -21,7 +22,7 @@ $ipn_statuses = array(
 // opening this screen is looking for what still needs action, which was
 // impossible to see when new orders sat undifferentiated among hundreds of
 // Collected ones (issue #16). Collected/expired are deliberately not here.
-$ipn_attention_statuses = array( 'new', 'accepted', 'preparing', 'ready', 'disputed' );
+$ipn_attention_statuses = array( 'awaiting-payment', 'new', 'accepted', 'preparing', 'ready', 'disputed' );
 ?>
 <div class="wrap ipn-admin">
 	<div class="section-head">

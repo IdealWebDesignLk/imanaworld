@@ -274,6 +274,8 @@
 .ipn-admin .chip-preparing { background: var(--preparing-bg); color: var(--preparing); }
 .ipn-admin .chip-ready { background: var(--ready-bg); color: var(--ready); }
 .ipn-admin .chip-collected { background: var(--neutral-bg); color: var(--muted); }
+.ipn-admin .chip-awaiting-payment { background: var(--preparing-bg); color: var(--preparing); }
+.ipn-admin .status-counter--awaiting-payment .status-counter__n { color: var(--preparing); }
 .ipn-admin .chip-disputed,
 .ipn-admin .chip-expired,
 .ipn-admin .chip-cancelled { background: var(--danger-bg); color: var(--danger); }
