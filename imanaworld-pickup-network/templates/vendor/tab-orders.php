@@ -29,8 +29,7 @@ $ipn_next_labels = array(
 
 // Why a row has no button, where the reason is worth saying out loud.
 $ipn_no_action_hint = array(
-	'awaiting-payment' => __( 'Payment first', 'ipn' ),
-	'ready'            => __( 'Collection code', 'ipn' ),
+	'ready' => __( 'Collection code', 'ipn' ),
 );
 ?>
 <form method="get" class="ipn-vd__bar">
@@ -105,6 +104,15 @@ $ipn_no_action_hint = array(
 										<?php echo esc_html( $ipn_next_labels[ $ipn_o->status ] ); ?>
 									</button>
 								</form>
+							<?php elseif ( 'awaiting-payment' === $ipn_o->status ) : ?>
+								<form method="post" onsubmit="return confirm('<?php echo esc_js( __( 'Confirm that payment for this order has been received? It will join the queue as New and its stock will be reserved at the branch.', 'ipn' ) ); ?>');">
+									<?php wp_nonce_field( 'ipn_vendor_mark_paid' ); ?>
+									<input type="hidden" name="ipn_vendor_action" value="mark_paid" />
+									<input type="hidden" name="order_id" value="<?php echo esc_attr( $ipn_o->order_id ); ?>" />
+									<button type="submit" class="ipn-vd__btn ipn-vd__btn--small">
+										<?php esc_html_e( 'Mark payment received', 'ipn' ); ?>
+									</button>
+								</form>
 							<?php elseif ( isset( $ipn_no_action_hint[ $ipn_o->status ] ) ) : ?>
 								<span class="ipn-vd__muted"><?php echo esc_html( $ipn_no_action_hint[ $ipn_o->status ] ); ?></span>
 							<?php else : ?>
@@ -120,6 +128,6 @@ $ipn_no_action_hint = array(
 		<?php esc_html_e( 'You and your branch staff work the same queue, and either of you can move an order along. The last step is different: an order is only marked Collected once the collection code the customer brings to the counter has been checked, which happens on the branch dashboard.', 'ipn' ); ?>
 	</p>
 	<p class="ipn-vd__hint">
-		<?php esc_html_e( 'An order awaiting payment has no next step yet. Its stock is not reserved until payment lands, so it should not be prepared.', 'ipn' ); ?>
+		<?php esc_html_e( 'An order placed by bank transfer, cheque, or payment at the counter arrives awaiting payment, and its stock is not reserved yet. Marking payment received puts it in the queue as New and reserves the stock, so only do it once the money has actually arrived.', 'ipn' ); ?>
 	</p>
 <?php endif; ?>

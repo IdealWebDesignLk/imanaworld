@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.8.0
+Stable tag: 0.8.1
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,21 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.8.1 =
+* Vendors can now mark an order as paid. WooCommerce parks every offline
+  payment method in "on hold" — bank transfer, cheque, and any store taking
+  payment at the counter — and such an order never leaves that state on its
+  own, so its branch queue could never start. Only an administrator could
+  move it on, from WooCommerce's own order screen.
+* The Orders tab now offers "Mark payment received" on those orders. It moves
+  the order to Processing rather than jumping straight to Accepted, because
+  Processing is what reserves the branch stock; skipping it would have a
+  branch pick goods the stock ledger still counted as available. The order
+  then joins the queue as New and the usual steps follow unchanged.
+* Because it is a claim about money, the action asks for confirmation, stamps
+  the order's paid date, and is recorded in the audit trail against the
+  vendor who made it.
 
 = 0.8.0 =
 * Vendors can now move their own orders along. The Orders tab gains a "Next

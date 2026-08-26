@@ -377,6 +377,9 @@ class IPN_Vendor_Dashboard {
 			case 'advance_order':
 				$this->result = $this->handle_advance_order();
 				break;
+			case 'mark_paid':
+				$this->result = $this->handle_mark_paid();
+				break;
 		}
 	}
 
@@ -859,6 +862,78 @@ class IPN_Vendor_Dashboard {
 			(int) $run->created_count,
 			(int) $run->updated_count,
 			(int) $run->failed_count
+		);
+	}
+
+	/**
+	 * Records that payment for an order has been received, which is what lets
+	 * a branch start working it.
+	 *
+	 * WooCommerce parks every offline payment method in on-hold: bank
+	 * transfer and cheque wait for money to arrive, and a store that takes
+	 * payment at the counter never leaves that state on its own. Until 0.8.1
+	 * only an administrator could move such an order on, from WooCommerce's
+	 * own order screen, so a partner running a pay-on-collection branch had a
+	 * queue that could never start.
+	 *
+	 * This deliberately moves the order to processing rather than jumping
+	 * straight to accepted. Processing is what reserves the branch stock
+	 * (IPN_Order::on_processing), and skipping it would have a branch pick
+	 * goods the stock ledger still believes are available to everyone else.
+	 * The order then joins the normal queue as New, and the usual accept,
+	 * preparing, ready and collection-code steps follow unchanged.
+	 *
+	 * It is a claim about money, so it is confirmed in the browser, written
+	 * to the audit trail against the vendor who made it, and stamped on the
+	 * order as its paid date.
+	 *
+	 * @return string|WP_Error
+	 */
+	protected function handle_mark_paid() {
+		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+		$order    = $order_id ? wc_get_order( $order_id ) : false;
+
+		if ( ! $order ) {
+			return new WP_Error( 'ipn_order_missing', __( 'That order could not be found.', 'ipn' ) );
+		}
+
+		$branch = IPN_Access::require_branch( IPN_Order::branch_id_for( $order ) );
+
+		if ( is_wp_error( $branch ) ) {
+			return $branch;
+		}
+
+		$current = $order->get_status();
+
+		// Read off the order itself, so a stale page cannot re-run this
+		// against an order somebody has already taken payment for.
+		if ( ! in_array( $current, array( 'on-hold', 'pending' ), true ) ) {
+			return new WP_Error(
+				'ipn_not_awaiting_payment',
+				__( 'That order is not awaiting payment. Reload the page to see where it is now.', 'ipn' )
+			);
+		}
+
+		if ( ! $order->get_date_paid() ) {
+			$order->set_date_paid( time() );
+			$order->save();
+		}
+
+		if ( ! IPN_Order::advance( $order_id, $current, 'processing' ) ) {
+			return new WP_Error( 'ipn_mark_paid_failed', __( 'Could not update that order. Please reload the page and try again.', 'ipn' ) );
+		}
+
+		IPN_Audit_Log::log( 'payment_marked_received', array(
+			'order_id'  => $order_id,
+			'branch_id' => $branch->id,
+			'data'      => array( 'from_status' => $current ),
+		) );
+
+		return sprintf(
+			/* translators: 1: order number, 2: branch name */
+			__( 'Order %1$s is marked paid and has joined the queue as New. Its stock is now reserved at %2$s.', 'ipn' ),
+			$order->get_order_number(),
+			$branch->name
 		);
 	}
 

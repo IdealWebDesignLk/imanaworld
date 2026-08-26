@@ -118,8 +118,16 @@ The last step is not shared. An order becomes Collected only when the collection
 customer brings to the counter is checked on the branch dashboard, because that code is
 the only evidence the right person took the goods.
 
-An order awaiting payment has no next step at all: its stock is not reserved until payment
-lands, so it must not be prepared.
+An order placed by bank transfer, cheque, or payment at the counter arrives **awaiting
+payment**, and its stock is not reserved yet. It has no fulfilment step until somebody
+records the money as having arrived — the vendor with **Mark payment received** on the
+Orders tab, or an administrator setting the order to Processing in WooCommerce. Either
+route reserves the branch stock and drops the order into the queue as New.
+
+That step exists because WooCommerce parks every offline payment method in "on hold", and
+a store taking payment at the counter never leaves that state on its own; without it such
+a branch has a queue that can never start. It is a claim about money, so it asks for
+confirmation and is recorded in the audit trail against whoever made it.
 
 ## Database
 
