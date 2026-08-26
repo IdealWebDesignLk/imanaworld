@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.7.6
+Stable tag: 0.7.7
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,21 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.7.7 =
+* Add: a Products tab on the vendor dashboard. Vendors can create a product
+  one at a time, or load many at once from a .csv/.xlsx file, and either way
+  the product is stocked at a chosen branch in the same step. Branch stock
+  could only ever stock a product that already existed.
+* Note: a vendor-run import is restricted to that vendor. A row naming a
+  branch code that is not theirs, or a SKU owned by another store, fails on
+  its own and the rest of the file still runs. Branch codes are short and
+  guessable, so this is a real boundary rather than a formality.
+* Note: products created here follow Dokan's own "new product status" setting,
+  so a marketplace that reviews vendor products before publishing still does.
+  WooCommerce stock management stays off, matching the catalogue importer:
+  ipn_branch_stock is the source of truth and a second global number would
+  only disagree with it.
 
 = 0.7.6 =
 * Add: the IPN admin now works on one partner at a time. Pick a partner from

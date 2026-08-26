@@ -21,7 +21,7 @@ class IPN_Vendor_Dashboard {
 	const SLUG     = 'ipn';
 	const PER_PAGE = 20;
 
-	const TABS = array( 'branches', 'staff', 'stock', 'orders' );
+	const TABS = array( 'branches', 'staff', 'stock', 'products', 'orders' );
 
 	/**
 	 * Result of whatever write was posted this request, surfaced as a notice.
@@ -152,6 +152,11 @@ class IPN_Vendor_Dashboard {
 					'stock_search'    => $search,
 					'stock_page'      => $page,
 					'addable'         => ( $branch_id && '' !== $search ) ? $this->searchable_products( $vendor_id, $search, $branch_id ) : array(),
+				);
+
+			case 'products':
+				return array(
+					'import_runs' => IPN_CSV_Import::get_recent_runs( 5 ),
 				);
 
 			case 'orders':
@@ -362,6 +367,12 @@ class IPN_Vendor_Dashboard {
 				break;
 			case 'delete_stock':
 				$this->result = $this->handle_delete_stock();
+				break;
+			case 'create_product':
+				$this->result = $this->handle_create_product();
+				break;
+			case 'import_products':
+				$this->result = $this->handle_import_products();
 				break;
 		}
 	}
@@ -690,6 +701,162 @@ class IPN_Vendor_Dashboard {
 		) );
 
 		return __( 'Stock updated.', 'ipn' );
+	}
+
+	/**
+	 * Creates one product for this vendor and stocks it at a branch.
+	 *
+	 * Vendors could already stock a product that existed, but had no way to
+	 * bring a new line into the network without leaving for Dokan's own
+	 * product screens — which is what issue #22 is about.
+	 *
+	 * WooCommerce's own stock management is deliberately left off, matching
+	 * the catalogue importer: ipn_branch_stock is the source of truth for
+	 * Click & Collect products, and a second global number would only
+	 * disagree with it.
+	 *
+	 * @return string|WP_Error
+	 */
+	protected function handle_create_product() {
+		$branch = IPN_Access::require_branch( isset( $_POST['branch_id'] ) ? absint( $_POST['branch_id'] ) : 0 );
+
+		if ( is_wp_error( $branch ) ) {
+			return $branch;
+		}
+
+		if ( ! function_exists( 'wc_get_product_id_by_sku' ) ) {
+			return new WP_Error( 'ipn_no_woocommerce', __( 'WooCommerce is not active.', 'ipn' ) );
+		}
+
+		$name  = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$sku   = isset( $_POST['sku'] ) ? sanitize_text_field( wp_unslash( $_POST['sku'] ) ) : '';
+		$price = isset( $_POST['price'] ) ? trim( (string) wp_unslash( $_POST['price'] ) ) : '';
+		$stock = isset( $_POST['stock'] ) ? absint( $_POST['stock'] ) : 0;
+
+		if ( '' === $name ) {
+			return new WP_Error( 'ipn_product_name', __( 'The product needs a name.', 'ipn' ) );
+		}
+
+		if ( '' === $price || ! is_numeric( $price ) ) {
+			return new WP_Error( 'ipn_product_price', __( 'The product needs a numeric price.', 'ipn' ) );
+		}
+
+		if ( '' !== $sku && wc_get_product_id_by_sku( $sku ) ) {
+			return new WP_Error( 'ipn_product_sku_taken', __( 'That SKU is already in use.', 'ipn' ) );
+		}
+
+		$product = new WC_Product_Simple();
+		$product->set_name( $name );
+		$product->set_regular_price( (string) floatval( $price ) );
+		$product->set_catalog_visibility( 'visible' );
+		$product->set_manage_stock( false );
+		$product->set_stock_status( 'instock' );
+		$product->set_status( self::new_product_status() );
+
+		if ( '' !== $sku ) {
+			$product->set_sku( $sku );
+		}
+
+		$product_id = $product->save();
+
+		if ( ! $product_id ) {
+			return new WP_Error( 'ipn_product_save', __( 'Could not save the product.', 'ipn' ) );
+		}
+
+		// Ownership is post_author, which is what Dokan and IPN both read.
+		wp_update_post( array(
+			'ID'          => $product_id,
+			'post_author' => IPN_Access::current_vendor_id(),
+		) );
+
+		IPN_Branch_Stock::set_total( $product_id, $branch->id, $stock );
+
+		IPN_Audit_Log::log( 'product_created', array(
+			'branch_id' => $branch->id,
+			'data'      => array( 'product_id' => (int) $product_id, 'name' => $name ),
+		) );
+
+		return sprintf(
+			/* translators: 1: product name, 2: branch name */
+			__( '%1$s created and stocked at %2$s.', 'ipn' ),
+			$name,
+			$branch->name
+		);
+	}
+
+	/**
+	 * The status a vendor-created product should start in.
+	 *
+	 * Dokan decides whether vendors publish directly or submit for review, and
+	 * a product created here should follow the same rule rather than quietly
+	 * bypassing a marketplace's moderation.
+	 */
+	protected static function new_product_status() {
+		if ( function_exists( 'dokan_get_option' ) ) {
+			$status = dokan_get_option( 'product_status', 'dokan_selling', 'publish' );
+
+			if ( in_array( $status, array( 'publish', 'pending', 'draft' ), true ) ) {
+				return $status;
+			}
+		}
+
+		return 'publish';
+	}
+
+	/**
+	 * Bulk import, reusing the catalogue importer with a vendor restriction so
+	 * a file can only ever touch this vendor's own branches and products.
+	 *
+	 * @return string|WP_Error
+	 */
+	protected function handle_import_products() {
+		$vendor_id = IPN_Access::current_vendor_id();
+
+		if ( empty( $_FILES['ipn_vendor_catalogue']['tmp_name'] ) || ! is_uploaded_file( $_FILES['ipn_vendor_catalogue']['tmp_name'] ) ) {
+			return new WP_Error( 'ipn_no_file', __( 'Please choose a file to upload.', 'ipn' ) );
+		}
+
+		$original = sanitize_file_name( wp_unslash( $_FILES['ipn_vendor_catalogue']['name'] ) );
+		$ext      = strtolower( pathinfo( $original, PATHINFO_EXTENSION ) );
+
+		if ( ! in_array( $ext, array( 'csv', 'xlsx' ), true ) ) {
+			return new WP_Error( 'ipn_bad_extension', __( 'Please upload a .csv or .xlsx file.', 'ipn' ) );
+		}
+
+		$upload_dir = wp_upload_dir();
+		$dest_dir   = trailingslashit( $upload_dir['basedir'] ) . 'ipn-imports/';
+		wp_mkdir_p( $dest_dir );
+
+		$dest = $dest_dir . wp_unique_filename( $dest_dir, $original );
+
+		if ( ! move_uploaded_file( $_FILES['ipn_vendor_catalogue']['tmp_name'], $dest ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_move_uploaded_file
+			return new WP_Error( 'ipn_upload_failed', __( 'Could not save the uploaded file.', 'ipn' ) );
+		}
+
+		$result = IPN_CSV_Import::process_file( $dest, get_current_user_id(), $vendor_id );
+
+		// The file is deleted either way — a catalogue file has no reason to
+		// sit in uploads once its rows are in the database.
+		wp_delete_file( $dest );
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		$runs = IPN_CSV_Import::get_recent_runs( 1 );
+		$run  = $runs ? $runs[0] : null;
+
+		if ( ! $run ) {
+			return __( 'Import finished.', 'ipn' );
+		}
+
+		return sprintf(
+			/* translators: 1: created count, 2: updated count, 3: failed count */
+			__( 'Import finished: %1$d created, %2$d updated, %3$d failed.', 'ipn' ),
+			(int) $run->created_count,
+			(int) $run->updated_count,
+			(int) $run->failed_count
+		);
 	}
 
 	/**

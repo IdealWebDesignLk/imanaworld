@@ -73,6 +73,11 @@ $ipn_pages = (int) ceil( $stock_total / 20 );
 			<p><?php esc_html_e( 'No products stocked at this branch match that search.', 'ipn' ); ?></p>
 		<?php else : ?>
 			<p><?php esc_html_e( 'This branch has no stock yet. Search for one of your products above to add it.', 'ipn' ); ?></p>
+			<p>
+				<a class="ipn-vd__btn" href="<?php echo esc_url( IPN_Vendor_Dashboard::tab_url( 'products' ) ); ?>">
+					<?php esc_html_e( 'Or add a new product', 'ipn' ); ?>
+				</a>
+			</p>
 		<?php endif; ?>
 	</div>
 <?php else : ?>
@@ -145,6 +150,15 @@ $ipn_pages = (int) ceil( $stock_total / 20 );
 		</div>
 	<?php endif; ?>
 
+	<p class="ipn-vd__hint">
+		<?php
+		printf(
+			/* translators: %s: link to the Products tab */
+			esc_html__( 'Only products that already exist can be stocked here. To create a new one, or to load many at once, use %s.', 'ipn' ),
+			'<a href="' . esc_url( IPN_Vendor_Dashboard::tab_url( 'products' ) ) . '">' . esc_html__( 'Products', 'ipn' ) . '</a>'
+		);
+		?>
+	</p>
 	<p class="ipn-vd__hint">
 		<?php esc_html_e( 'Reserved units belong to orders that have been paid for but not collected yet, so they are subtracted from what customers can buy. A product cannot be removed while any of its units are reserved.', 'ipn' ); ?>
 	</p>

@@ -37,7 +37,17 @@ class IPN_CSV_Import {
 	 * @param int    $run_by    User ID that triggered the import.
 	 * @return int|WP_Error Import log ID on success.
 	 */
-	public static function process_file( $file_path, $run_by = 0 ) {
+	/**
+	 * @param string $file_path
+	 * @param int    $run_by
+	 * @param int    $vendor_id When set, every row must belong to this vendor:
+	 *                          the branch code must be one of theirs, and an
+	 *                          existing SKU must be a product they own. This is
+	 *                          what makes the importer safe to hand to a vendor
+	 *                          rather than keeping it admin-only — a file is
+	 *                          untrusted input, and a branch code is guessable.
+	 */
+	public static function process_file( $file_path, $run_by = 0, $vendor_id = 0 ) {
 		$extension = strtolower( pathinfo( $file_path, PATHINFO_EXTENSION ) );
 
 		if ( 'csv' === $extension ) {
@@ -66,7 +76,7 @@ class IPN_CSV_Import {
 		);
 
 		foreach ( $rows as $i => $row ) {
-			$result             = self::process_row( $row );
+			$result             = self::process_row( $row, $vendor_id );
 			$counts[ $result['status'] ]++;
 
 			$wpdb->insert( self::log_rows_table(), array( // phpcs:ignore WordPress.DB.PreparedSQL
@@ -86,7 +96,7 @@ class IPN_CSV_Import {
 	/**
 	 * Creates or updates one product and sets its stock at one branch.
 	 */
-	protected static function process_row( array $row ) {
+	protected static function process_row( array $row, $vendor_id = 0 ) {
 		$sku       = isset( $row['sku'] ) ? sanitize_text_field( $row['sku'] ) : '';
 		$branch_code = isset( $row['branch code'] ) ? sanitize_text_field( $row['branch code'] ) : '';
 		$stock_qty = isset( $row['stock quantity'] ) && '' !== $row['stock quantity'] ? (int) $row['stock quantity'] : null;
@@ -110,12 +120,28 @@ class IPN_CSV_Import {
 			return self::row_result( 'failed', sprintf( __( 'Unknown Branch Code "%s" — check IPN > Branches for valid codes.', 'ipn' ), $branch_code ) );
 		}
 
+		// A vendor-run import may only touch that vendor's own branches.
+		// Branch codes are short and guessable, so this is a real boundary
+		// rather than a formality.
+		if ( $vendor_id && (int) $branch->vendor_id !== (int) $vendor_id ) {
+			/* translators: %s: branch code from the import file */
+			return self::row_result( 'failed', sprintf( __( 'Branch Code "%s" does not belong to your store.', 'ipn' ), $branch_code ) );
+		}
+
 		if ( ! function_exists( 'wc_get_product_id_by_sku' ) ) {
 			return self::row_result( 'failed', __( 'WooCommerce is not active.', 'ipn' ) );
 		}
 
 		$product_id = wc_get_product_id_by_sku( $sku );
 		$is_new     = ! $product_id;
+
+		// An existing SKU belonging to somebody else must not be rewritten by
+		// a vendor's file — that would let one store edit another's catalogue
+		// by guessing a SKU.
+		if ( $vendor_id && ! $is_new && (int) get_post_field( 'post_author', $product_id ) !== (int) $vendor_id ) {
+			/* translators: %s: SKU from the import file */
+			return self::row_result( 'failed', sprintf( __( 'SKU "%s" belongs to another store.', 'ipn' ), $sku ) );
+		}
 
 		if ( $is_new ) {
 			$name  = isset( $row['product name'] ) ? sanitize_text_field( $row['product name'] ) : '';
