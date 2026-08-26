@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.7.4
+Stable tag: 0.7.5
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,24 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.7.5 =
+* Fix: the branch staff order queue still showed "order routing is not
+  implemented" — a placeholder left over from the original scaffold. Order
+  routing has worked since 0.2.0; the empty state now just says there are no
+  orders in that view.
+* Fix: the branch staff dashboard rendered its header in the theme's blue
+  rather than the IPN green. Its CSS used generic class names such as
+  .topbar, which the Martfury theme also defines, and the theme's rules were
+  winning. Every rule is now scoped tightly enough that the host theme cannot
+  override it.
+* Fix: the dashboard followed the operating system's dark-mode preference
+  while the surrounding theme did not, leaving a black card on a white page.
+  It now follows the page it is embedded in, as the vendor dashboard already
+  did.
+* Change: widened the dashboard from a 460px phone frame, which on a desktop
+  looked like a broken widget floating in whitespace, and let the status
+  filters wrap instead of showing a horizontal scrollbar mid-card.
 
 = 0.7.4 =
 * Add: a vendor can now set a branch staff member's password directly, both

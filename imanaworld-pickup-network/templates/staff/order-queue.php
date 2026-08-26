@@ -81,7 +81,7 @@ $new_count = $status_count( 'new' );
 				<div class="content">
 					<?php if ( empty( $visible_orders ) ) : ?>
 						<div class="empty-state">
-							<?php esc_html_e( 'No orders to show yet — order routing is not implemented.', 'ipn' ); ?>
+							<?php esc_html_e( 'No orders in this view right now.', 'ipn' ); ?>
 						</div>
 					<?php else : ?>
 						<?php foreach ( $visible_orders as $order ) : ?>
