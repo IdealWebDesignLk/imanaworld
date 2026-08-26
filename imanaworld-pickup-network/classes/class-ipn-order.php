@@ -265,7 +265,12 @@ class IPN_Order {
 
 		$args   = wp_parse_args( $args, array( 'branch_id' => 0, 'limit' => 200 ) );
 		$table  = self::table();
-		$where  = array( '1=1' );
+
+		// A row with branch_id 0 is not a Click & Collect order — it is a row
+		// that was written without a branch ever being chosen. Treating those
+		// as IPN orders is what filled the admin list with ordinary orders
+		// showing a blank Branch column.
+		$where  = array( 'branch_id > 0' );
 		$params = array();
 
 		if ( ! empty( $args['branch_id'] ) ) {

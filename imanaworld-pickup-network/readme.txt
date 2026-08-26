@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.7.1
+Stable tag: 0.7.2
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,19 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.7.2 =
+* Fix: Orders & Disputes listed ordinary WooCommerce orders as Click & Collect
+  orders, every one of them with a blank Branch column. The blank was
+  accurate — those orders have no branch — but they should never have been
+  listed. Both lookups now require a real branch: the ipn_order_meta query
+  demands branch_id > 0, and the mirrored order-meta query matches on a
+  value greater than zero instead of on the key merely existing, which an
+  earlier build had written as zero on branchless orders. An order that
+  resolves to no branch is skipped outright.
+* Note: on a site whose only orders predate branch selection, this correctly
+  empties the Orders & Disputes list until a real Click & Collect order is
+  placed. That is the accurate state, not a regression.
 
 = 0.7.1 =
 * Fix: the vendor dashboard's "Click & Collect" link returned a 404 after

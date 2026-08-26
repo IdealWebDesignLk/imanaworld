@@ -771,6 +771,12 @@ class IPN_Admin {
 	 * because an unexpected WC/HPOS query response here previously took the
 	 * whole Orders screen down with it.
 	 *
+	 * Matched on a value greater than zero rather than on EXISTS. An earlier
+	 * build wrote this key with a zero value on orders that never had a
+	 * branch, and EXISTS happily matched those — which is why the admin list
+	 * filled up with ordinary orders whose Branch column was blank. Blank was
+	 * accurate; listing them at all was the bug.
+	 *
 	 * @return int[]
 	 */
 	protected function get_mirrored_ipn_order_ids( $limit ) {
@@ -783,7 +789,9 @@ class IPN_Admin {
 				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery
 					array(
 						'key'     => '_ipn_branch_id',
-						'compare' => 'EXISTS',
+						'value'   => 0,
+						'compare' => '>',
+						'type'    => 'NUMERIC',
 					),
 				),
 			) ) );
@@ -816,7 +824,14 @@ class IPN_Admin {
 
 		$meta      = IPN_Order::get_meta( $order_id );
 		$branch_id = IPN_Order::branch_id_for( $order );
-		$branch    = $branch_id ? IPN_Branch::get( $branch_id ) : null;
+
+		if ( ! $branch_id ) {
+			// Neither source names a branch, so this is not a Click & Collect
+			// order however it got into the candidate list.
+			return null;
+		}
+
+		$branch = IPN_Branch::get( $branch_id );
 
 		$items = array();
 		foreach ( $order->get_items() as $item ) {
