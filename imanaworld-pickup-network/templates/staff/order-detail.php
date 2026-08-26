@@ -35,10 +35,10 @@ $next_status_key = array(
 <div class="ipn-staff-dashboard">
 	<div class="device">
 		<section class="screen">
-			<div class="topbar">
+			<div class="ipn-sd-topbar">
 				<div class="back-row">
 					<a class="icon-btn" href="<?php echo IPN_Staff_Dashboard::screen_url( 'queue' ); ?>" aria-label="<?php esc_attr_e( 'Back to queue', 'ipn' ); ?>">&larr;</a>
-					<div class="topbar-brand"><?php esc_html_e( 'Order detail', 'ipn' ); ?></div>
+					<div class="ipn-sd-topbar-brand"><?php esc_html_e( 'Order detail', 'ipn' ); ?></div>
 				</div>
 			</div>
 

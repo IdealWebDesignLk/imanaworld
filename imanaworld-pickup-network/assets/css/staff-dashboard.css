@@ -88,15 +88,15 @@
 /* ---------- shared bits ---------- */
 .ipn-staff-dashboard.ipn-staff-dashboard .screen { display: flex; flex-direction: column; }
 
-.ipn-staff-dashboard.ipn-staff-dashboard .topbar {
+.ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar {
 	flex-shrink: 0;
 	background: var(--brand-700);
 	color: var(--on-brand);
 	padding: 14px 18px 12px;
 }
-.ipn-staff-dashboard.ipn-staff-dashboard .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.ipn-staff-dashboard.ipn-staff-dashboard .topbar-brand { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .78; }
-.ipn-staff-dashboard.ipn-staff-dashboard .topbar-branch { font-size: 17px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
+.ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar-brand { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .78; }
+.ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar-branch { font-size: 17px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
 .ipn-staff-dashboard.ipn-staff-dashboard .open-pill {
 	font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 20px;
 	background: rgba(255,255,255,.16); white-space: nowrap; flex-shrink: 0;

@@ -19,11 +19,11 @@ $ipn_total_pages = (int) ceil( $stock_total / max( 1, $stock_per_page ) );
 <div class="ipn-staff-dashboard">
 	<div class="device">
 		<section class="screen">
-			<div class="topbar">
-				<div class="topbar-row">
+			<div class="ipn-sd-topbar">
+				<div class="ipn-sd-topbar-row">
 					<div>
-						<div class="topbar-brand"><?php echo $branch ? esc_html( $branch->name ) : esc_html__( 'Branch Staff', 'ipn' ); ?></div>
-						<div class="topbar-branch"><?php esc_html_e( 'Branch stock', 'ipn' ); ?></div>
+						<div class="ipn-sd-topbar-brand"><?php echo $branch ? esc_html( $branch->name ) : esc_html__( 'Branch Staff', 'ipn' ); ?></div>
+						<div class="ipn-sd-topbar-branch"><?php esc_html_e( 'Branch stock', 'ipn' ); ?></div>
 					</div>
 				</div>
 			</div>

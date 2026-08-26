@@ -32,11 +32,11 @@ $ipn_state = $branch_id ? IPN_Branch::open_state( $branch_id ) : null;
 <div class="ipn-staff-dashboard">
 	<div class="device">
 		<section class="screen">
-			<div class="topbar">
-				<div class="topbar-row">
+			<div class="ipn-sd-topbar">
+				<div class="ipn-sd-topbar-row">
 					<div>
-						<div class="topbar-brand"><?php echo $branch ? esc_html( $branch->name ) : esc_html__( 'Branch Staff', 'ipn' ); ?></div>
-						<div class="topbar-branch"><?php esc_html_e( 'Opening hours', 'ipn' ); ?></div>
+						<div class="ipn-sd-topbar-brand"><?php echo $branch ? esc_html( $branch->name ) : esc_html__( 'Branch Staff', 'ipn' ); ?></div>
+						<div class="ipn-sd-topbar-branch"><?php esc_html_e( 'Opening hours', 'ipn' ); ?></div>
 					</div>
 				</div>
 			</div>

@@ -51,11 +51,11 @@ $new_count = $status_count( 'new' );
 <div class="ipn-staff-dashboard">
 	<div class="device">
 		<section class="screen">
-			<div class="topbar">
-				<div class="topbar-row">
+			<div class="ipn-sd-topbar">
+				<div class="ipn-sd-topbar-row">
 					<div>
-						<div class="topbar-brand"><?php esc_html_e( 'Branch Staff', 'ipn' ); ?></div>
-						<div class="topbar-branch"><?php echo $branch ? esc_html( $branch->name ) : esc_html__( 'No branch assigned', 'ipn' ); ?></div>
+						<div class="ipn-sd-topbar-brand"><?php esc_html_e( 'Branch Staff', 'ipn' ); ?></div>
+						<div class="ipn-sd-topbar-branch"><?php echo $branch ? esc_html( $branch->name ) : esc_html__( 'No branch assigned', 'ipn' ); ?></div>
 					</div>
 					<?php if ( $branch_id ) : ?>
 						<span class="open-pill">

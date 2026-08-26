@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.7.7
+Stable tag: 0.7.8
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,18 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.7.8 =
+* Fix: the branch staff dashboard header was still rendering in the theme's
+  blue after 0.7.5. Raising specificity there was the wrong fix: the theme's
+  rule (.header-layout-4 .topbar:not(.header-bar)) scores exactly the same as
+  the one 0.7.5 introduced, and on a tie the later stylesheet wins — which is
+  always the theme. The four topbar classes are renamed with an ipn-sd-
+  prefix so there is nothing left to collide over.
+* Note: checked against the live page rather than guessed. Of the dashboard's
+  other generic class names, only topbar had a competing class rule; the rest
+  match universal and element selectors, which are harmless resets. They were
+  left alone rather than renamed on suspicion.
 
 = 0.7.7 =
 * Add: a Products tab on the vendor dashboard. Vendors can create a product
