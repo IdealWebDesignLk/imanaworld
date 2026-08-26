@@ -351,6 +351,12 @@ class IPN_Vendor_Dashboard {
 			case 'delete_staff':
 				$this->result = $this->handle_delete_staff();
 				break;
+			case 'set_staff_password':
+				$this->result = $this->handle_set_staff_password();
+				break;
+			case 'email_staff_reset':
+				$this->result = $this->handle_email_staff_reset();
+				break;
 			case 'save_stock':
 				$this->result = $this->handle_save_stock();
 				break;
@@ -484,10 +490,22 @@ class IPN_Vendor_Dashboard {
 			$login .= '-' . wp_generate_password( 4, false, false );
 		}
 
+		// A password typed here is optional. Left blank, the account gets a
+		// random one and WordPress emails a set-your-own link — the safer
+		// default, and the only one where nobody but the staff member ever
+		// knows the credential. Counter staff often have no working email
+		// though (and a site with no SMTP configured silently sends nothing),
+		// so a manager can set one directly and hand it over in person.
+		$chosen = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : '';
+
+		if ( '' !== $chosen && strlen( $chosen ) < 8 ) {
+			return new WP_Error( 'ipn_staff_password_short', __( 'A password set here must be at least 8 characters. Leave it blank to email them a set-your-own link instead.', 'ipn' ) );
+		}
+
 		$new_id = wp_insert_user( array(
 			'user_login'   => $login,
 			'user_email'   => $email,
-			'user_pass'    => wp_generate_password( 24, true, true ),
+			'user_pass'    => '' !== $chosen ? $chosen : wp_generate_password( 24, true, true ),
 			'display_name' => $name,
 			'role'         => IPN_Roles::ROLE,
 		) );
@@ -497,14 +515,115 @@ class IPN_Vendor_Dashboard {
 		}
 
 		IPN_Roles::set_branch_id( $new_id, $branch->id );
-		wp_new_user_notification( $new_id, null, 'user' );
 
+		// Deliberately records that an account was made, never the password.
 		IPN_Audit_Log::log( 'staff_created', array(
 			'branch_id' => $branch->id,
 			'data'      => array( 'user_id' => (int) $new_id, 'name' => $name ),
 		) );
 
+		if ( '' !== $chosen ) {
+			return sprintf(
+				/* translators: %s: the password just set */
+				__( 'Staff member added. Their password is %s — give it to them now, it is not shown again.', 'ipn' ),
+				$chosen
+			);
+		}
+
+		wp_new_user_notification( $new_id, null, 'user' );
+
 		return __( 'Staff member added. They have been emailed a link to set their own password.', 'ipn' );
+	}
+
+	/**
+	 * Sets an existing staff member's password directly.
+	 *
+	 * The manager never learns a password that already exists — WordPress only
+	 * stores a hash — so this replaces it outright, which also ends any session
+	 * that account had open. Shown back once so it can be handed over, and
+	 * never written to the audit trail.
+	 *
+	 * @return string|WP_Error
+	 */
+	protected function handle_set_staff_password() {
+		$user_id = isset( $_POST['user_id'] ) ? absint( $_POST['user_id'] ) : 0;
+
+		if ( ! IPN_Access::can_manage_staff( $user_id ) ) {
+			return new WP_Error( 'ipn_staff_forbidden', __( 'You do not have permission to manage that staff account.', 'ipn' ) );
+		}
+
+		$password = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : '';
+
+		if ( strlen( $password ) < 8 ) {
+			return new WP_Error( 'ipn_staff_password_short', __( 'The password must be at least 8 characters.', 'ipn' ) );
+		}
+
+		wp_set_password( $password, $user_id );
+
+		IPN_Audit_Log::log( 'staff_password_set', array(
+			'branch_id' => IPN_Roles::get_branch_id( $user_id ),
+			'data'      => array( 'user_id' => $user_id ),
+		) );
+
+		return sprintf(
+			/* translators: %s: the password just set */
+			__( 'Password updated. It is now %s — give it to them now, it is not shown again. They have been signed out everywhere.', 'ipn' ),
+			$password
+		);
+	}
+
+	/**
+	 * Emails a staff member WordPress's own password-reset link.
+	 *
+	 * Built from get_password_reset_key() rather than by calling into
+	 * wp-login.php, which is not loaded on a front-end request.
+	 *
+	 * @return string|WP_Error
+	 */
+	protected function handle_email_staff_reset() {
+		$user_id = isset( $_POST['user_id'] ) ? absint( $_POST['user_id'] ) : 0;
+
+		if ( ! IPN_Access::can_manage_staff( $user_id ) ) {
+			return new WP_Error( 'ipn_staff_forbidden', __( 'You do not have permission to manage that staff account.', 'ipn' ) );
+		}
+
+		$user = get_userdata( $user_id );
+
+		if ( ! $user ) {
+			return new WP_Error( 'ipn_staff_missing', __( 'That staff account no longer exists.', 'ipn' ) );
+		}
+
+		$key = get_password_reset_key( $user );
+
+		if ( is_wp_error( $key ) ) {
+			return $key;
+		}
+
+		$reset_url = network_site_url( 'wp-login.php?action=rp&key=' . $key . '&login=' . rawurlencode( $user->user_login ), 'login' );
+
+		$sent = wp_mail(
+			$user->user_email,
+			__( 'Set your Click & Collect staff password', 'ipn' ),
+			sprintf(
+				/* translators: 1: staff display name, 2: password reset URL */
+				__( "Hi %1\$s,\n\nUse the link below to set the password for your Click & Collect branch dashboard:\n\n%2\$s\n\nIf you were not expecting this, you can ignore it.", 'ipn' ),
+				$user->display_name,
+				$reset_url
+			)
+		);
+
+		if ( ! $sent ) {
+			return new WP_Error(
+				'ipn_staff_mail_failed',
+				__( 'WordPress could not send that email — this site may have no mail delivery configured. Set a password directly instead.', 'ipn' )
+			);
+		}
+
+		return sprintf(
+			/* translators: %s: staff email address */
+			__( 'Reset link emailed to %s.', 'ipn' ),
+			$user->user_email
+		);
 	}
 
 	/**

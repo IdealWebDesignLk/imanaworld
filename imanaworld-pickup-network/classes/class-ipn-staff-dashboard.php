@@ -22,6 +22,63 @@ class IPN_Staff_Dashboard {
 
 	public function register_hooks( IPN_Loader $loader ) {
 		$loader->add_action( 'init', $this, 'register_shortcode' );
+		$loader->add_filter( 'login_redirect', $this, 'redirect_staff_after_login', 10, 3 );
+		$loader->add_action( 'admin_init', $this, 'keep_staff_out_of_wp_admin' );
+	}
+
+	/**
+	 * Sends branch staff to their dashboard after signing in, however they
+	 * signed in.
+	 *
+	 * The sign-in card on the dashboard page already passes a redirect, but a
+	 * staff member who lands on wp-login.php by any other route — a bookmark,
+	 * a password-reset link, a session timeout — would otherwise be dropped
+	 * into wp-admin, which they have no business seeing and which looks
+	 * exactly like the login having failed.
+	 *
+	 * @param string           $redirect_to
+	 * @param string           $requested
+	 * @param WP_User|WP_Error $user
+	 */
+	public function redirect_staff_after_login( $redirect_to, $requested, $user ) {
+		if ( ! $user instanceof WP_User || ! IPN_Roles::is_branch_staff( $user->ID ) ) {
+			return $redirect_to;
+		}
+
+		$dashboard = IPN_Pages::staff_dashboard_url();
+
+		return $dashboard ? $dashboard : $redirect_to;
+	}
+
+	/**
+	 * Bounces branch staff out of wp-admin, enforcing the rule the rest of the
+	 * plugin is written around rather than merely documenting it.
+	 *
+	 * Their own profile screen stays reachable so they can change their
+	 * password, and AJAX is left alone because admin-ajax.php fires admin_init
+	 * too — redirecting there would break any front-end request that uses it.
+	 */
+	public function keep_staff_out_of_wp_admin() {
+		if ( wp_doing_ajax() || ! is_user_logged_in() ) {
+			return;
+		}
+
+		if ( ! IPN_Roles::is_branch_staff( get_current_user_id() ) ) {
+			return;
+		}
+
+		global $pagenow;
+
+		if ( in_array( $pagenow, array( 'profile.php', 'admin-post.php' ), true ) ) {
+			return;
+		}
+
+		$dashboard = IPN_Pages::staff_dashboard_url();
+
+		if ( $dashboard ) {
+			wp_safe_redirect( $dashboard );
+			exit;
+		}
 	}
 
 	public function register_shortcode() {

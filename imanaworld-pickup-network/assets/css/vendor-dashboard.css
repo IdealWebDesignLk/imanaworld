@@ -211,6 +211,14 @@
 	font-size: 13px;
 }
 .ipn-vd__qty { width: 82px; }
+.ipn-vd__pw {
+	width: 150px;
+	border: 1px solid var( --ipn-vd-line-strong );
+	border-radius: 8px;
+	padding: 6px 8px;
+	font-size: 13px;
+}
+.ipn-vd__actions { flex-wrap: wrap; gap: 6px; }
 
 /* ---------- hours editor ---------- */
 .ipn-vd__hours { border: 1px solid var( --ipn-vd-line ); border-radius: var( --ipn-vd-radius ); overflow: hidden; }

@@ -57,6 +57,25 @@ defined( 'ABSPATH' ) || exit;
 							</form>
 						</td>
 						<td class="ipn-vd__actions">
+							<form method="post" class="ipn-vd__inline-form">
+								<?php wp_nonce_field( 'ipn_vendor_set_staff_password' ); ?>
+								<input type="hidden" name="ipn_vendor_action" value="set_staff_password" />
+								<input type="hidden" name="user_id" value="<?php echo esc_attr( $ipn_person->user_id ); ?>" />
+								<input
+									type="text"
+									name="password"
+									class="ipn-vd__pw"
+									autocomplete="off"
+									placeholder="<?php esc_attr_e( 'New password', 'ipn' ); ?>"
+								/>
+								<button type="submit" class="ipn-vd__btn"><?php esc_html_e( 'Set', 'ipn' ); ?></button>
+							</form>
+							<form method="post">
+								<?php wp_nonce_field( 'ipn_vendor_email_staff_reset' ); ?>
+								<input type="hidden" name="ipn_vendor_action" value="email_staff_reset" />
+								<input type="hidden" name="user_id" value="<?php echo esc_attr( $ipn_person->user_id ); ?>" />
+								<button type="submit" class="ipn-vd__btn"><?php esc_html_e( 'Email reset link', 'ipn' ); ?></button>
+							</form>
 							<form method="post" onsubmit="return confirm('<?php echo esc_js( __( 'Remove this staff member from the pickup network?', 'ipn' ) ); ?>');">
 								<?php wp_nonce_field( 'ipn_vendor_delete_staff' ); ?>
 								<input type="hidden" name="ipn_vendor_action" value="delete_staff" />
@@ -97,10 +116,15 @@ defined( 'ABSPATH' ) || exit;
 				<?php endforeach; ?>
 			</select>
 		</label>
+		<label class="ipn-vd__field ipn-vd__field--wide">
+			<span><?php esc_html_e( 'Password (optional)', 'ipn' ); ?></span>
+			<input type="text" name="password" autocomplete="off" placeholder="<?php esc_attr_e( 'Leave blank to email them a set-your-own link', 'ipn' ); ?>" />
+			<small><?php esc_html_e( 'At least 8 characters. Fill this in to hand credentials over in person — useful when counter staff have no working email. It is shown back to you once and never stored anywhere you can read it again.', 'ipn' ); ?></small>
+		</label>
 	</div>
 
 	<p class="ipn-vd__hint">
-		<?php esc_html_e( 'No password is set here — the new account is emailed a link to choose its own, the same as any other WordPress sign-in.', 'ipn' ); ?>
+		<?php esc_html_e( 'Leaving the password blank is the safer default: the account gets a random one and only the staff member ever knows it.', 'ipn' ); ?>
 	</p>
 
 	<div class="ipn-vd__form-foot">

@@ -97,6 +97,7 @@ class IPN_Audit_Log {
 			'staff_page_created'    => __( 'Staff dashboard page created', 'ipn' ),
 			'staff_created'         => __( 'Branch staff account created', 'ipn' ),
 			'staff_removed'         => __( 'Branch staff access removed', 'ipn' ),
+			'staff_password_set'    => __( 'Branch staff password reset by manager', 'ipn' ),
 			'branch_hours_updated'  => __( 'Branch operating hours updated', 'ipn' ),
 			'partner_enabled'       => __( 'Marked as IPN partner', 'ipn' ),
 			'partner_disabled'      => __( 'Removed as IPN partner', 'ipn' ),

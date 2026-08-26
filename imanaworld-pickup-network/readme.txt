@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.7.3
+Stable tag: 0.7.4
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,24 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.7.4 =
+* Add: a vendor can now set a branch staff member's password directly, both
+  when creating the account and afterwards from the staff list. Counter staff
+  often have no working email, and a site with no mail delivery configured
+  sends the set-your-own link into a void, which leaves an account nobody can
+  sign in to. The password is shown back once so it can be handed over, and is
+  never written to the audit trail.
+* Add: "Email reset link" per staff member, for where mail does work. It
+  reports honestly when WordPress could not send, rather than claiming success.
+* Change: the password field on "Add staff member" is optional. Left blank,
+  the previous behaviour is unchanged and remains the safer default, since
+  only the staff member ever knows the credential.
+* Fix: branch staff signing in anywhere other than the dashboard's own card
+  were dropped into wp-admin, which the design says they never get and which
+  looks like a failed login. They are now always returned to their branch
+  dashboard, and wp-admin bounces them back — their own profile screen stays
+  reachable so they can still change their password.
 
 = 0.7.3 =
 * Add: the branch staff dashboard page is now created by the plugin instead
