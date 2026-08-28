@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.0
+Stable tag: 0.9.1
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,22 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.1 =
+* The staff order detail page now shows the whole order rather than a name and
+  a list of item names. Added: order number, WooCommerce status, date, payment
+  method and currency; the customer's email and phone; billing and shipping
+  addresses with the shipping method; every line item with its SKU, unit price,
+  quantity and line total; subtotal, discount, shipping, tax and order total;
+  Dokan commission with store earnings, the marketplace's share, the rate and
+  shipping fees; order notes, marked where they were sent to the customer;
+  WooCommerce order attribution; and whether the customer checked out as a
+  guest or, if not, how many orders they have placed and what they have spent.
+  (#29)
+* Every WooCommerce and Dokan call behind that is guarded, so the page still
+  renders on a site where Dokan is inactive, on older WooCommerce without order
+  attribution, and on orders placed before attribution was switched on — an
+  absent section is simply not shown.
 
 = 0.9.0 =
 Branch staff dashboard, rebuilt around how it is actually used — at a counter,

@@ -99,14 +99,147 @@ $next_status_key = array(
 					<?php endif; ?>
 
 					<div class="card">
+						<div class="card-title"><?php esc_html_e( 'Order', 'ipn' ); ?></div>
+						<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Order number', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->order_number ); ?></span></div>
+						<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Placed', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->date_created ); ?></span></div>
+						<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Order status', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->wc_status ); ?></span></div>
+						<?php if ( $order->payment_method ) : ?>
+							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Payment method', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->payment_method ); ?></span></div>
+						<?php endif; ?>
+						<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Currency', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->currency ); ?></span></div>
+					</div>
+
+					<div class="card">
+						<div class="card-title"><?php esc_html_e( 'Customer', 'ipn' ); ?></div>
+						<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Name', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->customer_name ); ?></span></div>
+						<?php if ( $order->billing->email ) : ?>
+							<div class="kv-row">
+								<span class="kv-label"><?php esc_html_e( 'Email', 'ipn' ); ?></span>
+								<span class="kv-value"><a href="mailto:<?php echo esc_attr( $order->billing->email ); ?>"><?php echo esc_html( $order->billing->email ); ?></a></span>
+							</div>
+						<?php endif; ?>
+						<?php if ( $order->billing->phone ) : ?>
+							<div class="kv-row">
+								<span class="kv-label"><?php esc_html_e( 'Phone', 'ipn' ); ?></span>
+								<span class="kv-value"><a href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $order->billing->phone ) ); ?>"><?php echo esc_html( $order->billing->phone ); ?></a></span>
+							</div>
+						<?php endif; ?>
+						<?php if ( $order->customer->is_guest ) : ?>
+							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Account', 'ipn' ); ?></span><span class="kv-value"><?php esc_html_e( 'Guest checkout', 'ipn' ); ?></span></div>
+						<?php else : ?>
+							<div class="kv-row">
+								<span class="kv-label"><?php esc_html_e( 'Order history', 'ipn' ); ?></span>
+								<span class="kv-value">
+									<?php
+									printf(
+										/* translators: 1: number of orders, 2: total spent */
+										esc_html( _n( '%1$s order, %2$s spent', '%1$s orders, %2$s spent', $order->customer->order_count, 'ipn' ) ),
+										esc_html( number_format_i18n( $order->customer->order_count ) ),
+										wp_kses_post( wc_price( $order->customer->total_spent, array( 'currency' => $order->currency ) ) )
+									);
+									?>
+								</span>
+							</div>
+						<?php endif; ?>
+					</div>
+
+					<?php if ( $order->billing->address ) : ?>
+						<div class="card">
+							<div class="card-title"><?php esc_html_e( 'Billing address', 'ipn' ); ?></div>
+							<?php if ( $order->billing->company ) : ?>
+								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Company', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->billing->company ); ?></span></div>
+							<?php endif; ?>
+							<div class="address-block"><?php echo wp_kses_post( $order->billing->address ); ?></div>
+						</div>
+					<?php endif; ?>
+
+					<?php if ( $order->shipping ) : ?>
+						<div class="card">
+							<div class="card-title"><?php esc_html_e( 'Shipping address', 'ipn' ); ?></div>
+							<?php if ( $order->shipping->company ) : ?>
+								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Company', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->shipping->company ); ?></span></div>
+							<?php endif; ?>
+							<div class="address-block"><?php echo wp_kses_post( $order->shipping->address ); ?></div>
+							<?php if ( $order->shipping->phone ) : ?>
+								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Phone', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->shipping->phone ); ?></span></div>
+							<?php endif; ?>
+							<?php if ( $order->shipping->method ) : ?>
+								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Method', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->shipping->method ); ?></span></div>
+							<?php endif; ?>
+						</div>
+					<?php endif; ?>
+
+					<div class="card">
 						<div class="card-title"><?php esc_html_e( 'Items', 'ipn' ); ?></div>
 						<?php foreach ( $order->items as $item ) : ?>
-							<div class="item-row">
-								<span class="item-name"><?php echo esc_html( $item['name'] ); ?></span>
-								<span class="item-qty">&times;<?php echo esc_html( $item['qty'] ); ?></span>
+							<div class="line-item">
+								<div class="line-item__head">
+									<span class="item-name"><?php echo esc_html( $item['name'] ); ?></span>
+									<span class="line-item__total"><?php echo wp_kses_post( wc_price( $item['total'], array( 'currency' => $order->currency ) ) ); ?></span>
+								</div>
+								<div class="line-item__meta">
+									<?php if ( $item['sku'] ) : ?>
+										<span><?php esc_html_e( 'SKU', 'ipn' ); ?> <?php echo esc_html( $item['sku'] ); ?></span>
+									<?php endif; ?>
+									<span><?php echo wp_kses_post( wc_price( $item['price'], array( 'currency' => $order->currency ) ) ); ?> &times; <?php echo esc_html( $item['qty'] ); ?></span>
+								</div>
 							</div>
 						<?php endforeach; ?>
+
+						<div class="totals">
+							<div class="totals__row"><span><?php esc_html_e( 'Subtotal', 'ipn' ); ?></span><span><?php echo wp_kses_post( wc_price( $order->totals->subtotal, array( 'currency' => $order->currency ) ) ); ?></span></div>
+							<?php if ( $order->totals->discount > 0 ) : ?>
+								<div class="totals__row"><span><?php esc_html_e( 'Discount', 'ipn' ); ?></span><span>&minus;<?php echo wp_kses_post( wc_price( $order->totals->discount, array( 'currency' => $order->currency ) ) ); ?></span></div>
+							<?php endif; ?>
+							<div class="totals__row"><span><?php esc_html_e( 'Shipping', 'ipn' ); ?></span><span><?php echo wp_kses_post( wc_price( $order->totals->shipping, array( 'currency' => $order->currency ) ) ); ?></span></div>
+							<?php if ( $order->totals->tax > 0 ) : ?>
+								<div class="totals__row"><span><?php esc_html_e( 'Tax', 'ipn' ); ?></span><span><?php echo wp_kses_post( wc_price( $order->totals->tax, array( 'currency' => $order->currency ) ) ); ?></span></div>
+							<?php endif; ?>
+							<div class="totals__row totals__row--grand"><span><?php esc_html_e( 'Order total', 'ipn' ); ?></span><span><?php echo wp_kses_post( wc_price( $order->totals->total, array( 'currency' => $order->currency ) ) ); ?></span></div>
+						</div>
 					</div>
+
+					<?php if ( $order->commission ) : ?>
+						<div class="card">
+							<div class="card-title"><?php esc_html_e( 'Commission', 'ipn' ); ?></div>
+							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Store earnings', 'ipn' ); ?></span><span class="kv-value"><?php echo wp_kses_post( wc_price( $order->commission['vendor_earning'], array( 'currency' => $order->currency ) ) ); ?></span></div>
+							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Marketplace commission', 'ipn' ); ?></span><span class="kv-value"><?php echo wp_kses_post( wc_price( $order->commission['commission'], array( 'currency' => $order->currency ) ) ); ?></span></div>
+							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Commission rate', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( number_format_i18n( $order->commission['rate'], 1 ) ); ?>%</span></div>
+							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Shipping fees', 'ipn' ); ?></span><span class="kv-value"><?php echo wp_kses_post( wc_price( $order->commission['shipping'], array( 'currency' => $order->currency ) ) ); ?></span></div>
+							<div class="otp-hint"><?php esc_html_e( 'Store earnings come from Dokan. The commission and rate are what is left of the order total after them.', 'ipn' ); ?></div>
+						</div>
+					<?php endif; ?>
+
+					<?php if ( ! empty( $order->attribution ) ) : ?>
+						<div class="card">
+							<div class="card-title"><?php esc_html_e( 'Where this order came from', 'ipn' ); ?></div>
+							<?php foreach ( $order->attribution as $ipn_att_label => $ipn_att_value ) : ?>
+								<div class="kv-row"><span class="kv-label"><?php echo esc_html( $ipn_att_label ); ?></span><span class="kv-value"><?php echo esc_html( $ipn_att_value ); ?></span></div>
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
+
+					<?php if ( ! empty( $order->notes ) ) : ?>
+						<div class="card">
+							<div class="card-title"><?php esc_html_e( 'Order notes', 'ipn' ); ?></div>
+							<?php foreach ( $order->notes as $ipn_note ) : ?>
+								<div class="order-note<?php echo $ipn_note['customer'] ? ' order-note--customer' : ''; ?>">
+									<div class="order-note__body"><?php echo wp_kses_post( wpautop( $ipn_note['content'] ) ); ?></div>
+									<div class="order-note__meta">
+										<?php
+										printf(
+											/* translators: 1: who added the note, 2: when */
+											esc_html__( '%1$s · %2$s', 'ipn' ),
+											esc_html( $ipn_note['added_by'] ),
+											esc_html( $ipn_note['date'] )
+										);
+										echo $ipn_note['customer'] ? ' · ' . esc_html__( 'sent to customer', 'ipn' ) : '';
+										?>
+									</div>
+								</div>
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
 
 					<?php if ( 'ready' === $order->status ) : ?>
 						<div class="card">
