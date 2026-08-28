@@ -9,7 +9,73 @@ defined( 'ABSPATH' ) || exit;
  */
 ?>
 <div class="wrap ipn-admin">
-	<div class="section-title" style="margin-bottom:14px;"><?php esc_html_e( 'Global IPN settings', 'ipn' ); ?></div>
+	<div class="section-title" style="margin-bottom:14px;"><?php esc_html_e( 'Global IPN settings', 'ipn' ); ?>	<script>
+	/* Swatch and HEX box are two views of one value; the HEX box is the one
+	   that posts, so a typed code is what gets saved. Preview only — nothing
+	   here decides what is stored. */
+	( function () {
+		function readableOn( hex ) {
+			var r = parseInt( hex.substr( 1, 2 ), 16 ) / 255,
+				g = parseInt( hex.substr( 3, 2 ), 16 ) / 255,
+				b = parseInt( hex.substr( 5, 2 ), 16 ) / 255;
+			function lin( c ) { return c <= 0.03928 ? c / 12.92 : Math.pow( ( c + 0.055 ) / 1.055, 2.4 ); }
+			var l = 0.2126 * lin( r ) + 0.7152 * lin( g ) + 0.0722 * lin( b );
+			return ( 1.05 / ( l + 0.05 ) ) >= ( ( l + 0.05 ) / 0.05 ) ? '#ffffff' : '#1c1b18';
+		}
+
+		function tint( hex, amount ) {
+			var out = '#', i, c;
+			for ( i = 1; i < 7; i += 2 ) {
+				c = parseInt( hex.substr( i, 2 ), 16 );
+				c = Math.round( c + ( 255 - c ) * amount );
+				out += ( '0' + c.toString( 16 ) ).slice( -2 );
+			}
+			return out;
+		}
+
+		function valid( v ) { return /^#[0-9a-fA-F]{6}$/.test( v ); }
+
+		function get( id ) {
+			var el = document.getElementById( id + '_hex' );
+			return el && valid( el.value ) ? el.value.toLowerCase() : null;
+		}
+
+		function paint() {
+			var primary   = get( 'ipn_staff_primary_color' ),
+				secondary = get( 'ipn_staff_secondary_color' ),
+				accent    = get( 'ipn_staff_accent_color' ),
+				bar  = document.getElementById( 'ipn-colour-preview-bar' ),
+				btn  = document.getElementById( 'ipn-colour-preview-btn' ),
+				chip = document.getElementById( 'ipn-colour-preview-chip' );
+
+			if ( bar && primary ) { bar.style.background = primary; bar.style.color = readableOn( primary ); }
+			if ( btn && secondary ) { btn.style.background = secondary; btn.style.color = readableOn( secondary ); }
+			if ( chip && accent ) { chip.style.background = tint( accent, 0.88 ); chip.style.color = accent; }
+		}
+
+		Array.prototype.forEach.call( document.querySelectorAll( '.ipn-colour-swatch' ), function ( swatch ) {
+			swatch.addEventListener( 'input', function () {
+				var hex = document.getElementById( swatch.getAttribute( 'data-hex-for' ) + '_hex' );
+				if ( hex ) { hex.value = swatch.value; }
+				paint();
+			} );
+		} );
+
+		Array.prototype.forEach.call( document.querySelectorAll( '.ipn-colour-hex' ), function ( field ) {
+			field.addEventListener( 'input', function () {
+				var v = field.value.trim();
+				if ( v && v.charAt( 0 ) !== '#' ) { v = '#' + v; }
+				if ( ! valid( v ) ) { return; }
+				var swatch = document.getElementById( field.getAttribute( 'data-swatch-for' ) );
+				if ( swatch ) { swatch.value = v.toLowerCase(); }
+				paint();
+			} );
+		} );
+
+		paint();
+	}() );
+	</script>
+</div>
 
 	<?php if ( ! empty( $settings_saved ) ) : ?>
 		<div class="notice notice-success" style="margin:0 0 14px;"><p><?php echo esc_html( $settings_saved ); ?></p></div>
@@ -67,38 +133,82 @@ defined( 'ABSPATH' ) || exit;
 	</div>
 
 	<div class="panel" style="margin-top:16px;">
-		<div class="panel-title"><?php esc_html_e( 'Staff dashboard colour', 'ipn' ); ?></div>
-		<div class="panel-sub"><?php esc_html_e( 'One colour drives the whole branch staff dashboard: the header, buttons, tabs, active states, links and icons all follow it.', 'ipn' ); ?></div>
+		<div class="panel-title"><?php esc_html_e( 'Global theme colours', 'ipn' ); ?></div>
+		<div class="panel-sub"><?php esc_html_e( 'Three colours drive the whole branch staff dashboard. Pick them with the swatch or type a HEX code such as #4054B2.', 'ipn' ); ?></div>
 
-		<div class="field" style="max-width:320px;">
-			<label for="ipn_staff_primary_color"><?php esc_html_e( 'Dashboard colour', 'ipn' ); ?></label>
-			<div style="display:flex;align-items:center;gap:10px;">
-				<input type="color" id="ipn_staff_primary_color" name="ipn_staff_primary_color" value="<?php echo esc_attr( IPN_Theme::primary() ); ?>" style="width:52px;height:36px;padding:2px;" />
-				<input type="text" id="ipn_staff_primary_color_hex" value="<?php echo esc_attr( IPN_Theme::primary() ); ?>" readonly="readonly" style="width:110px;font-family:monospace;" aria-label="<?php esc_attr_e( 'Selected colour', 'ipn' ); ?>" />
+		<?php
+		$ipn_colour_fields = array(
+			array(
+				'option' => IPN_Theme::OPTION_PRIMARY,
+				'label'  => __( 'Primary colour', 'ipn' ),
+				'value'  => IPN_Theme::primary(),
+				'shipped' => IPN_Theme::DEFAULT_PRIMARY,
+				'role'   => __( 'Surfaces you look at: the dashboard header, the active tab, links and headings.', 'ipn' ),
+			),
+			array(
+				'option' => IPN_Theme::OPTION_SECONDARY,
+				'label'  => __( 'Secondary colour', 'ipn' ),
+				'value'  => IPN_Theme::secondary(),
+				'shipped' => IPN_Theme::DEFAULT_SECONDARY,
+				'role'   => __( 'Things you press: buttons, and the marks that lead to them.', 'ipn' ),
+			),
+			array(
+				'option' => IPN_Theme::OPTION_ACCENT,
+				'label'  => __( 'Accent colour', 'ipn' ),
+				'value'  => IPN_Theme::accent(),
+				'shipped' => IPN_Theme::DEFAULT_ACCENT,
+				'role'   => __( 'Quiet highlights: soft fills behind badges and notes, and the keyboard focus ring.', 'ipn' ),
+			),
+		);
+		?>
+
+		<?php foreach ( $ipn_colour_fields as $ipn_cf ) : ?>
+			<div class="field" style="max-width:460px;">
+				<label for="<?php echo esc_attr( $ipn_cf['option'] ); ?>"><?php echo esc_html( $ipn_cf['label'] ); ?></label>
+				<div style="display:flex;align-items:center;gap:10px;">
+					<input type="color"
+						id="<?php echo esc_attr( $ipn_cf['option'] ); ?>"
+						class="ipn-colour-swatch"
+						data-hex-for="<?php echo esc_attr( $ipn_cf['option'] ); ?>"
+						value="<?php echo esc_attr( $ipn_cf['value'] ); ?>"
+						style="width:52px;height:36px;padding:2px;" />
+					<input type="text"
+						id="<?php echo esc_attr( $ipn_cf['option'] ); ?>_hex"
+						name="<?php echo esc_attr( $ipn_cf['option'] ); ?>"
+						class="ipn-colour-hex"
+						data-swatch-for="<?php echo esc_attr( $ipn_cf['option'] ); ?>"
+						value="<?php echo esc_attr( $ipn_cf['value'] ); ?>"
+						maxlength="7" spellcheck="false"
+						style="width:120px;font-family:monospace;text-transform:lowercase;"
+						aria-label="<?php echo esc_attr( sprintf( /* translators: %s: colour field name */ __( '%s HEX code', 'ipn' ), $ipn_cf['label'] ) ); ?>" />
+					<span class="hint" style="margin:0;"><?php echo esc_html( $ipn_cf['role'] ); ?></span>
+				</div>
+				<p class="hint" style="margin-top:6px;">
+					<?php
+					printf(
+						/* translators: %s: the shipped default colour, e.g. #1b5e20 */
+						esc_html__( 'Shipped default %s.', 'ipn' ),
+						esc_html( $ipn_cf['shipped'] )
+					);
+					?>
+				</p>
 			</div>
-			<p class="hint" style="margin-top:8px;">
-				<?php
-				printf(
-					/* translators: %s: the plugin's shipped default colour, e.g. #1b5e20 */
-					esc_html__( 'Shipped default is %s. The darker and lighter shades, and the text colour that sits on this one, are worked out from it so they always stay readable together.', 'ipn' ),
-					esc_html( IPN_Theme::DEFAULT_PRIMARY )
-				);
-				?>
-			</p>
-			<p class="hint">
-				<?php esc_html_e( 'Order status badges keep their own colours. Those carry meaning — a disputed order has to read as a problem whatever the brand colour is.', 'ipn' ); ?>
-			</p>
-		</div>
+		<?php endforeach; ?>
+
+		<p class="hint">
+			<?php esc_html_e( 'The text that sits on the primary and secondary colours is worked out by contrast rather than chosen, so a pale colour cannot end up with unreadable text on it. Order status badges keep their own colours — those carry meaning, and a disputed order has to read as a problem whatever the brand colours are.', 'ipn' ); ?>
+		</p>
 
 		<div class="field" style="max-width:520px;">
 			<label><?php esc_html_e( 'Preview', 'ipn' ); ?></label>
 			<div id="ipn-colour-preview" style="border-radius:10px;overflow:hidden;border:1px solid #dcdcde;">
-				<div id="ipn-colour-preview-bar" style="padding:12px 14px;background:<?php echo esc_attr( IPN_Theme::primary() ); ?>;color:<?php echo esc_attr( IPN_Theme::readable_on( IPN_Theme::primary() ) ); ?>;">
+				<div id="ipn-colour-preview-bar" style="padding:12px 14px;">
 					<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;"><?php esc_html_e( 'Branch Staff', 'ipn' ); ?></div>
 					<div style="font-size:16px;font-weight:700;"><?php esc_html_e( 'Kandy Mall', 'ipn' ); ?></div>
 				</div>
-				<div style="padding:12px 14px;background:#fff;">
-					<span id="ipn-colour-preview-btn" style="display:inline-block;padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;background:<?php echo esc_attr( IPN_Theme::primary() ); ?>;color:<?php echo esc_attr( IPN_Theme::readable_on( IPN_Theme::primary() ) ); ?>;"><?php esc_html_e( 'Accept order', 'ipn' ); ?></span>
+				<div id="ipn-colour-preview-body" style="padding:12px 14px;background:#fff;display:flex;align-items:center;gap:10px;">
+					<span id="ipn-colour-preview-btn" style="display:inline-block;padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;"><?php esc_html_e( 'Accept order', 'ipn' ); ?></span>
+					<span id="ipn-colour-preview-chip" style="display:inline-block;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:600;"><?php esc_html_e( 'Ready', 'ipn' ); ?></span>
 				</div>
 			</div>
 		</div>
@@ -109,31 +219,4 @@ defined( 'ABSPATH' ) || exit;
 	</div>
 	</form>
 
-	<script>
-	/* Live preview only — the saved value is whatever the colour input posts. */
-	( function () {
-		var input = document.getElementById( 'ipn_staff_primary_color' );
-		if ( ! input ) { return; }
-
-		function readableOn( hex ) {
-			var r = parseInt( hex.substr( 1, 2 ), 16 ) / 255,
-				g = parseInt( hex.substr( 3, 2 ), 16 ) / 255,
-				b = parseInt( hex.substr( 5, 2 ), 16 ) / 255;
-			function lin( c ) { return c <= 0.03928 ? c / 12.92 : Math.pow( ( c + 0.055 ) / 1.055, 2.4 ); }
-			var l = 0.2126 * lin( r ) + 0.7152 * lin( g ) + 0.0722 * lin( b );
-			return ( 1.05 / ( l + 0.05 ) ) >= ( ( l + 0.05 ) / 0.05 ) ? '#ffffff' : '#1c1b18';
-		}
-
-		input.addEventListener( 'input', function () {
-			var hex = input.value, ink = readableOn( hex ), i;
-			var hexField = document.getElementById( 'ipn_staff_primary_color_hex' );
-			if ( hexField ) { hexField.value = hex; }
-			var targets = [ 'ipn-colour-preview-bar', 'ipn-colour-preview-btn' ];
-			for ( i = 0; i < targets.length; i++ ) {
-				var el = document.getElementById( targets[ i ] );
-				if ( el ) { el.style.background = hex; el.style.color = ink; }
-			}
-		} );
-	}() );
-	</script>
 </div>

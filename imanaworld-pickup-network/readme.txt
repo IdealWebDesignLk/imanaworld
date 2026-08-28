@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.6
+Stable tag: 0.9.7
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,27 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.7 =
+* IPN > Settings now carries three theme colours instead of one: Primary for
+  the surfaces you look at (header, active tab, links, headings), Secondary
+  for the things you press (buttons), and Accent for the quiet highlights
+  (soft fills behind badges and notes, and the focus ring). Each takes a HEX
+  code typed directly, such as #4054B2, or the colour swatch. (#25)
+* The text sitting on the primary and on the secondary colour is now worked
+  out separately, each by contrast against its own background. With one colour
+  that distinction did not exist; with two it does, and without it a dark
+  header with a pale button would have kept white text on the pale button.
+* The Products tab is gone from the vendor dashboard, along with the create
+  and bulk-import handlers behind it, so the capability is removed rather than
+  hidden. Products are created by an administrator. (#32)
+* The collection code is no longer shown on the branch staff order detail;
+  that screen keeps the verification form only. The code is still shown to the
+  vendor on their Orders tab. (#33)
+* The staff sign-in panel is a centred card of a sensible width again rather
+  than two fields stretched across a desktop monitor, and the shop's currency
+  flag switcher, back-to-top arrow and mobile off-canvas menu no longer appear
+  over the dashboard. (#34)
 
 = 0.9.6 =
 Polish on the staff order detail.

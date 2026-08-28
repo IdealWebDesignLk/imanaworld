@@ -1067,9 +1067,19 @@ class IPN_Admin {
 		update_option( 'ipn_auto_refund_mode', in_array( $refund_mode, array( 'auto', 'manual' ), true ) ? $refund_mode : 'manual' );
 
 		// An unparseable colour falls back to the shipped one rather than
-		// being stored, so the dashboard can never be left unstyled.
-		$colour = isset( $_POST['ipn_staff_primary_color'] ) ? IPN_Theme::normalise_hex( wp_unslash( $_POST['ipn_staff_primary_color'] ) ) : '';
-		update_option( IPN_Theme::OPTION_PRIMARY, $colour ? $colour : IPN_Theme::DEFAULT_PRIMARY );
+		// being stored, so the dashboard can never be left unstyled. The HEX
+		// box is what posts, so a typed code is what gets saved, and "4054B2"
+		// is accepted as readily as "#4054b2".
+		$colours = array(
+			IPN_Theme::OPTION_PRIMARY   => IPN_Theme::DEFAULT_PRIMARY,
+			IPN_Theme::OPTION_SECONDARY => IPN_Theme::DEFAULT_SECONDARY,
+			IPN_Theme::OPTION_ACCENT    => IPN_Theme::DEFAULT_ACCENT,
+		);
+
+		foreach ( $colours as $option => $shipped ) {
+			$colour = isset( $_POST[ $option ] ) ? IPN_Theme::normalise_hex( wp_unslash( $_POST[ $option ] ) ) : '';
+			update_option( $option, $colour ? $colour : $shipped );
+		}
 
 		IPN_Audit_Log::log( 'settings_saved' );
 

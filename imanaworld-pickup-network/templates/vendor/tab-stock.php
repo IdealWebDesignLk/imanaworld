@@ -73,11 +73,6 @@ $ipn_pages = (int) ceil( $stock_total / 20 );
 			<p><?php esc_html_e( 'No products stocked at this branch match that search.', 'ipn' ); ?></p>
 		<?php else : ?>
 			<p><?php esc_html_e( 'This branch has no stock yet. Search for one of your products above to add it.', 'ipn' ); ?></p>
-			<p>
-				<a class="ipn-vd__btn" href="<?php echo esc_url( IPN_Vendor_Dashboard::tab_url( 'products' ) ); ?>">
-					<?php esc_html_e( 'Or add a new product', 'ipn' ); ?>
-				</a>
-			</p>
 		<?php endif; ?>
 	</div>
 <?php else : ?>
@@ -152,11 +147,7 @@ $ipn_pages = (int) ceil( $stock_total / 20 );
 
 	<p class="ipn-vd__hint">
 		<?php
-		printf(
-			/* translators: %s: link to the Products tab */
-			esc_html__( 'Only products that already exist can be stocked here. To create a new one, or to load many at once, use %s.', 'ipn' ),
-			'<a href="' . esc_url( IPN_Vendor_Dashboard::tab_url( 'products' ) ) . '">' . esc_html__( 'Products', 'ipn' ) . '</a>'
-		);
+		esc_html_e( 'Only products that already exist can be stocked here. Ask an IMANAWORLD administrator to create a new product, or to load many at once from a catalogue file.', 'ipn' );
 		?>
 	</p>
 	<p class="ipn-vd__hint">

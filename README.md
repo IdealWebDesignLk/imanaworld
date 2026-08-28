@@ -88,7 +88,7 @@ place on a page:
 
 | Where | What appears |
 |-------|--------------|
-| Dokan vendor dashboard | A "Click & Collect" section: branches, staff, per-branch stock, products, orders |
+| Dokan vendor dashboard | A "Click & Collect" section: branches, staff, per-branch stock, orders |
 | Before the shop loop | Branch selector, until a branch is chosen |
 | Above every WooCommerce template | "Shopping at X · Change branch" indicator bar |
 | Single product page | Click & Collect availability per branch, above add-to-cart |
@@ -105,11 +105,19 @@ There is also a **Click & Collect Branch Stock** box on the WooCommerce product 
 screen for setting per-branch stock on any product without going through the importer.
 
 **IPN → Settings** carries the collection and OTP defaults, the uncollected-order
-workflow, and a single **Dashboard colour**. That one colour drives the whole branch
-staff dashboard — header, buttons, tabs, active states, links, icons — with the darker
-and lighter shades derived from it and the text that sits on it chosen by contrast, so
-no picked colour can come out unreadable. Order status badges keep their own colours;
-those carry meaning rather than branding.
+workflow, and three **theme colours** that drive the whole branch staff dashboard, each
+taking a HEX code or the colour swatch:
+
+| Colour | Drives |
+|--------|--------|
+| Primary | The surfaces you look at — header, active tab, links, headings |
+| Secondary | The things you press — buttons, and the marks that lead to them |
+| Accent | The quiet highlights — soft fills behind badges and notes, the focus ring |
+
+The text that sits on the primary and on the secondary colour is worked out separately,
+each by contrast against its own background, so no combination can produce unreadable
+text on a header or a button. Order status badges keep their own colours; those carry
+meaning rather than branding.
 
 Branch opening hours are set here too, on the branch itself under **IPN → Branches**.
 Staff do not set them.
@@ -133,14 +141,14 @@ of its own is therefore still workable by the partner.
 The last step is not shared. An order becomes Collected only when the collection code the
 customer brings to the counter is entered on the branch dashboard.
 
-Since 0.9.4 that code is also displayed — to branch staff on the order detail, and to the
-vendor as a column on their Orders tab — at the site owner's request. Be clear about what
-that trades away: a code the counter can read is a code the counter can use without the
-customer being there, so it is no longer on its own proof that the right person collected
-the goods. Both screens say to check the code the customer presents rather than read it
-out to them. Verification still runs against a one-way hash; the readable copy is stored
-encrypted under a key derived from `wp_salt()`, which lives in `wp-config.php` and not in
-the database.
+Since 0.9.7 that code is displayed to the **vendor**, as a column on their Orders tab, at
+the site owner's request. It is deliberately not shown on the branch staff screen, which
+keeps the verification form only. Be clear about what showing it trades away: a code that
+can be read is a code that can be used without the customer being there, so it is not on
+its own proof that the right person collected the goods. The vendor screen says to check
+the code the customer presents rather than read it out. Verification still runs against a
+one-way hash; the readable copy is stored encrypted under a key derived from `wp_salt()`,
+which lives in `wp-config.php` and not in the database.
 
 An order placed by bank transfer, cheque, or payment at the counter arrives **awaiting
 payment**, and its stock is not reserved yet. It has no fulfilment step until somebody

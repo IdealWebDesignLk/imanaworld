@@ -19,7 +19,6 @@ $ipn_tabs = array(
 	'branches' => __( 'Branches', 'ipn' ),
 	'staff'    => __( 'Staff', 'ipn' ),
 	'stock'    => __( 'Branch stock', 'ipn' ),
-	'products' => __( 'Products', 'ipn' ),
 	'orders'   => __( 'Orders', 'ipn' ),
 );
 ?>

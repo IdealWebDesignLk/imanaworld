@@ -2,38 +2,68 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The staff dashboard's colour scheme, as one admin-chosen colour plus
- * everything derived from it (issue #25).
+ * The staff dashboard's colour scheme — three admin-chosen colours, and
+ * everything derived from them (issue #25).
  *
- * The dashboard's stylesheet is already written entirely against CSS custom
+ * The dashboard's stylesheet is written entirely against CSS custom
  * properties, so re-colouring it is a matter of redefining a handful of
- * variables rather than touching any rule. That is the whole point of this
- * class: an admin picks one colour, and the header, buttons, tabs, active
- * states, links and icons all follow, with no per-screen editing.
+ * variables rather than touching any rule. Each colour owns a role:
  *
- * Deriving the shades rather than asking for each one is deliberate. An admin
- * given eight colour pickers produces eight colours that do not belong to each
- * other; an admin given one produces a palette. The text colour that sits on
- * the brand is computed for contrast rather than chosen, so a light brand
- * colour cannot end up with unreadable white text on it.
+ *   Primary   the surfaces you look at — top bar, active tab, links, headings
+ *   Secondary the things you press — buttons and the marks that lead to them
+ *   Accent    the quiet highlights — soft fills behind chips and notes, and
+ *             the focus ring
+ *
+ * The text colour that sits on primary and on secondary is computed for
+ * contrast rather than chosen, so no combination of three colours can produce
+ * unreadable text on a button or a header. That matters more here than with
+ * one colour: an admin who picks a pale secondary would otherwise get white
+ * text on a pale button and no warning.
  *
  * Status colours are deliberately NOT derived. "Disputed" has to stay red and
- * "Ready" has to stay distinguishable from "New" whatever the brand colour is
- * — those carry meaning, not branding.
+ * "Ready" has to stay distinguishable from "New" whatever the brand colours
+ * are — those carry meaning, not branding.
  */
 class IPN_Theme {
 
-	const OPTION_PRIMARY  = 'ipn_staff_primary_color';
-	const DEFAULT_PRIMARY = '#1b5e20';
+	const OPTION_PRIMARY   = 'ipn_staff_primary_color';
+	const OPTION_SECONDARY = 'ipn_staff_secondary_color';
+	const OPTION_ACCENT    = 'ipn_staff_accent_color';
+
+	const DEFAULT_PRIMARY   = '#1b5e20';
+	const DEFAULT_SECONDARY = '#2e7d32';
+	const DEFAULT_ACCENT    = '#2e7d32';
 
 	/**
-	 * The admin's chosen colour, falling back to the shipped green whenever
-	 * the stored value is missing or not a colour we can parse.
+	 * The three settings, as role => colour, each falling back to the shipped
+	 * value when the stored one is missing or is not a colour we can parse.
+	 *
+	 * @return array
 	 */
-	public static function primary() {
-		$hex = self::normalise_hex( get_option( self::OPTION_PRIMARY, self::DEFAULT_PRIMARY ) );
+	public static function colours() {
+		return array(
+			'primary'   => self::colour( self::OPTION_PRIMARY, self::DEFAULT_PRIMARY ),
+			'secondary' => self::colour( self::OPTION_SECONDARY, self::DEFAULT_SECONDARY ),
+			'accent'    => self::colour( self::OPTION_ACCENT, self::DEFAULT_ACCENT ),
+		);
+	}
 
-		return $hex ? $hex : self::DEFAULT_PRIMARY;
+	protected static function colour( $option, $fallback ) {
+		$hex = self::normalise_hex( get_option( $option, $fallback ) );
+
+		return $hex ? $hex : $fallback;
+	}
+
+	public static function primary() {
+		return self::colour( self::OPTION_PRIMARY, self::DEFAULT_PRIMARY );
+	}
+
+	public static function secondary() {
+		return self::colour( self::OPTION_SECONDARY, self::DEFAULT_SECONDARY );
+	}
+
+	public static function accent() {
+		return self::colour( self::OPTION_ACCENT, self::DEFAULT_ACCENT );
 	}
 
 	/**
@@ -126,7 +156,7 @@ class IPN_Theme {
 	/**
 	 * White or near-black, whichever contrasts better against $hex. Picking
 	 * by contrast ratio rather than a brightness threshold means a mid-tone
-	 * brand colour lands on the readable side rather than the guessed one.
+	 * colour lands on the readable side rather than the guessed one.
 	 */
 	public static function readable_on( $hex ) {
 		$lum = self::luminance( $hex );
@@ -143,19 +173,23 @@ class IPN_Theme {
 	 * @return array
 	 */
 	public static function palette() {
-		$primary = self::primary();
+		$c = self::colours();
 
 		return array(
-			// The dark band behind the top bar.
-			'--brand-900' => self::shade( $primary, 0.32 ),
-			// Buttons, active tab, the top bar itself.
-			'--brand-700' => $primary,
-			// Hover and the lighter half of the header.
-			'--brand-600' => self::tint( $primary, 0.12 ),
-			// Soft fills behind brand-coloured chips and rows.
-			'--brand-100' => self::tint( $primary, 0.88 ),
-			'--on-brand'  => self::readable_on( $primary ),
-			'--focus'     => $primary,
+			// Kept in step with primary so anything reaching for the darker
+			// brand shade stays in the same family.
+			'--brand-900'    => self::shade( $c['primary'], 0.32 ),
+			// Top bar, active tab, links, the logo mark.
+			'--brand-700'    => $c['primary'],
+			// Buttons and the marks that lead to them.
+			'--brand-600'    => $c['secondary'],
+			// Soft fills behind chips, customer notes and the code panel.
+			'--brand-100'    => self::tint( $c['accent'], 0.88 ),
+			// Text that sits on each of those two, by contrast rather than by
+			// assumption — a pale secondary must not keep white button text.
+			'--on-brand'     => self::readable_on( $c['primary'] ),
+			'--on-brand-600' => self::readable_on( $c['secondary'] ),
+			'--focus'        => $c['accent'],
 		);
 	}
 
@@ -169,11 +203,14 @@ class IPN_Theme {
 	 * @return string
 	 */
 	public static function css_variables() {
-		$primary = self::primary();
+		$c = self::colours();
 
-		// Nothing to override while the admin is still on the shipped colour;
-		// emitting the defaults again would only be noise in the page.
-		if ( self::DEFAULT_PRIMARY === $primary ) {
+		// Nothing to override while the admin is still on the shipped
+		// colours; emitting the defaults again would only be noise, and the
+		// base stylesheet's own values are what the design was drawn against.
+		if ( self::DEFAULT_PRIMARY === $c['primary']
+			&& self::DEFAULT_SECONDARY === $c['secondary']
+			&& self::DEFAULT_ACCENT === $c['accent'] ) {
 			return '';
 		}
 
