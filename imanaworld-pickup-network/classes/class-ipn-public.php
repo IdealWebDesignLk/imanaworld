@@ -30,6 +30,15 @@ class IPN_Public {
 			if ( $post && has_shortcode( $post->post_content, 'ipn_staff_dashboard' ) ) {
 				wp_enqueue_style( 'ipn-staff-dashboard', IPN_PLUGIN_URL . 'assets/css/staff-dashboard.css', array(), IPN_VERSION );
 				wp_enqueue_script( 'ipn-staff-dashboard', IPN_PLUGIN_URL . 'assets/js/staff-dashboard.js', array( 'jquery' ), IPN_VERSION, true );
+
+				// The admin's chosen colour, as a redefinition of the custom
+				// properties the stylesheet is written against. Appended after
+				// it, so equal specificity resolves on source order.
+				$ipn_palette = IPN_Theme::css_variables();
+
+				if ( '' !== $ipn_palette ) {
+					wp_add_inline_style( 'ipn-staff-dashboard', $ipn_palette );
+				}
 			}
 		}
 	}

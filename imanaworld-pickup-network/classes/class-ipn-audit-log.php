@@ -143,6 +143,8 @@ class IPN_Audit_Log {
 			'vendor_disabled'       => __( 'Partner selling disabled', 'ipn' ),
 			'branch_created'        => __( 'Branch created', 'ipn' ),
 			'branch_updated'        => __( 'Branch updated', 'ipn' ),
+			'payment_marked_received' => __( 'Payment marked received by vendor', 'ipn' ),
+			'settings_saved'        => __( 'Global settings saved', 'ipn' ),
 		);
 
 		return isset( $labels[ $event_type ] ) ? $labels[ $event_type ] : ucfirst( str_replace( '_', ' ', $event_type ) );

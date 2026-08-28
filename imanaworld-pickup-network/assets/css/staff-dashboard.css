@@ -56,6 +56,73 @@
 }
 
 /*
+ * Standalone mode (issue #25). On its own page the dashboard is the whole
+ * document, so the card framing that made sense inside a theme page — a
+ * 760px column, rounded corners, a drop shadow, air around it — becomes
+ * wasted room on the phone this is actually used on. Everything below turns
+ * the card back into a full-bleed app surface.
+ *
+ * These rules are scoped to body.ipn-sd-standalone rather than applied
+ * outright, so the shortcode still renders as a tidy card if an admin puts it
+ * on some other page.
+ */
+body.ipn-sd-standalone {
+	margin: 0;
+	padding: 0;
+	background: #f6f5f0;
+}
+body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard {
+	max-width: none;
+	margin: 0;
+	padding: 0;
+	min-height: 100vh;
+	min-height: 100dvh;
+	display: flex;
+}
+body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .device {
+	width: 100%;
+	min-height: 100vh;
+	min-height: 100dvh;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	display: flex;
+}
+body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .screen {
+	width: 100%;
+	min-height: 100vh;
+	min-height: 100dvh;
+}
+/* The top bar keeps its corners inside a card; full-bleed it must not. */
+body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar {
+	border-radius: 0;
+	padding-top: max(14px, env(safe-area-inset-top));
+}
+/* The tab bar is the thing a thumb reaches for, so it sits on the bottom
+   edge and clears the phone's home indicator. */
+body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
+	position: sticky;
+	bottom: 0;
+	background: var(--surface);
+	padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+/* Wide screens: the content column stays readable, the chrome stays full
+   width, so a desktop till does not get a line of text a metre long. */
+@media (min-width: 900px) {
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .content,
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .filters,
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .stock-search,
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar-row,
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .sticky-actions,
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
+		max-width: 1100px;
+		margin-left: auto;
+		margin-right: auto;
+		width: 100%;
+	}
+}
+
+/*
  * No prefers-color-scheme block here, deliberately. This dashboard renders
  * inside the host theme's page, and the theme does not follow the OS colour
  * preference — so honouring it here produced a black card sitting on a white
@@ -97,10 +164,14 @@
 .ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar-brand { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .78; }
 .ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar-branch { font-size: 17px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em; }
-.ipn-staff-dashboard.ipn-staff-dashboard .open-pill {
-	font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 20px;
-	background: rgba(255,255,255,.16); white-space: nowrap; flex-shrink: 0;
+.ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-signout {
+	display: inline-flex; align-items: center; gap: 6px;
+	font-size: 12px; font-weight: 600; padding: 6px 11px; border-radius: 20px;
+	background: rgba(255,255,255,.16); color: var(--on-brand); text-decoration: none;
+	white-space: nowrap; flex-shrink: 0;
 }
+.ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-signout:hover { background: rgba(255,255,255,.26); color: var(--on-brand); }
+.ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-signout__ico { font-size: 13px; line-height: 1; }
 .ipn-staff-dashboard.ipn-staff-dashboard .icon-btn {
 	background: rgba(255,255,255,.14); border: none; color: var(--on-brand);
 	width: 30px; height: 30px; border-radius: 9px; cursor: pointer;

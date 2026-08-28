@@ -58,11 +58,7 @@ $new_count = $status_count( 'new' );
 						<div class="ipn-sd-topbar-brand"><?php esc_html_e( 'Branch Staff', 'ipn' ); ?></div>
 						<div class="ipn-sd-topbar-branch"><?php echo $branch ? esc_html( $branch->name ) : esc_html__( 'No branch assigned', 'ipn' ); ?></div>
 					</div>
-					<?php if ( $branch_id ) : ?>
-						<span class="open-pill">
-							<?php echo IPN_Branch::is_open_now( $branch_id ) ? esc_html__( 'Open now', 'ipn' ) : esc_html__( 'Closed now', 'ipn' ); ?>
-						</span>
-					<?php endif; ?>
+					<?php include IPN_PLUGIN_DIR . 'templates/staff/partials/topbar-signout.php'; ?>
 				</div>
 			</div>
 

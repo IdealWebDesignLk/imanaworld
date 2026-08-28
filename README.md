@@ -57,10 +57,16 @@ One shortcode, and it takes no attributes:
 
 | Shortcode | Description |
 |-----------|-------------|
-| `[ipn_staff_dashboard]` | The branch staff dashboard — order queue, order detail with the collection-code check, and that branch's stock. Scoped to the one branch the logged-in staff user is assigned to. |
+| `[ipn_staff_dashboard]` | The branch staff dashboard — order queue, order detail with the collection-code check, and a read-only view of that branch's stock. Scoped to the one branch the logged-in staff user is assigned to. |
 
 Put it on a single page (e.g. `/branch-staff/`) and give branch staff that URL. Branch
 staff have no wp-admin access, so this page is their entire interface.
+
+That page renders as a document of its own: the plugin takes over `template_include` for
+it, so the theme's header, navigation, breadcrumbs and footer do not load and the
+dashboard fills the screen. Staff work it at a counter, usually on a phone, where the
+shop's chrome is only in the way. The shortcode still renders as an ordinary card if it
+is placed on any other page.
 
 Anyone who is not a logged-in **IPN Branch Staff** user sees a sign-in prompt instead —
 no branch data is exposed. A staff user with no branch assigned yet is told to contact
@@ -97,6 +103,16 @@ Digest, Audit Trail, Reports, Settings.
 
 There is also a **Click & Collect Branch Stock** box on the WooCommerce product edit
 screen for setting per-branch stock on any product without going through the importer.
+
+**IPN → Settings** carries the collection and OTP defaults, the uncollected-order
+workflow, and a single **Dashboard colour**. That one colour drives the whole branch
+staff dashboard — header, buttons, tabs, active states, links, icons — with the darker
+and lighter shades derived from it and the text that sits on it chosen by contrast, so
+no picked colour can come out unreadable. Order status badges keep their own colours;
+those carry meaning rather than branding.
+
+Branch opening hours are set here too, on the branch itself under **IPN → Branches**.
+Staff do not set them.
 
 ## Setting it up
 

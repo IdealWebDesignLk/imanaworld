@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.8.1
+Stable tag: 0.9.0
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,34 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.0 =
+Branch staff dashboard, rebuilt around how it is actually used — at a counter,
+usually on a phone.
+
+* The dashboard is now a page of its own. The shop's header, mega-menu,
+  breadcrumbs, page title, newsletter block and footer are gone, and the
+  dashboard fills the screen on phone, tablet and desktop instead of sitting in
+  a small card in the middle of a very tall page. (#25)
+* A single "Dashboard colour" setting under IPN > Settings now drives the whole
+  staff dashboard — header, buttons, tabs, active states, links and icons. The
+  darker and lighter shades are worked out from it, and the text colour that
+  sits on it is chosen by contrast, so no combination can come out unreadable.
+  Order status badges keep their own colours, because those carry meaning
+  rather than branding. (#25)
+* Fix: the Settings screen never saved anything. Its Save button only raised a
+  toast saying so, and none of its fields carried a name to post. Every field
+  on it now saves, with each value cast and range-checked on the way in.
+* The Hours screen is gone from the staff dashboard. Branch opening hours are
+  set by an administrator on IPN > Branches, which already had a full hours
+  editor. (#26)
+* Branch stock is now view-only for staff: they still see on hand, reserved and
+  available, and can search, but adjusting, adding and removing are gone. The
+  POST handlers went with the buttons, so the capability was removed rather
+  than only hidden. (#27)
+* "Sign Out" now sits at the top right of every staff screen, in place of the
+  open/closed pill that used to be there — which is where people were reaching
+  when they wanted to leave. It is no longer duplicated in the tab bar. (#28)
 
 = 0.8.1 =
 * Vendors can now mark an order as paid. WooCommerce parks every offline

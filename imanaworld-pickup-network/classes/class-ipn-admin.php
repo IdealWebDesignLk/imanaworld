@@ -1013,7 +1013,67 @@ class IPN_Admin {
 	}
 
 	public function render_settings() {
-		$this->view( 'settings' );
+		$this->view( 'settings', array(
+			'settings_saved' => $this->maybe_handle_settings_save(),
+		) );
+	}
+
+	/**
+	 * Saves the Global settings screen.
+	 *
+	 * The screen has existed since the first release with a Save button that
+	 * only raised a toast saying saving was not implemented, and fields that
+	 * carried no name attribute to post. Issue #25 needs a colour setting that
+	 * actually persists, and a settings form that silently discards what is
+	 * typed into it is worse than no form, so the whole screen is wired up
+	 * here rather than only the one new field.
+	 *
+	 * Each option is cast on the way in — an expiry of "soon" or a colour of
+	 * "javascript:" must never reach the database, let alone a stylesheet.
+	 *
+	 * @return string|null Message to display, or null when nothing was posted.
+	 */
+	protected function maybe_handle_settings_save() {
+		if ( empty( $_POST['ipn_settings_nonce'] ) ) {
+			return null;
+		}
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			return null;
+		}
+
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ipn_settings_nonce'] ) ), 'ipn_save_settings' ) ) {
+			return null;
+		}
+
+		$integers = array(
+			'ipn_otp_expiry_hours'      => 72,
+			'ipn_max_otp_attempts'      => 3,
+			'ipn_reminder_after_hours'  => 48,
+			'ipn_collection_window_days' => 5,
+		);
+
+		foreach ( $integers as $option => $fallback ) {
+			$value = isset( $_POST[ $option ] ) ? absint( $_POST[ $option ] ) : 0;
+			update_option( $option, $value > 0 ? $value : $fallback );
+		}
+
+		$surcharge = isset( $_POST['ipn_default_express_surcharge'] ) ? (float) wp_unslash( $_POST['ipn_default_express_surcharge'] ) : 0;
+		update_option( 'ipn_default_express_surcharge', number_format( max( 0, $surcharge ), 2, '.', '' ) );
+
+		update_option( 'ipn_auto_cancel_expired', empty( $_POST['ipn_auto_cancel_expired'] ) ? '0' : '1' );
+
+		$refund_mode = isset( $_POST['ipn_auto_refund_mode'] ) ? sanitize_key( wp_unslash( $_POST['ipn_auto_refund_mode'] ) ) : 'manual';
+		update_option( 'ipn_auto_refund_mode', in_array( $refund_mode, array( 'auto', 'manual' ), true ) ? $refund_mode : 'manual' );
+
+		// An unparseable colour falls back to the shipped one rather than
+		// being stored, so the dashboard can never be left unstyled.
+		$colour = isset( $_POST['ipn_staff_primary_color'] ) ? IPN_Theme::normalise_hex( wp_unslash( $_POST['ipn_staff_primary_color'] ) ) : '';
+		update_option( IPN_Theme::OPTION_PRIMARY, $colour ? $colour : IPN_Theme::DEFAULT_PRIMARY );
+
+		IPN_Audit_Log::log( 'settings_saved' );
+
+		return __( 'Settings saved.', 'ipn' );
 	}
 
 	/**

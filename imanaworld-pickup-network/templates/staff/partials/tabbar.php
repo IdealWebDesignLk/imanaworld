@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
  * Each screen sets $ipn_active_tab before including this; anything that
  * doesn't is treated as the queue, which is the dashboard's home screen.
  *
- * @var string $ipn_active_tab queue | stock | hours
+ * @var string $ipn_active_tab queue | stock
  * @var int    $new_count      Optional: unaccepted orders, badged on Queue.
  */
 
@@ -25,11 +25,6 @@ $ipn_tabs = array(
 		'icon' => '&#128230;',
 		'text' => __( 'Branch stock', 'ipn' ),
 	),
-	'hours' => array(
-		'url'  => IPN_Staff_Dashboard::screen_url( 'hours' ),
-		'icon' => '&#128340;',
-		'text' => __( 'Hours', 'ipn' ),
-	),
 );
 ?>
 <div class="tabbar">
@@ -42,8 +37,4 @@ $ipn_tabs = array(
 			<?php endif; ?>
 		</a>
 	<?php endforeach; ?>
-	<a class="tab" href="<?php echo esc_url( wp_logout_url( get_permalink() ) ); ?>">
-		<span class="tab-ico" aria-hidden="true">&#8617;</span>
-		<span class="tab-lbl"><?php esc_html_e( 'Sign out', 'ipn' ); ?></span>
-	</a>
 </div>
