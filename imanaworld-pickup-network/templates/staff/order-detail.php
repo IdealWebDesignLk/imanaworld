@@ -111,10 +111,8 @@ $next_status_key = array(
 						</div>
 					<?php endif; ?>
 
-					<div class="card">
+					<div class="card card--half">
 						<div class="card-title"><?php esc_html_e( 'Order', 'ipn' ); ?></div>
-						<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Order number', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->order_number ); ?></span></div>
-						<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Placed', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->date_created ); ?></span></div>
 						<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Order status', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->wc_status ); ?></span></div>
 						<?php if ( $order->payment_method ) : ?>
 							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Payment method', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->payment_method ); ?></span></div>
@@ -122,7 +120,7 @@ $next_status_key = array(
 						<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Currency', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->currency ); ?></span></div>
 					</div>
 
-					<div class="card">
+					<div class="card card--half">
 						<div class="card-title"><?php esc_html_e( 'Customer', 'ipn' ); ?></div>
 						<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Name', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->customer_name ); ?></span></div>
 						<?php if ( $order->billing->email ) : ?>
@@ -157,7 +155,7 @@ $next_status_key = array(
 					</div>
 
 					<?php if ( $order->billing->address ) : ?>
-						<div class="card">
+						<div class="card card--half">
 							<div class="card-title"><?php esc_html_e( 'Billing address', 'ipn' ); ?></div>
 							<?php if ( $order->billing->company ) : ?>
 								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Company', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->billing->company ); ?></span></div>
@@ -167,7 +165,7 @@ $next_status_key = array(
 					<?php endif; ?>
 
 					<?php if ( $order->shipping ) : ?>
-						<div class="card">
+						<div class="card card--half">
 							<div class="card-title"><?php esc_html_e( 'Shipping address', 'ipn' ); ?></div>
 							<?php if ( $order->shipping->company ) : ?>
 								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Company', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->shipping->company ); ?></span></div>
@@ -213,18 +211,17 @@ $next_status_key = array(
 					</div>
 
 					<?php if ( $order->commission ) : ?>
-						<div class="card">
+						<div class="card card--half">
 							<div class="card-title"><?php esc_html_e( 'Commission', 'ipn' ); ?></div>
 							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Store earnings', 'ipn' ); ?></span><span class="kv-value"><?php echo wp_kses_post( wc_price( $order->commission['vendor_earning'], array( 'currency' => $order->currency ) ) ); ?></span></div>
 							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Marketplace commission', 'ipn' ); ?></span><span class="kv-value"><?php echo wp_kses_post( wc_price( $order->commission['commission'], array( 'currency' => $order->currency ) ) ); ?></span></div>
-							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Commission rate', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( number_format_i18n( $order->commission['rate'], 1 ) ); ?>%</span></div>
-							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Shipping fees', 'ipn' ); ?></span><span class="kv-value"><?php echo wp_kses_post( wc_price( $order->commission['shipping'], array( 'currency' => $order->currency ) ) ); ?></span></div>
-							<div class="otp-hint"><?php esc_html_e( 'Store earnings come from Dokan. The commission and rate are what is left of the order total after them.', 'ipn' ); ?></div>
+								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Shipping fees', 'ipn' ); ?></span><span class="kv-value"><?php echo wp_kses_post( wc_price( $order->commission['shipping'], array( 'currency' => $order->currency ) ) ); ?></span></div>
+							<div class="otp-hint"><?php esc_html_e( 'Store earnings come from Dokan. The commission is what is left of the order total after them.', 'ipn' ); ?></div>
 						</div>
 					<?php endif; ?>
 
 					<?php if ( ! empty( $order->attribution ) ) : ?>
-						<div class="card">
+						<div class="card card--half">
 							<div class="card-title"><?php esc_html_e( 'Where this order came from', 'ipn' ); ?></div>
 							<?php foreach ( $order->attribution as $ipn_att_label => $ipn_att_value ) : ?>
 								<div class="kv-row"><span class="kv-label"><?php echo esc_html( $ipn_att_label ); ?></span><span class="kv-value"><?php echo esc_html( $ipn_att_value ); ?></span></div>
@@ -255,7 +252,7 @@ $next_status_key = array(
 					<?php endif; ?>
 
 					<?php if ( $order->otp ) : ?>
-						<div class="card">
+						<div class="card card--half">
 							<div class="card-title"><?php esc_html_e( 'Collection code record', 'ipn' ); ?></div>
 							<div class="kv-row">
 								<span class="kv-label"><?php esc_html_e( 'Status', 'ipn' ); ?></span>
@@ -334,7 +331,7 @@ $next_status_key = array(
 					<?php endif; ?>
 
 					<?php if ( ! empty( $order->audit ) ) : ?>
-						<div class="card">
+						<div class="card card--half">
 							<div class="card-title"><?php esc_html_e( 'Audit trail', 'ipn' ); ?></div>
 							<div class="audit-list">
 								<?php foreach ( $order->audit as $entry ) : ?>

@@ -341,7 +341,37 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
 .ipn-staff-dashboard.ipn-staff-dashboard .detail-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
 
 .ipn-staff-dashboard.ipn-staff-dashboard .card {
-	background: var(--surface-sunken); border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+	background: var(--surface-sunken); border-radius: var(--radius); padding: 13px 14px; margin-bottom: 10px;
+}
+
+/*
+ * Order detail on a wide screen. Every card used to be a full-width band in a
+ * single column, so a desktop till showed a short list of facts down the
+ * middle of a very tall page and staff scrolled past most of it. The
+ * reference cards pair up instead, and only the ones that genuinely need the
+ * width — the items and their totals, order notes, and the collection form —
+ * still span it.
+ *
+ * The grid lives on .content, whose children are already the cards, banners
+ * and forms, so nothing had to be re-nested to get here. Everything spans by
+ * default and opts into half width, which means a card added later is
+ * full-width until someone decides otherwise rather than silently landing in
+ * a column it was not designed for.
+ */
+@media ( min-width: 900px ) {
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .content {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 10px 12px;
+		align-content: start;
+	}
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .content > * { grid-column: 1 / -1; }
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .content > .card--half { grid-column: span 1; align-self: stretch; }
+	/* The grid owns the vertical rhythm now; the cards' own margin would
+	   double it. */
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .content > .card,
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .content > .banner,
+	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .content > .recipient-banner { margin-bottom: 0; }
 }
 .ipn-staff-dashboard.ipn-staff-dashboard .card-title { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 10px; }
 
@@ -350,7 +380,7 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
 .ipn-staff-dashboard.ipn-staff-dashboard .item-name { flex: 1; }
 .ipn-staff-dashboard.ipn-staff-dashboard .item-qty { font-variant-numeric: tabular-nums; color: var(--muted); flex-shrink: 0; }
 
-.ipn-staff-dashboard.ipn-staff-dashboard .kv-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 13.5px; }
+.ipn-staff-dashboard.ipn-staff-dashboard .kv-row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 13.5px; }
 .ipn-staff-dashboard.ipn-staff-dashboard .kv-label { color: var(--muted); }
 .ipn-staff-dashboard.ipn-staff-dashboard .kv-value { font-weight: 600; text-align: right; }
 

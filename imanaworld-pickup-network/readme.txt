@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.2
+Stable tag: 0.9.3
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,19 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.3 =
+* The staff order detail no longer runs down the page as one long column. On
+  screens 900px and wider the reference cards pair up two to a row, and only
+  the items and totals, order notes, the nominated recipient warning and the
+  collection form still span the full width. Phones are unchanged.
+* Removed the commission rate. It was derived as the commission over the order
+  total, which is not the rate Dokan is configured with — that is normally
+  taken on the line items — so the percentage shown disagreed with the
+  marketplace's own settings. Store earnings, commission and shipping fees are
+  real figures and stay.
+* Dropped the order number and date from the Order card; the page header
+  already shows both, directly above it.
 
 = 0.9.2 =
 * The staff order detail page now carries a Collection code record, shown at
