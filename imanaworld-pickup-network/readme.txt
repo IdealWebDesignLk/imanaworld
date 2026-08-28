@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.5
+Stable tag: 0.9.6
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,23 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.6 =
+Polish on the staff order detail.
+
+* Every card now has a neighbour on a wide screen, so there are no half-empty
+  rows left. Order notes moved down to sit beside the audit trail — they are
+  both records of what has already happened — which puts the collection code
+  next to the form that consumes it instead of separated by a wall of notes.
+* The collection code sits on a tinted panel, so the thing somebody opened the
+  page to find is the thing they see first.
+* The six-digit entry box is now sized for six digits rather than stretching
+  the width of the card.
+* "Customer lost their code" reads as a button rather than a heading, and
+  "Reject collection instead" is a compact control on the right rather than a
+  full-width band under a dashed rule.
+* Order notes are tighter, and a long referrer URL now wraps inside its card
+  instead of pushing the row wide.
 
 = 0.9.5 =
 * Branch staff can now mark an order as paid. The vendor got this in 0.8.1 and

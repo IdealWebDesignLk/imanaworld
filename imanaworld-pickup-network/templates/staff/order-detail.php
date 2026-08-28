@@ -236,28 +236,6 @@ $next_status_key = array(
 						</div>
 					<?php endif; ?>
 
-					<?php if ( ! empty( $order->notes ) ) : ?>
-						<div class="card">
-							<div class="card-title"><?php esc_html_e( 'Order notes', 'ipn' ); ?></div>
-							<?php foreach ( $order->notes as $ipn_note ) : ?>
-								<div class="order-note<?php echo $ipn_note['customer'] ? ' order-note--customer' : ''; ?>">
-									<div class="order-note__body"><?php echo wp_kses_post( wpautop( $ipn_note['content'] ) ); ?></div>
-									<div class="order-note__meta">
-										<?php
-										printf(
-											/* translators: 1: who added the note, 2: when */
-											esc_html__( '%1$s · %2$s', 'ipn' ),
-											esc_html( $ipn_note['added_by'] ),
-											esc_html( $ipn_note['date'] )
-										);
-										echo $ipn_note['customer'] ? ' · ' . esc_html__( 'sent to customer', 'ipn' ) : '';
-										?>
-									</div>
-								</div>
-							<?php endforeach; ?>
-						</div>
-					<?php endif; ?>
-
 					<?php if ( $order->otp ) : ?>
 						<div class="card card--half">
 							<div class="card-title"><?php esc_html_e( 'Collection code record', 'ipn' ); ?></div>
@@ -299,7 +277,7 @@ $next_status_key = array(
 					<?php endif; ?>
 
 					<?php if ( 'ready' === $order->status ) : ?>
-						<div class="card">
+						<div class="card card--half">
 							<div class="card-title"><?php esc_html_e( 'Verify collection', 'ipn' ); ?></div>
 							<div class="otp-hint"><?php esc_html_e( 'Ask the customer (or nominated recipient) for their 6-digit email OTP and enter it below to complete the order.', 'ipn' ); ?></div>
 
@@ -346,6 +324,28 @@ $next_status_key = array(
 								<p class="otp-hint"><?php esc_html_e( 'Rejecting moves the order to Disputed and notifies IMANAWORLD admin to process the refund.', 'ipn' ); ?></p>
 								<button type="submit" class="btn btn-secondary"><?php esc_html_e( 'Confirm rejection', 'ipn' ); ?></button>
 							</form>
+						</div>
+					<?php endif; ?>
+
+					<?php if ( ! empty( $order->notes ) ) : ?>
+						<div class="card card--half">
+							<div class="card-title"><?php esc_html_e( 'Order notes', 'ipn' ); ?></div>
+							<?php foreach ( $order->notes as $ipn_note ) : ?>
+								<div class="order-note<?php echo $ipn_note['customer'] ? ' order-note--customer' : ''; ?>">
+									<div class="order-note__body"><?php echo wp_kses_post( wpautop( $ipn_note['content'] ) ); ?></div>
+									<div class="order-note__meta">
+										<?php
+										printf(
+											/* translators: 1: who added the note, 2: when */
+											esc_html__( '%1$s · %2$s', 'ipn' ),
+											esc_html( $ipn_note['added_by'] ),
+											esc_html( $ipn_note['date'] )
+										);
+										echo $ipn_note['customer'] ? ' · ' . esc_html__( 'sent to customer', 'ipn' ) : '';
+										?>
+									</div>
+								</div>
+							<?php endforeach; ?>
 						</div>
 					<?php endif; ?>
 

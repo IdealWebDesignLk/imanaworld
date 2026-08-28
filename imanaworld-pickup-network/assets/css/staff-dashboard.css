@@ -214,11 +214,12 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
 }
 
 .ipn-staff-dashboard.ipn-staff-dashboard .order-note {
-	padding: 9px 11px; border-radius: 10px; background: var(--surface-sunken);
-	margin-bottom: 8px;
+	padding: 8px 10px; border-radius: 9px; background: var(--surface);
+	margin-bottom: 6px;
 }
+.ipn-staff-dashboard.ipn-staff-dashboard .order-note:last-child { margin-bottom: 0; }
 .ipn-staff-dashboard.ipn-staff-dashboard .order-note--customer { background: var(--brand-100); }
-.ipn-staff-dashboard.ipn-staff-dashboard .order-note__body { font-size: 13px; line-height: 1.5; }
+.ipn-staff-dashboard.ipn-staff-dashboard .order-note__body { font-size: 12.5px; line-height: 1.45; }
 .ipn-staff-dashboard.ipn-staff-dashboard .order-note__body p { margin: 0 0 6px; }
 .ipn-staff-dashboard.ipn-staff-dashboard .order-note__body p:last-child { margin-bottom: 0; }
 .ipn-staff-dashboard.ipn-staff-dashboard .order-note__meta { margin-top: 5px; font-size: 11px; color: var(--faint); }
@@ -259,7 +260,11 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
 .ipn-staff-dashboard.ipn-staff-dashboard .btn-secondary:hover { background: var(--surface-sunken); }
 .ipn-staff-dashboard.ipn-staff-dashboard .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger-bg); }
 .ipn-staff-dashboard.ipn-staff-dashboard .btn-danger:hover { background: var(--danger-bg); }
-.ipn-staff-dashboard.ipn-staff-dashboard .btn-ghost { background: transparent; color: var(--muted); }
+.ipn-staff-dashboard.ipn-staff-dashboard .btn-ghost {
+	background: transparent; color: var(--muted);
+	border: 1px solid var(--line-strong); font-size: 13px; padding: 9px 14px;
+}
+.ipn-staff-dashboard.ipn-staff-dashboard .btn-ghost:hover { background: var(--surface); color: var(--ink); }
 .ipn-staff-dashboard.ipn-staff-dashboard .btn-row { display: flex; gap: 8px; }
 
 /* ---------- fields (login, reject reason) ---------- */
@@ -392,8 +397,8 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
    holding. */
 .ipn-staff-dashboard.ipn-staff-dashboard .otp-reveal {
 	display: flex; align-items: center; justify-content: space-between; gap: 12px;
-	background: var(--surface); border: 1px solid var(--line-strong);
-	border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
+	background: var(--brand-100); border: 1px solid transparent;
+	border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;
 }
 .ipn-staff-dashboard.ipn-staff-dashboard .otp-reveal__label {
 	font-size: 11.5px; font-weight: 700; text-transform: uppercase;
@@ -403,7 +408,7 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
 	font-family: var(--font-mono); font-size: 24px; font-weight: 700;
 	letter-spacing: .18em; font-variant-numeric: tabular-nums; color: var(--ink);
 }
-.ipn-staff-dashboard.ipn-staff-dashboard .kv-value { font-weight: 600; text-align: right; }
+.ipn-staff-dashboard.ipn-staff-dashboard .kv-value { font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
 
 .ipn-staff-dashboard.ipn-staff-dashboard .recipient-banner {
 	background: var(--express-bg); color: var(--express); border-radius: 11px; padding: 11px 13px;
@@ -417,9 +422,10 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
 	font-variant-numeric: tabular-nums;
 }
 .ipn-staff-dashboard.ipn-staff-dashboard .otp-form { margin: 0; }
-.ipn-staff-dashboard.ipn-staff-dashboard .otp-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.ipn-staff-dashboard.ipn-staff-dashboard .otp-input-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 .ipn-staff-dashboard.ipn-staff-dashboard .otp-input-row input {
-	flex: 1; text-align: center; letter-spacing: .3em; font-family: var(--font-mono); font-size: 18px;
+	flex: 1 1 160px; max-width: 220px;
+	text-align: center; letter-spacing: .3em; font-family: var(--font-mono); font-size: 18px;
 	border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
 	border-radius: 10px; padding: 10px; font-variant-numeric: tabular-nums;
 }
@@ -441,7 +447,10 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
 .ipn-staff-dashboard.ipn-staff-dashboard .banner-success { background: var(--ready-bg); color: var(--ready); }
 .ipn-staff-dashboard.ipn-staff-dashboard .banner-danger { background: var(--danger-bg); color: var(--danger); }
 
-.ipn-staff-dashboard.ipn-staff-dashboard .reject-panel { border-top: 1px dashed var(--line-strong); margin-top: 4px; padding-top: 12px; }
+.ipn-staff-dashboard.ipn-staff-dashboard .reject-panel { margin-top: 4px; }
+.ipn-staff-dashboard.ipn-staff-dashboard .reject-panel > .btn-danger {
+	width: auto; margin-left: auto; font-size: 13px; padding: 9px 14px;
+}
 
 .ipn-staff-dashboard.ipn-staff-dashboard .sticky-actions { flex-shrink: 0; padding: 12px 16px 16px; border-top: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
 
