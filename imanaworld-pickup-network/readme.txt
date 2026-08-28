@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.1
+Stable tag: 0.9.2
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,16 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.2 =
+* The staff order detail page now carries a Collection code record, shown at
+  every status rather than only while an order is ready: whether the code is
+  waiting, verified, expired or replaced, when it was issued, when it expires,
+  when it was verified, and how many wrong entries it has taken. (#30)
+* The code itself is still never displayed. It is stored the way a password is
+  — only a hash — and the query behind this panel does not read that column at
+  all. Showing it to staff would mean an order could be completed without the
+  customer present, which is the one thing the code exists to prevent.
 
 = 0.9.1 =
 * The staff order detail page now shows the whole order rather than a name and

@@ -400,6 +400,7 @@ class IPN_Staff_Dashboard {
 			'total'    => (float) $order->get_total(),
 		);
 
+		$detail->otp         = IPN_OTP::status_for( $order_id );
 		$detail->commission  = self::commission_summary( $order );
 		$detail->notes       = self::order_notes( $order_id );
 		$detail->attribution = self::order_attribution( $order );

@@ -26,6 +26,19 @@ $next_action_label = array(
 	'preparing' => __( 'Mark ready for collection', 'ipn' ),
 );
 
+$ipn_otp_status_labels = array(
+	'active'     => __( 'Issued and waiting', 'ipn' ),
+	'used'       => __( 'Verified — order collected', 'ipn' ),
+	'expired'    => __( 'Expired', 'ipn' ),
+	'superseded' => __( 'Replaced by a newer code', 'ipn' ),
+);
+
+$ipn_when = function ( $sql_date ) {
+	return $sql_date && '0000-00-00 00:00:00' !== $sql_date
+		? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $sql_date ) )
+		: '';
+};
+
 $next_status_key = array(
 	'new'       => 'ipn-accepted',
 	'accepted'  => 'ipn-preparing',
@@ -241,9 +254,37 @@ $next_status_key = array(
 						</div>
 					<?php endif; ?>
 
+					<?php if ( $order->otp ) : ?>
+						<div class="card">
+							<div class="card-title"><?php esc_html_e( 'Collection code record', 'ipn' ); ?></div>
+							<div class="kv-row">
+								<span class="kv-label"><?php esc_html_e( 'Status', 'ipn' ); ?></span>
+								<span class="kv-value"><?php echo esc_html( isset( $ipn_otp_status_labels[ $order->otp->status ] ) ? $ipn_otp_status_labels[ $order->otp->status ] : $order->otp->status ); ?></span>
+							</div>
+							<?php if ( $ipn_when( $order->otp->created_at ) ) : ?>
+								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Issued', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $ipn_when( $order->otp->created_at ) ); ?></span></div>
+							<?php endif; ?>
+							<?php if ( 'used' !== $order->otp->status && $ipn_when( $order->otp->expires_at ) ) : ?>
+								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Expires', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $ipn_when( $order->otp->expires_at ) ); ?></span></div>
+							<?php endif; ?>
+							<?php if ( $ipn_when( $order->otp->verified_at ) ) : ?>
+								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Verified', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $ipn_when( $order->otp->verified_at ) ); ?></span></div>
+							<?php endif; ?>
+							<?php if ( (int) $order->otp->failed_attempts > 0 ) : ?>
+								<div class="kv-row">
+									<span class="kv-label"><?php esc_html_e( 'Failed entries', 'ipn' ); ?></span>
+									<span class="kv-value"><?php echo esc_html( number_format_i18n( (int) $order->otp->failed_attempts ) ); ?></span>
+								</div>
+							<?php endif; ?>
+							<div class="otp-hint">
+								<?php esc_html_e( 'The code itself is stored the way a password is and is never shown here. It is emailed to the customer, and it is what proves the person at the counter is the one who placed the order.', 'ipn' ); ?>
+							</div>
+						</div>
+					<?php endif; ?>
+
 					<?php if ( 'ready' === $order->status ) : ?>
 						<div class="card">
-							<div class="card-title"><?php esc_html_e( 'Collection code', 'ipn' ); ?></div>
+							<div class="card-title"><?php esc_html_e( 'Verify collection', 'ipn' ); ?></div>
 							<div class="otp-hint"><?php esc_html_e( 'Ask the customer (or nominated recipient) for their 6-digit email OTP and enter it below to complete the order.', 'ipn' ); ?></div>
 
 							<?php if ( $otp_result instanceof WP_Error ) : ?>

@@ -43,6 +43,31 @@ class IPN_OTP {
 		return $code;
 	}
 
+	/**
+	 * The most recent collection code's lifecycle for an order — when it was
+	 * issued, when it expires, whether it has been used, and how many wrong
+	 * entries it has taken (issue #30).
+	 *
+	 * otp_hash is deliberately excluded from the SELECT. The code itself is
+	 * stored the way a password is, so there is nothing here to reveal even by
+	 * accident, and a caller cannot leak one by passing this row somewhere it
+	 * should not go.
+	 *
+	 * @return object|null
+	 */
+	public static function status_for( $order_id ) {
+		global $wpdb;
+		$table = self::table();
+
+		$row = $wpdb->get_row( $wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQL
+			"SELECT id, branch_id, status, created_at, expires_at, verified_at, failed_attempts
+			   FROM {$table} WHERE order_id = %d ORDER BY id DESC LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
+			(int) $order_id
+		) );
+
+		return $row ? $row : null;
+	}
+
 	public static function verify( $order_id, $submitted_code, $staff_user_id = 0 ) {
 		global $wpdb;
 		$table = self::table();
