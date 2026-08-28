@@ -131,8 +131,16 @@ of the vendor dashboard or from the branch dashboard; a branch that has no staff
 of its own is therefore still workable by the partner.
 
 The last step is not shared. An order becomes Collected only when the collection code the
-customer brings to the counter is checked on the branch dashboard, because that code is
-the only evidence the right person took the goods.
+customer brings to the counter is entered on the branch dashboard.
+
+Since 0.9.4 that code is also displayed — to branch staff on the order detail, and to the
+vendor as a column on their Orders tab — at the site owner's request. Be clear about what
+that trades away: a code the counter can read is a code the counter can use without the
+customer being there, so it is no longer on its own proof that the right person collected
+the goods. Both screens say to check the code the customer presents rather than read it
+out to them. Verification still runs against a one-way hash; the readable copy is stored
+encrypted under a key derived from `wp_salt()`, which lives in `wp-config.php` and not in
+the database.
 
 An order placed by bank transfer, cheque, or payment at the counter arrives **awaiting
 payment**, and its stock is not reserved yet. It has no fulfilment step until somebody

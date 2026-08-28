@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.3
+Stable tag: 0.9.4
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,26 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.4 =
+* The collection code is now shown to branch staff on the order detail and to
+  the vendor as a column on their Orders tab, at the site owner's request.
+  (#30)
+* Note what this changes: a code that can be read at the counter is a code
+  that can be used without the customer present, so it no longer proves on its
+  own that the right person collected the goods. Both screens say to check the
+  code the customer shows rather than read it out. Verification is unchanged
+  and still runs against a one-way hash.
+* The code is stored encrypted with a key derived from wp_salt(), which lives
+  in wp-config.php rather than the database, so a leaked database backup on
+  its own yields no codes. Superseding a code wipes its readable copy, so only
+  the current code for an order is ever recoverable. On a server without
+  OpenSSL nothing is stored rather than falling back to plain text, and the
+  screens say the code is unavailable.
+* Codes issued before this release cannot be read back and show as
+  unavailable; resending issues one that can.
+* Database schema 1.3.0 adds otp_code_enc to the collection codes table. It
+  upgrades itself on the next admin page load.
 
 = 0.9.3 =
 * The staff order detail no longer runs down the page as one long column. On

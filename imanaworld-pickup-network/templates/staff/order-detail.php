@@ -254,6 +254,18 @@ $next_status_key = array(
 					<?php if ( $order->otp ) : ?>
 						<div class="card card--half">
 							<div class="card-title"><?php esc_html_e( 'Collection code record', 'ipn' ); ?></div>
+
+							<?php if ( '' !== $order->otp->code ) : ?>
+								<div class="otp-reveal">
+									<span class="otp-reveal__label"><?php esc_html_e( 'Code', 'ipn' ); ?></span>
+									<span class="otp-reveal__value"><?php echo esc_html( $order->otp->code ); ?></span>
+								</div>
+							<?php else : ?>
+								<div class="otp-hint">
+									<?php esc_html_e( 'This code cannot be read back — it was issued before codes became viewable, or the server cannot decrypt it. Resend to issue one that can be read.', 'ipn' ); ?>
+								</div>
+							<?php endif; ?>
+
 							<div class="kv-row">
 								<span class="kv-label"><?php esc_html_e( 'Status', 'ipn' ); ?></span>
 								<span class="kv-value"><?php echo esc_html( isset( $ipn_otp_status_labels[ $order->otp->status ] ) ? $ipn_otp_status_labels[ $order->otp->status ] : $order->otp->status ); ?></span>
@@ -274,7 +286,7 @@ $next_status_key = array(
 								</div>
 							<?php endif; ?>
 							<div class="otp-hint">
-								<?php esc_html_e( 'The code itself is stored the way a password is and is never shown here. It is emailed to the customer, and it is what proves the person at the counter is the one who placed the order.', 'ipn' ); ?>
+								<?php esc_html_e( 'This code is emailed to the customer and is what proves the person at the counter is the one who placed the order. Ask them for it and check it matches before releasing the goods, rather than reading it out.', 'ipn' ); ?>
 							</div>
 						</div>
 					<?php endif; ?>

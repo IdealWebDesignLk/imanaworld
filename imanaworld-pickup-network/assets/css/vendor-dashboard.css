@@ -173,6 +173,15 @@
 .ipn-vd__actions form { margin: 0; }
 .ipn-vd__actions { white-space: nowrap; }
 
+/* The collection code in the orders table. Monospaced so digits line up when
+   comparing it against what a customer is holding. */
+.ipn-vd__code {
+	font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+	font-size: 14px; font-weight: 700; letter-spacing: .12em;
+	font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.ipn-vd__code.is-spent { color: var( --ipn-vd-muted ); font-weight: 600; }
+
 /* ---------- forms ---------- */
 .ipn-vd__form {
 	border: 1px solid var( --ipn-vd-line );

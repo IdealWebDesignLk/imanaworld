@@ -382,6 +382,23 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
 
 .ipn-staff-dashboard.ipn-staff-dashboard .kv-row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 13.5px; }
 .ipn-staff-dashboard.ipn-staff-dashboard .kv-label { color: var(--muted); }
+
+/* The collection code itself. Monospaced and spaced out because it gets read
+   off a screen and compared digit by digit against what a customer is
+   holding. */
+.ipn-staff-dashboard.ipn-staff-dashboard .otp-reveal {
+	display: flex; align-items: center; justify-content: space-between; gap: 12px;
+	background: var(--surface); border: 1px solid var(--line-strong);
+	border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
+}
+.ipn-staff-dashboard.ipn-staff-dashboard .otp-reveal__label {
+	font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+	letter-spacing: .06em; color: var(--muted);
+}
+.ipn-staff-dashboard.ipn-staff-dashboard .otp-reveal__value {
+	font-family: var(--font-mono); font-size: 24px; font-weight: 700;
+	letter-spacing: .18em; font-variant-numeric: tabular-nums; color: var(--ink);
+}
 .ipn-staff-dashboard.ipn-staff-dashboard .kv-value { font-weight: 600; text-align: right; }
 
 .ipn-staff-dashboard.ipn-staff-dashboard .recipient-banner {

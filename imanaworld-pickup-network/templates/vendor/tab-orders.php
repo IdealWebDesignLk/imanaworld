@@ -70,6 +70,7 @@ $ipn_no_action_hint = array(
 					<th><?php esc_html_e( 'Branch', 'ipn' ); ?></th>
 					<th><?php esc_html_e( 'Customer', 'ipn' ); ?></th>
 					<th><?php esc_html_e( 'Status', 'ipn' ); ?></th>
+					<th><?php esc_html_e( 'Collection code', 'ipn' ); ?></th>
 					<th class="ipn-vd__num"><?php esc_html_e( 'Total', 'ipn' ); ?></th>
 					<th><?php esc_html_e( 'Next step', 'ipn' ); ?></th>
 				</tr>
@@ -91,6 +92,13 @@ $ipn_no_action_hint = array(
 							<span class="ipn-vd__pill is-status-<?php echo esc_attr( $ipn_o->status ); ?>">
 								<?php echo esc_html( IPN_Order::status_label( $ipn_o->status ) ); ?>
 							</span>
+						</td>
+						<td>
+							<?php if ( '' !== $ipn_o->otp_code ) : ?>
+								<span class="ipn-vd__code<?php echo 'active' === $ipn_o->otp_status ? '' : ' is-spent'; ?>"><?php echo esc_html( $ipn_o->otp_code ); ?></span>
+							<?php else : ?>
+								<span class="ipn-vd__muted">&mdash;</span>
+							<?php endif; ?>
 						</td>
 						<td class="ipn-vd__num"><?php echo wp_kses_post( wc_price( $ipn_o->total ) ); ?></td>
 						<td class="ipn-vd__actions">
@@ -124,6 +132,9 @@ $ipn_no_action_hint = array(
 			</tbody>
 		</table>
 	</div>
+	<p class="ipn-vd__hint">
+		<?php esc_html_e( 'The collection code is what the customer brings to the counter. Check it against what they show you rather than reading it out to them, and treat this column the way you would treat their password.', 'ipn' ); ?>
+	</p>
 	<p class="ipn-vd__hint">
 		<?php esc_html_e( 'You and your branch staff work the same queue, and either of you can move an order along. The last step is different: an order is only marked Collected once the collection code the customer brings to the counter has been checked, which happens on the branch dashboard.', 'ipn' ); ?>
 	</p>

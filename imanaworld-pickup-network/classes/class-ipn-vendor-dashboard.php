@@ -294,6 +294,11 @@ class IPN_Vendor_Dashboard {
 				$meta    = IPN_Order::get_meta( $order_id );
 				$created = $order->get_date_created();
 
+				// The collection code, for issue #30. '' whenever it cannot be
+				// read back, which the template shows as a dash rather than
+				// pretending no code exists.
+				$otp = IPN_OTP::status_for( $order_id );
+
 				$rows[] = (object) array(
 					'order_id'      => (int) $order_id,
 					'order_number'  => $order->get_order_number(),
@@ -301,6 +306,8 @@ class IPN_Vendor_Dashboard {
 					'customer_name' => IPN_Order::customer_name( $order ),
 					'type'          => ( $meta && $meta->collection_type ) ? $meta->collection_type : 'standard',
 					'status'        => $status,
+					'otp_code'      => $otp ? $otp->code : '',
+					'otp_status'    => $otp ? $otp->status : '',
 					'total'         => $order->get_total(),
 					'created_at'    => $created ? $created->getTimestamp() : 0,
 					'date_label'    => IPN_Order::time_label( $order ),

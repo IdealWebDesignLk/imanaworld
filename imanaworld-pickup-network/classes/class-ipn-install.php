@@ -105,6 +105,7 @@ class IPN_Install {
 			order_id BIGINT UNSIGNED NOT NULL,
 			branch_id BIGINT UNSIGNED NOT NULL,
 			otp_hash VARCHAR(255) NOT NULL,
+			otp_code_enc VARCHAR(255) NULL,
 			status VARCHAR(20) NOT NULL DEFAULT 'active',
 			failed_attempts SMALLINT UNSIGNED NOT NULL DEFAULT 0,
 			created_at DATETIME NOT NULL,
