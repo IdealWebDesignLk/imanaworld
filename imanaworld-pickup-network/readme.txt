@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.4
+Stable tag: 0.9.5
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,20 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.5 =
+* Branch staff can now mark an order as paid. The vendor got this in 0.8.1 and
+  staff did not, which left the people actually taking the money at the counter
+  unable to move an order at all: an offline-payment order sits in "on hold",
+  nothing advances it from there, so the branch queue showed an order with no
+  action against it. (#31)
+* An unpaid order on the staff detail screen now says plainly that no stock is
+  reserved for it and not to start picking, so the missing action reads as a
+  rule rather than a fault.
+* With this, branch staff can take an order the whole way: awaiting payment,
+  new, accepted, preparing, ready, then collected against the customer's code.
+  Orders remain scoped to the one branch on the staff member's session, on both
+  the queue and the detail screen, and never to anything posted or in the URL.
 
 = 0.9.4 =
 * The collection code is now shown to branch staff on the order detail and to

@@ -12,6 +12,7 @@ defined( 'ABSPATH' ) || exit;
  */
 
 $statuses = array(
+	'awaiting-payment' => __( 'Awaiting payment', 'ipn' ),
 	'new'       => __( 'New', 'ipn' ),
 	'accepted'  => __( 'Accepted', 'ipn' ),
 	'preparing' => __( 'Preparing', 'ipn' ),
@@ -87,6 +88,12 @@ $next_status_key = array(
 							<?php endif; ?>
 						</div>
 					</div>
+
+					<?php if ( 'awaiting-payment' === $order->status ) : ?>
+						<div class="banner banner-warn">
+							<?php esc_html_e( 'Not paid yet, so no stock is reserved for it — do not start picking. Mark payment received once the money is in, and it joins the queue as New.', 'ipn' ); ?>
+						</div>
+					<?php endif; ?>
 
 					<?php if ( 'collected' === $order->status ) : ?>
 						<div class="banner banner-success">&#10003; <?php esc_html_e( 'Collected. Order complete and closed out.', 'ipn' ); ?></div>
@@ -361,7 +368,15 @@ $next_status_key = array(
 				<?php endif; ?>
 			</div>
 
-			<?php if ( $order && isset( $next_action_label[ $order->status ], $next_status_key[ $order->status ] ) ) : ?>
+			<?php if ( $order && 'awaiting-payment' === $order->status ) : ?>
+				<form method="post" class="sticky-actions" onsubmit="return confirm('<?php echo esc_js( __( 'Confirm that payment for this order has been received? It joins the queue as New and its stock is reserved at this branch.', 'ipn' ) ); ?>');">
+					<?php wp_nonce_field( 'ipn_mark_paid_' . $order_id, 'ipn_mark_paid_nonce' ); ?>
+					<input type="hidden" name="ipn_staff_mark_paid" value="1" />
+					<button type="submit" class="btn btn-primary">
+						<?php esc_html_e( 'Mark payment received', 'ipn' ); ?>
+					</button>
+				</form>
+			<?php elseif ( $order && isset( $next_action_label[ $order->status ], $next_status_key[ $order->status ] ) ) : ?>
 				<form method="post" class="sticky-actions">
 					<?php wp_nonce_field( 'ipn_advance_status_' . $order_id, 'ipn_advance_nonce' ); ?>
 					<input type="hidden" name="ipn_advance_to" value="<?php echo esc_attr( $next_status_key[ $order->status ] ); ?>" />

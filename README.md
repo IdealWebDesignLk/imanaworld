@@ -144,9 +144,13 @@ the database.
 
 An order placed by bank transfer, cheque, or payment at the counter arrives **awaiting
 payment**, and its stock is not reserved yet. It has no fulfilment step until somebody
-records the money as having arrived — the vendor with **Mark payment received** on the
-Orders tab, or an administrator setting the order to Processing in WooCommerce. Either
-route reserves the branch stock and drops the order into the queue as New.
+records the money as having arrived — **Mark payment received**, on the vendor's Orders
+tab or on the branch staff order detail, or an administrator setting the order to
+Processing in WooCommerce. Any of those reserves the branch stock and drops the order
+into the queue as New.
+
+Branch staff have that step because at a pay-on-collection branch they are the ones
+taking the money.
 
 That step exists because WooCommerce parks every offline payment method in "on hold", and
 a store taking payment at the counter never leaves that state on its own; without it such

@@ -211,6 +211,49 @@ class IPN_Staff_Dashboard {
 			return; // Not this branch's order — ignore any posted action.
 		}
 
+		// Payment taken at the counter (issue #31). The vendor got this in
+		// 0.8.1 and branch staff did not, which left the people actually
+		// handling the money unable to move an order at all: an offline
+		// payment order sits in on-hold, nothing in NEXT_STATUS maps it, so
+		// their queue showed an order with no action against it.
+		//
+		// Processing rather than straight to accepted, for the same reason as
+		// the vendor's version — processing is what reserves the branch stock,
+		// and picking goods the ledger still counts as available is how a
+		// branch oversells.
+		if ( isset( $_POST['ipn_staff_mark_paid'], $_POST['ipn_mark_paid_nonce'] )
+			&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ipn_mark_paid_nonce'] ) ), 'ipn_mark_paid_' . $order_id ) ) {
+
+			$paid_order = wc_get_order( $order_id );
+
+			if ( ! $paid_order ) {
+				return;
+			}
+
+			// Read off the order itself, so a stale page cannot re-run this
+			// against one somebody has already taken payment for.
+			$current = $paid_order->get_status();
+
+			if ( ! in_array( $current, array( 'on-hold', 'pending' ), true ) ) {
+				return;
+			}
+
+			if ( ! $paid_order->get_date_paid() ) {
+				$paid_order->set_date_paid( time() );
+				$paid_order->save();
+			}
+
+			if ( IPN_Order::advance( $order_id, $current, 'processing' ) ) {
+				IPN_Audit_Log::log( 'payment_marked_received', array(
+					'order_id'  => $order_id,
+					'branch_id' => $branch_id,
+					'data'      => array( 'from_status' => $current ),
+				) );
+			}
+
+			return;
+		}
+
 		if ( isset( $_POST['ipn_resend_otp'], $_POST['ipn_resend_nonce'] )
 			&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ipn_resend_nonce'] ) ), 'ipn_resend_otp_' . $order_id ) ) {
 

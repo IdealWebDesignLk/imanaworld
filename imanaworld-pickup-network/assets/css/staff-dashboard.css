@@ -381,6 +381,10 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
 .ipn-staff-dashboard.ipn-staff-dashboard .item-qty { font-variant-numeric: tabular-nums; color: var(--muted); flex-shrink: 0; }
 
 .ipn-staff-dashboard.ipn-staff-dashboard .kv-row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 13.5px; }
+.ipn-staff-dashboard.ipn-staff-dashboard .banner-warn {
+	background: var(--preparing-bg); color: var(--preparing);
+}
+
 .ipn-staff-dashboard.ipn-staff-dashboard .kv-label { color: var(--muted); }
 
 /* The collection code itself. Monospaced and spaced out because it gets read
