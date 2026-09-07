@@ -114,7 +114,6 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .tabbar {
    width, so a desktop till does not get a line of text a metre long. */
 @media (min-width: 900px) {
 	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .content,
-	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .filters,
 	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .stock-search,
 	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar-row,
 	body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .sticky-actions,
@@ -355,16 +354,6 @@ body.ipn-sd-standalone > #pswp { display: none !important; }
 .ipn-staff-dashboard.ipn-staff-dashboard .login-screen form .login-submit input[type="submit"]:hover { background: var(--brand-700); }
 
 /* ---------- queue ---------- */
-.ipn-staff-dashboard.ipn-staff-dashboard .filters { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 16px 0; flex-shrink: 0; }
-.ipn-staff-dashboard.ipn-staff-dashboard .filter-tab {
-	flex-shrink: 0; font-size: 12.5px; font-weight: 650; padding: 7px 12px; border-radius: 9px;
-	background: transparent; border: 1px solid var(--line); color: var(--muted); cursor: pointer;
-	display: flex; align-items: center; gap: 6px; text-decoration: none;
-}
-.ipn-staff-dashboard.ipn-staff-dashboard .filter-tab .n { font-variant-numeric: tabular-nums; opacity: .7; }
-.ipn-staff-dashboard.ipn-staff-dashboard .filter-tab.active { background: var(--brand-700); border-color: var(--brand-700); color: var(--on-brand); }
-.ipn-staff-dashboard.ipn-staff-dashboard .filter-tab.active .n { opacity: .85; }
-
 .ipn-staff-dashboard.ipn-staff-dashboard .order-card {
 	display: block;
 	background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);

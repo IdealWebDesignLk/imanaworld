@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.10
+Stable tag: 0.9.11
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,17 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.11 =
+* Removed the six status filter tabs (Awaiting payment, New, Accepted,
+  Preparing, Ready, Collected) from the branch staff order queue, keeping one
+  list of every order. At a single branch's order volume, six mostly-empty
+  count tabs were clutter, and two real statuses — Expired and Disputed — had
+  no tab at all, so an order in either state was invisible unless "All"
+  happened to already be selected. Each order's status is still shown, right
+  on its card.
+* The Queue tab's new-order badge is unaffected — that count never depended
+  on the removed tabs.
 
 = 0.9.10 =
 * Fix: a quantity the selected branch could not supply could still reach

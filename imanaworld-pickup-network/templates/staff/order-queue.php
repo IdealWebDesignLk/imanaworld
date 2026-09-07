@@ -4,50 +4,37 @@ defined( 'ABSPATH' ) || exit;
  * @var int         $branch_id
  * @var object|null $branch  Row from IPN_Branch::get().
  * @var array       $orders  See IPN_Staff_Dashboard::get_branch_orders() for the expected shape.
- *                            Always empty today — order routing isn't implemented yet.
  */
 
+/**
+ * Labels for the status chip on each order card. Not a filter any more
+ * (issue #25 follow-up) — with a branch's order volume this small, six
+ * mostly-empty count tabs (plus "All") were pure clutter, and Expired and
+ * Disputed had no tab at all, so an order in either state was invisible
+ * unless you happened to already be on "All". One list, every order, with
+ * its status readable straight off the card is simpler and misses nothing.
+ */
 $statuses = array(
-	'all'       => __( 'All', 'ipn' ),
 	'awaiting-payment' => __( 'Awaiting payment', 'ipn' ),
 	'new'       => __( 'New', 'ipn' ),
 	'accepted'  => __( 'Accepted', 'ipn' ),
 	'preparing' => __( 'Preparing', 'ipn' ),
 	'ready'     => __( 'Ready', 'ipn' ),
 	'collected' => __( 'Collected', 'ipn' ),
+	'disputed'  => __( 'Disputed', 'ipn' ),
+	'expired'   => __( 'Expired', 'ipn' ),
 );
 
-$active_status = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : 'all'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-if ( ! isset( $statuses[ $active_status ] ) ) {
-	$active_status = 'all';
-}
-
-$status_count = function ( $status ) use ( $orders ) {
-	if ( 'all' === $status ) {
-		return count( $orders );
-	}
-	return count(
-		array_filter(
-			$orders,
-			function ( $order ) use ( $status ) {
-				return isset( $order->status ) && $status === $order->status;
-			}
-		)
-	);
-};
-
-$visible_orders = 'all' === $active_status
-	? $orders
-	: array_values(
-		array_filter(
-			$orders,
-			function ( $order ) use ( $active_status ) {
-				return isset( $order->status ) && $active_status === $order->status;
-			}
-		)
-	);
-
-$new_count = $status_count( 'new' );
+// Still used by the tab bar below, to badge the Queue tab with how many
+// orders are waiting to be accepted — unrelated to the removed filter tabs.
+$new_count = count(
+	array_filter(
+		$orders,
+		function ( $order ) {
+			return isset( $order->status ) && 'new' === $order->status;
+		}
+	)
+);
 ?>
 <div class="ipn-staff-dashboard">
 	<div class="device">
@@ -67,21 +54,13 @@ $new_count = $status_count( 'new' );
 					<div class="empty-state"><?php esc_html_e( 'Your account is not yet assigned to a branch. Contact IMANAWORLD admin.', 'ipn' ); ?></div>
 				</div>
 			<?php else : ?>
-				<div class="filters">
-					<?php foreach ( $statuses as $key => $label ) : ?>
-						<a class="filter-tab<?php echo $key === $active_status ? ' active' : ''; ?>" href="<?php echo IPN_Staff_Dashboard::screen_url( 'queue', array( 'status' => $key ) ); ?>">
-							<?php echo esc_html( $label ); ?> <span class="n"><?php echo esc_html( $status_count( $key ) ); ?></span>
-						</a>
-					<?php endforeach; ?>
-				</div>
-
 				<div class="content">
-					<?php if ( empty( $visible_orders ) ) : ?>
+					<?php if ( empty( $orders ) ) : ?>
 						<div class="empty-state">
 							<?php esc_html_e( 'No orders in this view right now.', 'ipn' ); ?>
 						</div>
 					<?php else : ?>
-						<?php foreach ( $visible_orders as $order ) : ?>
+						<?php foreach ( $orders as $order ) : ?>
 							<a class="order-card" href="<?php echo IPN_Staff_Dashboard::screen_url( 'detail', array( 'order_id' => $order->order_id ) ); ?>">
 								<div class="order-top">
 									<div>
