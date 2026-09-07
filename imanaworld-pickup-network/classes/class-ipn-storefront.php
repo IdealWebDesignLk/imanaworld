@@ -277,10 +277,11 @@ class IPN_Storefront {
 
 	/**
 	 * Replaces WooCommerce's native "In stock"/"Out of stock" text with the
-	 * selected branch's real per-branch figure — but only for products that
-	 * both belong to that branch's vendor AND actually have an IPN stock
-	 * row (i.e. were brought into the per-branch model, typically via
-	 * catalogue import). Everything else keeps WC's normal display.
+	 * selected branch's real per-branch figure — but only for a product that
+	 * actually has an IPN stock row at that branch (i.e. was brought into
+	 * the per-branch model, typically via catalogue import) and only while
+	 * the branch itself is active. Everything else keeps WC's normal
+	 * display, matching what get_availability_by_branch() would show.
 	 */
 	public function filter_product_availability( $availability, $product ) {
 		$branch_id = $this->get_selected_branch_id();
@@ -291,7 +292,7 @@ class IPN_Storefront {
 
 		$branch = IPN_Branch::get( $branch_id );
 
-		if ( ! $branch || (int) $branch->vendor_id !== (int) get_post_field( 'post_author', $product->get_id() ) ) {
+		if ( ! $branch || 'active' !== $branch->status ) {
 			return $availability;
 		}
 
@@ -331,16 +332,35 @@ class IPN_Storefront {
 			return null;
 		}
 
+		// Whether a branch can fulfil an order for this product is decided
+		// the same way IPN_Branch_Stock::get_availability_by_branch() decides
+		// what to SHOW a shopper as available in the first place: an active
+		// branch, and a stock row joining it to the product. That row is what
+		// "this branch carries this product" actually means; there is no
+		// separate vendor-ownership fact to reconcile it against.
+		//
+		// A vendor-match gate against get_post_field( 'post_author', ... )
+		// used to sit here, and defeated itself: on a mismatch it treated the
+		// pairing as "not this function's concern" and returned null — no
+		// problem — which let checkout complete for a quantity the branch
+		// could not supply. Reproduced live: 21 units added against a branch
+		// stocking 15, order placed successfully. It never touched the
+		// display path above, which is why the same order looked completely
+		// normal on the product page throughout.
 		$branch = IPN_Branch::get( $branch_id );
 
-		if ( ! $branch || (int) $branch->vendor_id !== (int) get_post_field( 'post_author', $product_id ) ) {
-			return null;
+		// A missing or inactive branch fails CLOSED, not open: nothing can be
+		// collected from a branch that has gone away or shut down, whatever
+		// the stock table still says. get_availability_by_branch() reaches
+		// the same outcome by simply excluding such a branch from its JOIN.
+		if ( ! $branch || 'active' !== $branch->status ) {
+			return array( 'reason' => 'not_stocked', 'available' => 0 );
 		}
 
-		// A Click & Collect product of this vendor's that this branch holds no
-		// stock row for cannot be collected here at all. It used to be waved
-		// through, which is how an item reached the cart from a direct link
-		// and was only refused later.
+		// A Click & Collect product this branch holds no stock row for
+		// cannot be collected here at all. It used to be waved through,
+		// which is how an item reached the cart from a direct link and was
+		// only refused later.
 		if ( ! IPN_Branch_Stock::get_row( $product_id, $branch_id ) ) {
 			return array( 'reason' => 'not_stocked', 'available' => 0 );
 		}

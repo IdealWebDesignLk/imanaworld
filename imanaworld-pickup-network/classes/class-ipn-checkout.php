@@ -125,12 +125,32 @@ class IPN_Checkout {
 			$product_id = (int) $cart_item['product_id'];
 			$quantity   = (int) $cart_item['quantity'];
 
-			if ( (int) get_post_field( 'post_author', $product_id ) !== (int) $branch->vendor_id ) {
-				continue; // Not this branch's vendor — not an IPN-tracked stock concern.
+			if ( ! IPN_Branch_Stock::is_tracked( $product_id ) ) {
+				continue; // A plain WooCommerce product — outside the per-branch stock model entirely.
 			}
 
+			// Whether this branch carries the product is the stock row
+			// itself, exactly as IPN_Branch_Stock::get_availability_by_branch()
+			// decides what a shopper is shown as available in the first
+			// place. A vendor-ownership comparison used to gate this instead,
+			// and on a mismatch it `continue`d — treated the pairing as no
+			// concern of this function's rather than as unavailable — which
+			// is how a quantity the branch could not supply reached payment
+			// at this, the last checkpoint before money moves. Reproduced
+			// live: 21 units checked out successfully against a branch
+			// stocking 15.
 			if ( ! IPN_Branch_Stock::get_row( $product_id, $branch->id ) ) {
-				continue; // This vendor's product was never brought into the per-branch stock model.
+				$product = wc_get_product( $product_id );
+
+				wc_add_notice(
+					sprintf(
+						/* translators: %s: product name */
+						__( '%s is not available at your selected branch. Please remove it or choose a different branch.', 'ipn' ),
+						$product ? $product->get_name() : __( 'An item in your cart', 'ipn' )
+					),
+					'error'
+				);
+				continue;
 			}
 
 			$available = IPN_Branch_Stock::get_available( $product_id, $branch->id );

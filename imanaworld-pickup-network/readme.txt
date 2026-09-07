@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.9
+Stable tag: 0.9.10
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,27 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.10 =
+* Fix: a quantity the selected branch could not supply could still reach
+  checkout and complete payment. Both places that check a cart item against
+  branch stock — IPN_Storefront's shared add-to-cart/cart-page rule and
+  IPN_Checkout's own re-check immediately before payment — compared the
+  product's vendor against the branch's owning vendor first, and on a
+  mismatch treated the pairing as none of their concern and skipped the
+  quantity check entirely rather than blocking it. Reproduced live: 21 units
+  of an item stocked 15 at the selected branch went all the way through to a
+  placed order.
+* Both now decide "does this branch carry this product" the same way
+  IPN_Branch_Stock::get_availability_by_branch() already decides what a
+  shopper is shown as available in the first place — an active branch and a
+  stock row joining it to the product — with no separate vendor-ownership
+  fact to reconcile against. A missing or inactive branch now fails closed
+  (blocks) rather than open (waves through).
+* This was pre-existing in both places, predating #36/#37 — carried forward
+  rather than introduced when the shared rule was written for those. Found
+  only because #36 and #37 were verified against a real, live checkout
+  attempt rather than checked by reading the code.
 
 = 0.9.9 =
 * Fix: a shopper's very first request to the store, if it happened to be a
