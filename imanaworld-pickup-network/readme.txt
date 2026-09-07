@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.8
+Stable tag: 0.9.9
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,28 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.9 =
+* Fix: a shopper's very first request to the store, if it happened to be a
+  branch selection (a deep link, or simply the first click on this device),
+  never actually kept the branch chosen. The handler wrote it to the session
+  and redirected straight away; WooCommerce normally sends the cookie that
+  names that session on a later hook, one only reached once something has
+  mutated the cart through its own code path, and the early exit here skipped
+  past it every time. The data was saved server-side, but the browser had no
+  cookie pointing at it, so the very next request looked like a new visitor
+  and the choice was gone. In ordinary use this was mostly invisible, because
+  a shopper who had already looked at a page or two first arrived at branch
+  selection with a session cookie a normal page load had already set — it
+  broke specifically for whichever request is genuinely a visitor's first.
+  Found by testing #36 and #37 end to end against a deliberately fresh
+  session rather than trusting an already-warm browser, which is exactly the
+  gap a real static verification would have missed. Fixed by forcing that
+  cookie to go out with the same response, before the redirect.
+* This was pre-existing in the branch-selection code, not introduced by 0.9.8
+  — but 0.9.8's cart/branch reconciliation (#37) and required-branch prompt
+  (#36) both depend on branch selection actually persisting, so it blocked
+  verifying either.
 
 = 0.9.8 =
 * Fix: verifying a collection code crashed to a blank screen. Verification

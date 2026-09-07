@@ -44,6 +44,34 @@ class IPN_Storefront {
 	}
 
 	/**
+	 * Forces WooCommerce to send its session cookie with THIS response,
+	 * instead of leaving it to whichever later hook normally does that.
+	 *
+	 * WooCommerce defers setting wp_woocommerce_session_* for a brand-new
+	 * anonymous visitor until something gives it a reason to — normally a
+	 * cart mutation, handled deep inside WC_Cart_Session on hooks later in
+	 * the page lifecycle than wp_loaded. Every branch in
+	 * maybe_handle_branch_actions() writes to WC()->session or WC()->cart
+	 * and then calls wp_safe_redirect(); exit(); on wp_loaded itself — before
+	 * any of those later hooks run. WC_Session_Handler::save_data() still
+	 * fires on shutdown and persists the data server-side, but the cookie
+	 * naming which session to load never reaches the browser, so the next
+	 * request looks like a brand-new anonymous visitor and the write is
+	 * orphaned. This was invisible in ordinary use because a shopper who has
+	 * already viewed a page or two first arrives here with a session cookie
+	 * a normal page load already set; it broke for whichever visit is
+	 * genuinely this browser's first request to the store — proven live on
+	 * v0.9.8 with a fresh session: the branch never stuck across the redirect.
+	 *
+	 * Safe to call repeatedly and a no-op once the cookie already matches.
+	 */
+	protected function ensure_session_cookie() {
+		if ( function_exists( 'WC' ) && WC()->session && method_exists( WC()->session, 'set_customer_session_cookie' ) ) {
+			WC()->session->set_customer_session_cookie( true );
+		}
+	}
+
+	/**
 	 * Handles the branch-selector card links and the "Change branch" link
 	 * from the indicator bar. Both are plain nonce-guarded GET requests
 	 * (no JS required) that redirect back to the page the user was on.
@@ -73,6 +101,7 @@ class IPN_Storefront {
 					// out, and blocks checkout until it is resolved (#37).
 				}
 
+				$this->ensure_session_cookie();
 				wp_safe_redirect( remove_query_arg( array( 'ipn_branch', 'ipn_change_branch', '_wpnonce' ) ) );
 				exit;
 			}
@@ -105,6 +134,7 @@ class IPN_Storefront {
 				}
 			}
 
+			$this->ensure_session_cookie();
 			wp_safe_redirect( remove_query_arg( array( 'ipn_cart_fix', '_wpnonce' ) ) );
 			exit;
 		} elseif ( isset( $_GET['ipn_change_branch'], $_GET['_wpnonce'] ) ) {
@@ -114,6 +144,7 @@ class IPN_Storefront {
 				$this->set_selected_branch( 0 );
 			}
 
+			$this->ensure_session_cookie();
 			wp_safe_redirect( remove_query_arg( array( 'ipn_branch', 'ipn_change_branch', '_wpnonce' ) ) );
 			exit;
 		}
