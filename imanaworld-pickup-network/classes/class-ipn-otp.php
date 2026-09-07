@@ -170,9 +170,17 @@ class IPN_OTP {
 			return new WP_Error( 'ipn_otp_expired', __( 'Collection code has expired.', 'ipn' ) );
 		}
 
-		$wp_hasher = new PasswordHash( 8, true );
-
-		if ( ! $wp_hasher->CheckPassword( $submitted_code, $otp->otp_hash ) ) {
+		// wp_check_password() rather than PasswordHash directly (issue #35).
+		// Instantiating that class here was wrong twice over. WordPress only
+		// loads wp-includes/class-phpass.php from inside its own password
+		// functions, so on a front-end request the class was often simply not
+		// there and the whole page died — the blank screen the issue reports.
+		// And since WordPress 6.8 wp_hash_password() produces bcrypt, which
+		// phpass cannot read back, so even where the class did load no code
+		// would ever have matched. wp_check_password() is the supported entry
+		// point: it loads what it needs and reads both formats, which also
+		// means codes hashed before this fix still verify.
+		if ( ! wp_check_password( $submitted_code, $otp->otp_hash ) ) {
 			$attempts = (int) $otp->failed_attempts + 1;
 			$wpdb->update( $table, array( 'failed_attempts' => $attempts ), array( 'id' => $otp->id ) );
 

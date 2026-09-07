@@ -92,7 +92,7 @@ $ipn_in_stock_rows = array_values( array_filter( $rows, function ( $row ) {
 
 		<?php if ( $selected_branch_id ) : ?>
 			<p class="ipn-product-availability__note">
-				<?php esc_html_e( 'Switching branch empties your cart, since stock is held per branch.', 'ipn' ); ?>
+				<?php esc_html_e( 'Your cart is kept when you switch branch. Anything the new branch cannot supply is flagged in the cart, where you can drop those items or start again.', 'ipn' ); ?>
 			</p>
 		<?php endif; ?>
 

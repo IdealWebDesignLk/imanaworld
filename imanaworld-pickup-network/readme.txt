@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.7
+Stable tag: 0.9.8
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,31 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.8 =
+* Fix: verifying a collection code crashed to a blank screen. Verification
+  instantiated WordPress's internal PasswordHash class directly, which
+  WordPress only loads from inside its own password functions — on a
+  front-end request the class was often simply not there, and the whole page
+  died. Since WordPress 6.8, wp_hash_password() also produces bcrypt, which
+  that class cannot read back, so even where it did load no code would ever
+  have matched. Verification now goes through wp_check_password(), the
+  supported entry point, which reads both formats — codes hashed before this
+  fix still verify. (#35)
+* On the single product page, choosing a Click & Collect branch is now
+  required before the item can be added to the cart, with a message above the
+  Add to Cart button saying so and a matching notice if the button is pressed
+  regardless. Only applies to products actually stocked per branch; a plain
+  WooCommerce product is unaffected. (#36)
+* Switching branch no longer empties the cart. Instead, anything the newly
+  selected branch cannot supply is flagged with the product name, on the cart
+  page and again if checkout is attempted — checkout is blocked until it is
+  resolved. Two links are offered: remove just the unavailable items, or clear
+  the cart and start again. (#37)
+* Fix found while building #37: a Click & Collect product a branch had never
+  stocked at all could previously still be added to that branch's cart
+  (silently waved through validation) and only failed later. It is now
+  refused at add-to-cart, with the same message issue #37 specifies.
 
 = 0.9.7 =
 * IPN > Settings now carries three theme colours instead of one: Primary for

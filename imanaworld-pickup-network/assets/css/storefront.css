@@ -457,3 +457,20 @@
 	padding: 10px 13px;
 	margin: 0;
 }
+
+/* "Pick a branch first", above Add to Cart (issue #36). Built from the same
+   tokens as everything else on this page rather than a new colour: this file
+   has no warning hue anywhere in it (.ipn-status-pill--closed is neutral
+   grey, not red or amber), so a call to action reads as one using the brand
+   tint already used for "Ready"/positive states, not as an alarm the rest of
+   the design has no equivalent for. */
+.ipn-branch-required {
+	margin: 0 0 14px;
+	padding: 10px 12px;
+	border-radius: var( --ipn-radius );
+	border: 1px solid var( --ipn-brand-600 );
+	background: var( --ipn-brand-100 );
+	color: var( --ipn-brand-700 );
+	font-size: 13.5px;
+	line-height: 1.45;
+}

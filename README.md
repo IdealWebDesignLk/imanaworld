@@ -68,6 +68,16 @@ dashboard fills the screen. Staff work it at a counter, usually on a phone, wher
 shop's chrome is only in the way. The shortcode still renders as an ordinary card if it
 is placed on any other page.
 
+## Branch selection on the storefront
+
+A Click & Collect product cannot be added to the cart until a branch is selected —
+"in stock" has no meaning until it's known which branch the customer means to collect
+from. Switching branch afterwards keeps the cart rather than emptying it: anything the
+newly selected branch cannot supply is flagged by name, on the cart page and again if
+checkout is attempted, with a link to drop just those items or clear the cart and start
+over. The same availability rule decides all three checks — adding to cart, viewing the
+cart, and checkout — so nothing can pass one and fail another.
+
 Anyone who is not a logged-in **IPN Branch Staff** user sees a sign-in prompt instead —
 no branch data is exposed. A staff user with no branch assigned yet is told to contact
 an admin.
@@ -91,7 +101,7 @@ place on a page:
 | Dokan vendor dashboard | A "Click & Collect" section: branches, staff, per-branch stock, orders |
 | Before the shop loop | Branch selector, until a branch is chosen |
 | Above every WooCommerce template | "Shopping at X · Change branch" indicator bar |
-| Single product page | Click & Collect availability per branch, above add-to-cart |
+| Single product page | Click & Collect availability per branch, above add-to-cart. Choosing a branch is required before a tracked product can be added; the cart is checked again against whatever branch is selected. |
 | Checkout | Collection type, nominated recipient, and the branch picker if none is selected |
 | My Account → Orders | Live order tracker under the order table |
 
