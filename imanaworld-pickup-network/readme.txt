@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.11
+Stable tag: 0.9.12
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,13 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.12 =
+* Removed the Commission and "Where this order came from" cards from the
+  branch staff order detail. Marketplace commission and order attribution
+  (origin, source, device) are back-office and marketing figures, not
+  something a branch needs to hand over a parcel — they stayed on the admin
+  and vendor screens, which is where that information belongs.
 
 = 0.9.11 =
 * Removed the six status filter tabs (Awaiting payment, New, Accepted,

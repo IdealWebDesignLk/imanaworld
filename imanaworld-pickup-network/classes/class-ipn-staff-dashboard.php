@@ -443,11 +443,9 @@ class IPN_Staff_Dashboard {
 			'total'    => (float) $order->get_total(),
 		);
 
-		$detail->otp         = IPN_OTP::status_for( $order_id );
-		$detail->commission  = self::commission_summary( $order );
-		$detail->notes       = self::order_notes( $order_id );
-		$detail->attribution = self::order_attribution( $order );
-		$detail->customer    = self::customer_history( $order );
+		$detail->otp      = IPN_OTP::status_for( $order_id );
+		$detail->notes    = self::order_notes( $order_id );
+		$detail->customer = self::customer_history( $order );
 
 		$detail->recipient = null;
 		if ( ! empty( $meta->nominated_name ) ) {
@@ -467,51 +465,6 @@ class IPN_Staff_Dashboard {
 		}
 
 		return $detail;
-	}
-
-	/**
-	 * What the marketplace kept and what the store earned, when Dokan can
-	 * tell us (issue #29).
-	 *
-	 * Dokan's earning figure is the authoritative one; the commission is what
-	 * is left of the order total after it, and the rate is that as a
-	 * percentage. They are labelled as derived in the template rather than
-	 * presented as figures Dokan itself reports, because how Dokan apportions
-	 * shipping and tax depends on settings this has no view of.
-	 *
-	 * Every Dokan call is guarded: this plugin has to keep rendering on a site
-	 * where Dokan is deactivated or has moved its API on.
-	 *
-	 * @return array|null
-	 */
-	protected static function commission_summary( $order ) {
-		$earning = null;
-
-		if ( function_exists( 'dokan_get_seller_amount_from_order' ) ) {
-			$earning = dokan_get_seller_amount_from_order( $order->get_id() );
-		}
-
-		if ( ( null === $earning || '' === $earning ) && function_exists( 'dokan' ) ) {
-			$dokan = dokan();
-
-			if ( is_object( $dokan ) && isset( $dokan->commission ) && method_exists( $dokan->commission, 'get_earning_by_order' ) ) {
-				$earning = $dokan->commission->get_earning_by_order( $order );
-			}
-		}
-
-		if ( null === $earning || '' === $earning || ! is_numeric( $earning ) ) {
-			return null;
-		}
-
-		$earning = (float) $earning;
-		$total   = (float) $order->get_total();
-
-		return array(
-			'vendor_earning' => $earning,
-			'commission'     => max( 0, $total - $earning ),
-			'rate'           => $total > 0 ? ( ( $total - $earning ) / $total ) * 100 : 0.0,
-			'shipping'       => (float) $order->get_shipping_total(),
-		);
 	}
 
 	/**
@@ -536,36 +489,6 @@ class IPN_Staff_Dashboard {
 		}
 
 		return $rows;
-	}
-
-	/**
-	 * WooCommerce's order attribution — where the order came from. Absent on
-	 * older WooCommerce and on orders placed before it was switched on, which
-	 * is why an empty list is a normal outcome rather than an error.
-	 *
-	 * @return array label => value
-	 */
-	protected static function order_attribution( $order ) {
-		$fields = array(
-			'source_type'  => __( 'Origin', 'ipn' ),
-			'utm_source'   => __( 'Source', 'ipn' ),
-			'utm_medium'   => __( 'Medium', 'ipn' ),
-			'utm_campaign' => __( 'Campaign', 'ipn' ),
-			'referrer'     => __( 'Referrer', 'ipn' ),
-			'device_type'  => __( 'Device', 'ipn' ),
-		);
-
-		$out = array();
-
-		foreach ( $fields as $key => $label ) {
-			$value = $order->get_meta( '_wc_order_attribution_' . $key );
-
-			if ( '' !== $value && null !== $value ) {
-				$out[ $label ] = (string) $value;
-			}
-		}
-
-		return $out;
 	}
 
 	/**

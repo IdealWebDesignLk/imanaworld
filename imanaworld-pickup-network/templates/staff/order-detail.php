@@ -204,25 +204,6 @@ $next_status_key = array(
 						</div>
 					</div>
 
-					<?php if ( $order->commission ) : ?>
-						<div class="card card--half">
-							<div class="card-title"><?php esc_html_e( 'Commission', 'ipn' ); ?></div>
-							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Store earnings', 'ipn' ); ?></span><span class="kv-value"><?php echo wp_kses_post( wc_price( $order->commission['vendor_earning'], array( 'currency' => $order->currency ) ) ); ?></span></div>
-							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Marketplace commission', 'ipn' ); ?></span><span class="kv-value"><?php echo wp_kses_post( wc_price( $order->commission['commission'], array( 'currency' => $order->currency ) ) ); ?></span></div>
-								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Shipping fees', 'ipn' ); ?></span><span class="kv-value"><?php echo wp_kses_post( wc_price( $order->commission['shipping'], array( 'currency' => $order->currency ) ) ); ?></span></div>
-							<div class="otp-hint"><?php esc_html_e( 'Store earnings come from Dokan. The commission is what is left of the order total after them.', 'ipn' ); ?></div>
-						</div>
-					<?php endif; ?>
-
-					<?php if ( ! empty( $order->attribution ) ) : ?>
-						<div class="card card--half">
-							<div class="card-title"><?php esc_html_e( 'Where this order came from', 'ipn' ); ?></div>
-							<?php foreach ( $order->attribution as $ipn_att_label => $ipn_att_value ) : ?>
-								<div class="kv-row"><span class="kv-label"><?php echo esc_html( $ipn_att_label ); ?></span><span class="kv-value"><?php echo esc_html( $ipn_att_value ); ?></span></div>
-							<?php endforeach; ?>
-						</div>
-					<?php endif; ?>
-
 					<?php if ( 'ready' === $order->status ) : ?>
 						<div class="card">
 							<div class="card-title"><?php esc_html_e( 'Verify collection', 'ipn' ); ?></div>
