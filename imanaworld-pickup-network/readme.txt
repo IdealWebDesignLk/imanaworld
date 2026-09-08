@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.15
+Stable tag: 0.9.16
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,20 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.16 =
+* Fix: adding a different vendor's product via the single-product page's own
+  Add to Cart button showed no message at all (#39) — the block worked (the
+  product never entered the cart), but nothing explained why. This theme
+  redirects to the cart page after every classic add-to-cart submission,
+  success or failure, and the cart page's own notices area was confirmed live
+  to render empty regardless of what is queued for it. The shop-loop's AJAX
+  Add to Cart button never had this problem, because WooCommerce's own JS
+  sends a blocked add back to the product's page instead, where the notice
+  does render — which is why this only affected the single-product page.
+* The single-product page's button now gets the same treatment: a blocked
+  add sends the customer back to the product's own page rather than falling
+  through to the cart, without touching the already-working AJAX path.
 
 = 0.9.15 =
 * Fix: "Clear Cart & Continue" on the different-vendor notice (#39) led to a

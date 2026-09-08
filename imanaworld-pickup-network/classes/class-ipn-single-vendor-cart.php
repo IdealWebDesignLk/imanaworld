@@ -81,6 +81,32 @@ class IPN_Single_Vendor_Cart {
 			'error'
 		);
 
+		// The classic (non-AJAX) single-product form redirects to the cart
+		// page after ANY add-to-cart submission on this site, success or
+		// failure, regardless of what WooCommerce core's own conditional
+		// redirect logic would do — a theme behaviour, not this plugin's.
+		// Confirmed live that the cart page's own notices area renders
+		// empty, so a customer blocked from there never sees this message at
+		// all — just an unexplained bounce to a cart that looks unchanged.
+		//
+		// The AJAX shop-loop button does not have this problem: on a blocked
+		// add, WooCommerce's own JS reads the error flag in the AJAX
+		// response and sends the browser to the product's page itself, which
+		// reliably shows the notice — that is why the earlier, AJAX-only
+		// reproduction of this feature worked fine. Redirecting here as well
+		// puts the classic path on equal footing, without touching the AJAX
+		// one (still let through by the wp_doing_ajax() check, since exiting
+		// mid-filter there would return a redirect where the loop button's
+		// JS expects JSON and break it).
+		if ( ! wp_doing_ajax() && $product_id && function_exists( 'get_permalink' ) ) {
+			$product_url = get_permalink( $product_id );
+
+			if ( $product_url ) {
+				wp_safe_redirect( $product_url );
+				exit;
+			}
+		}
+
 		return false;
 	}
 
