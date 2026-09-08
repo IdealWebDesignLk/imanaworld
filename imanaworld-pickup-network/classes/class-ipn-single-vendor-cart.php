@@ -119,15 +119,34 @@ class IPN_Single_Vendor_Cart {
 	 * A nonce-guarded link that clears the cart and, when a product/quantity
 	 * is given, adds that product straight back in — "Clear Cart & Continue"
 	 * in one click rather than two.
+	 *
+	 * Built against an explicit page rather than add_query_arg()'s default of
+	 * "whatever the current request's URL is" — that default is wrong here
+	 * specifically because it is not always safe to assume. Reproduced live:
+	 * the shop-loop's Add to Cart button is WooCommerce's own AJAX one, and
+	 * when this notice is raised from inside THAT request, the "current URL"
+	 * is the ?wc-ajax=add_to_cart endpoint itself. A link built from it sends
+	 * the next click straight into WooCommerce's own AJAX handler, which has
+	 * nothing to do with this query string, dies before this class's own
+	 * wp_loaded handler ever runs, and the browser is left looking at
+	 * whatever that handler happened to output — a blank screen.
+	 *
+	 * The product's own permalink is what "Clear Cart & Continue" actually
+	 * means anyway — back to the product being added, not wherever the click
+	 * that got here happened to originate.
 	 */
 	protected function cart_fix_url( $product_id, $quantity ) {
+		$product_id = (int) $product_id;
+		$base       = $product_id && get_permalink( $product_id ) ? get_permalink( $product_id ) : ( function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/' ) );
+
 		return add_query_arg(
 			array(
 				'ipn_vendor_cart_fix' => 'clear',
-				'ipn_product_id'      => (int) $product_id,
+				'ipn_product_id'      => $product_id,
 				'ipn_quantity'        => max( 1, (int) $quantity ),
 				'_wpnonce'            => wp_create_nonce( 'ipn_vendor_cart_fix' ),
-			)
+			),
+			$base
 		);
 	}
 
@@ -167,7 +186,12 @@ class IPN_Single_Vendor_Cart {
 			wc_add_notice( __( 'Your cart has been cleared.', 'ipn' ), 'success' );
 		}
 
-		wp_safe_redirect( remove_query_arg( array( 'ipn_vendor_cart_fix', 'ipn_product_id', 'ipn_quantity', '_wpnonce' ) ) );
+		// The cart page rather than remove_query_arg() on whatever page this
+		// request landed on — same reasoning as the link that led here: an
+		// explicit, always-real destination beats trusting the current
+		// request's URL, and landing on the cart is the clearest confirmation
+		// of what just happened either way.
+		wp_safe_redirect( function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/' ) );
 		exit;
 	}
 }

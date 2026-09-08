@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.14
+Stable tag: 0.9.15
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,20 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.15 =
+* Fix: "Clear Cart & Continue" on the different-vendor notice (#39) led to a
+  blank screen. The shop's Add to Cart buttons are WooCommerce's own AJAX
+  ones, and when the block is raised from inside that request, the link was
+  built against add_query_arg()'s default of "the current request's URL" —
+  which, in that request, is WooCommerce's own ?wc-ajax=add_to_cart endpoint,
+  not a real page. Clicking it sent the browser straight into that handler,
+  which has nothing to do with this plugin's query string and ends the
+  request before this class's own code ever runs, leaving the blank page
+  reported. Both cart-fix links, and the redirect after using one, now target
+  an explicit real page — the product's own permalink for "Clear Cart &
+  Continue", the cart page otherwise — rather than trusting whichever URL the
+  current request happened to be.
 
 = 0.9.14 =
 * Fix: "Cancel" on the different-vendor notice (#39) linked back to the exact
