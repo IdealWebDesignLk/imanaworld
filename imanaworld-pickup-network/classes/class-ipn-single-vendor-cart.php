@@ -70,7 +70,14 @@ class IPN_Single_Vendor_Cart {
 		wc_add_notice(
 			__( 'This product is from a different vendor. You can only purchase products from one vendor at a time. If you want to continue with this product, you\'ll need to clear your current cart.', 'ipn' )
 			. ' <a href="' . esc_url( $this->cart_fix_url( $product_id, $quantity ) ) . '">' . esc_html__( 'Clear Cart & Continue', 'ipn' ) . '</a>'
-			. ' &middot; <a href="' . esc_url( remove_query_arg( array( 'ipn_vendor_cart_fix', 'ipn_product_id', 'ipn_quantity', '_wpnonce' ) ) ) . '">' . esc_html__( 'Cancel', 'ipn' ) . '</a>',
+			// Points at the cart rather than back at the same product page.
+			// Nothing was ever added to the cart on this path, so this link's
+			// job is to visibly PROVE that, not just avoid changing anything —
+			// a link that reloads the exact page the customer is already
+			// looking at leaves nothing on screen to confirm the click did
+			// anything, which reads as the button being broken. Landing on
+			// the cart shows their original vendor's items, unchanged.
+			. ' &middot; <a href="' . esc_url( function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : remove_query_arg( array( 'ipn_vendor_cart_fix', 'ipn_product_id', 'ipn_quantity', '_wpnonce' ) ) ) . '">' . esc_html__( 'Cancel', 'ipn' ) . '</a>',
 			'error'
 		);
 
