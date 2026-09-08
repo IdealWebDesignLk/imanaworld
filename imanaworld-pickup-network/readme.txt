@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.16
+Stable tag: 0.9.17
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,15 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.17 =
+* Fix: "Clear Cart & Continue" from the single-vendor-cart notice (#39)
+  cleared the cart but silently failed to re-add the product when it was a
+  variable product (needs a size/colour/etc. selected) — the customer just
+  landed back on an empty cart with an unrelated "please choose product
+  options" message. The link now carries the chosen variation's ID through,
+  and the variation's own attribute values are re-read from it when re-adding
+  rather than needing to be trusted from anywhere else.
 
 = 0.9.16 =
 * Fix: adding a different vendor's product via the single-product page's own

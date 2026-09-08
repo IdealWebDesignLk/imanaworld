@@ -21,7 +21,7 @@ class IPN_Single_Vendor_Cart {
 
 	public function register_hooks( IPN_Loader $loader ) {
 		$loader->add_action( 'wp_loaded', $this, 'maybe_handle_cart_fix' );
-		$loader->add_filter( 'woocommerce_add_to_cart_validation', $this, 'validate_single_vendor', 20, 3 );
+		$loader->add_filter( 'woocommerce_add_to_cart_validation', $this, 'validate_single_vendor', 20, 4 );
 		$loader->add_action( 'woocommerce_check_cart_items', $this, 'check_cart_single_vendor' );
 		$loader->add_action( 'woocommerce_checkout_process', $this, 'check_cart_single_vendor' );
 	}
@@ -50,7 +50,7 @@ class IPN_Single_Vendor_Cart {
 	 * already holds, and offers the same choice the issue specifies: clear
 	 * the cart and add this one instead, or leave the cart as it is.
 	 */
-	public function validate_single_vendor( $passed, $product_id, $quantity ) {
+	public function validate_single_vendor( $passed, $product_id, $quantity, $variation_id = 0 ) {
 		if ( ! $passed ) {
 			return $passed;
 		}
@@ -69,7 +69,7 @@ class IPN_Single_Vendor_Cart {
 
 		wc_add_notice(
 			__( 'This product is from a different vendor. You can only purchase products from one vendor at a time. If you want to continue with this product, you\'ll need to clear your current cart.', 'ipn' )
-			. ' <a href="' . esc_url( $this->cart_fix_url( $product_id, $quantity ) ) . '">' . esc_html__( 'Clear Cart & Continue', 'ipn' ) . '</a>'
+			. ' <a href="' . esc_url( $this->cart_fix_url( $product_id, $quantity, $variation_id ) ) . '">' . esc_html__( 'Clear Cart & Continue', 'ipn' ) . '</a>'
 			// Points at the cart rather than back at the same product page.
 			// Nothing was ever added to the cart on this path, so this link's
 			// job is to visibly PROVE that, not just avoid changing anything —
@@ -160,20 +160,28 @@ class IPN_Single_Vendor_Cart {
 	 * The product's own permalink is what "Clear Cart & Continue" actually
 	 * means anyway — back to the product being added, not wherever the click
 	 * that got here happened to originate.
+	 *
+	 * For a variable product, only the variation ID is carried through —
+	 * that alone determines its attribute values, so maybe_handle_cart_fix()
+	 * re-derives them from the variation itself rather than this URL needing
+	 * to carry (and something needing to trust) the attributes separately.
 	 */
-	protected function cart_fix_url( $product_id, $quantity ) {
+	protected function cart_fix_url( $product_id, $quantity, $variation_id = 0 ) {
 		$product_id = (int) $product_id;
 		$base       = $product_id && get_permalink( $product_id ) ? get_permalink( $product_id ) : ( function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/' ) );
 
-		return add_query_arg(
-			array(
-				'ipn_vendor_cart_fix' => 'clear',
-				'ipn_product_id'      => $product_id,
-				'ipn_quantity'        => max( 1, (int) $quantity ),
-				'_wpnonce'            => wp_create_nonce( 'ipn_vendor_cart_fix' ),
-			),
-			$base
+		$args = array(
+			'ipn_vendor_cart_fix' => 'clear',
+			'ipn_product_id'      => $product_id,
+			'ipn_quantity'        => max( 1, (int) $quantity ),
+			'_wpnonce'            => wp_create_nonce( 'ipn_vendor_cart_fix' ),
 		);
+
+		if ( $variation_id ) {
+			$args['ipn_variation_id'] = (int) $variation_id;
+		}
+
+		return add_query_arg( $args, $base );
 	}
 
 	/**
@@ -198,14 +206,28 @@ class IPN_Single_Vendor_Cart {
 
 		WC()->cart->empty_cart();
 
-		$product_id = isset( $_GET['ipn_product_id'] ) ? absint( $_GET['ipn_product_id'] ) : 0;
-		$quantity   = isset( $_GET['ipn_quantity'] ) ? max( 1, absint( $_GET['ipn_quantity'] ) ) : 1;
+		$product_id   = isset( $_GET['ipn_product_id'] ) ? absint( $_GET['ipn_product_id'] ) : 0;
+		$quantity     = isset( $_GET['ipn_quantity'] ) ? max( 1, absint( $_GET['ipn_quantity'] ) ) : 1;
+		$variation_id = isset( $_GET['ipn_variation_id'] ) ? absint( $_GET['ipn_variation_id'] ) : 0;
 
 		if ( $product_id ) {
+			$variation = array();
+
+			// A variation's attribute values are intrinsic to the variation
+			// itself — re-reading them here is both simpler and safer than
+			// having the URL carry them (and this code trust what it carried).
+			if ( $variation_id ) {
+				$variation_product = wc_get_product( $variation_id );
+
+				if ( $variation_product instanceof WC_Product_Variation ) {
+					$variation = $variation_product->get_variation_attributes();
+				}
+			}
+
 			// The cart is empty now, so this product's own vendor is free to
 			// become the cart's new (and only) vendor — validate_single_vendor()
 			// will not object to it.
-			if ( WC()->cart->add_to_cart( $product_id, $quantity ) ) {
+			if ( WC()->cart->add_to_cart( $product_id, $quantity, $variation_id, $variation ) ) {
 				wc_add_notice( __( 'Your cart was cleared and this product was added.', 'ipn' ), 'success' );
 			}
 		} else {
