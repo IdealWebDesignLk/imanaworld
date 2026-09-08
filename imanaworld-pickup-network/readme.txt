@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.12
+Stable tag: 0.9.13
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,20 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.13 =
+* A cart can now only ever hold one vendor's products at a time, storewide —
+  not a Click & Collect rule, this applies to every vendor on the site (#39).
+  Adding a product from a different vendor than what is already in the cart
+  is blocked with the message the issue specifies and two ways forward:
+  "Clear Cart & Continue", which empties the cart and adds the new product in
+  one step, or "Cancel", which leaves the cart untouched.
+* A second check on the cart page and at checkout blocks a mixed-vendor cart
+  from proceeding even if one somehow got built by some path the add-to-cart
+  gate did not cover, matching the same defence-in-depth shape #37's branch
+  stock check already uses.
+* New class, IPN_Single_Vendor_Cart, kept separate from the Click & Collect
+  storefront code since this rule is not about branches or collection at all.
 
 = 0.9.12 =
 * Removed the Commission and "Where this order came from" cards from the

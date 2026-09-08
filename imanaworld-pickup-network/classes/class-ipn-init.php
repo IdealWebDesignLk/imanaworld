@@ -42,6 +42,9 @@ class IPN_Init {
 		$storefront = new IPN_Storefront();
 		$storefront->register_hooks( $this->loader );
 
+		$single_vendor_cart = new IPN_Single_Vendor_Cart();
+		$single_vendor_cart->register_hooks( $this->loader );
+
 		$checkout = new IPN_Checkout();
 		$checkout->register_hooks( $this->loader );
 

@@ -3,7 +3,7 @@
  * Plugin Name:       IMANAWORLD Pickup Network
  * Plugin URI:         https://imanaworld.com
  * Description:        Click & Collect fulfilment network for IMANAWORLD — per-branch inventory, branch staff order dashboard, OTP collection verification, and operational reporting on top of WooCommerce/Dokan. Pilot partner: Choppies.
- * Version:            0.9.12
+ * Version:            0.9.13
  * Requires PHP:       7.4
  * Requires Plugins:   woocommerce, dokan-lite
  * Author:             Ideal Web Design
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'IPN_VERSION', '0.9.12' );
+define( 'IPN_VERSION', '0.9.13' );
 define( 'IPN_DB_VERSION', '1.3.0' );
 define( 'IPN_PLUGIN_FILE', __FILE__ );
 define( 'IPN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -40,6 +40,7 @@ require_once IPN_PLUGIN_DIR . 'classes/class-ipn-uncollected-workflow.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-notifications.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-reports.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-storefront.php';
+require_once IPN_PLUGIN_DIR . 'classes/class-ipn-single-vendor-cart.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-checkout.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-my-account.php';
 require_once IPN_PLUGIN_DIR . 'classes/class-ipn-staff-dashboard.php';
