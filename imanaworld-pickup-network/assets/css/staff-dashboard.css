@@ -546,10 +546,12 @@ body.ipn-sd-standalone > #pswp { display: none !important; }
 }
 
 .ipn-staff-dashboard.ipn-staff-dashboard .stock-search { padding: 12px 16px 4px; flex-shrink: 0; }
+.ipn-staff-dashboard.ipn-staff-dashboard .stock-search form { display: flex; gap: 8px; }
 .ipn-staff-dashboard.ipn-staff-dashboard .stock-search input {
-	width: 100%; border: 1px solid var(--line-strong); background: var(--surface-sunken); color: var(--ink);
+	flex: 1; min-width: 0; border: 1px solid var(--line-strong); background: var(--surface-sunken); color: var(--ink);
 	border-radius: 10px; padding: 10px 12px; font-size: 14px;
 }
+.ipn-staff-dashboard.ipn-staff-dashboard .stock-search .btn { width: auto; padding: 10px 16px; }
 .ipn-staff-dashboard.ipn-staff-dashboard .stock-row {
 	background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
 	padding: 12px 13px; margin-bottom: 8px;

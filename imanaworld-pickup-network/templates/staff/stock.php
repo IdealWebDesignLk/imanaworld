@@ -49,7 +49,8 @@ $ipn_total_pages = (int) ceil( $stock_total / max( 1, $stock_per_page ) );
 							?>
 							<input type="hidden" name="<?php echo esc_attr( $ipn_key ); ?>" value="<?php echo esc_attr( wp_unslash( $ipn_value ) ); ?>" />
 						<?php endforeach; ?>
-						<input type="text" name="stock_q" value="<?php echo esc_attr( $stock_search ); ?>" placeholder="<?php esc_attr_e( 'Search products…', 'ipn' ); ?>" />
+						<input type="search" name="stock_q" value="<?php echo esc_attr( $stock_search ); ?>" placeholder="<?php esc_attr_e( 'Search products…', 'ipn' ); ?>" />
+						<button type="submit" class="btn btn-secondary"><?php esc_html_e( 'Search', 'ipn' ); ?></button>
 					</form>
 				</div>
 

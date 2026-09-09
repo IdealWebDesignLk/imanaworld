@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.21
+Stable tag: 0.9.22
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,13 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.22 =
+* Fix: the branch staff dashboard's Branch Stock search box had no submit
+  button at all, only relying on the Enter key with no visible way to
+  trigger a search - unlike the vendor dashboard's otherwise-identical
+  Branch Stock search, which already has one. Added a matching Search
+  button.
 
 = 0.9.21 =
 * Fix: the single-vendor-cart popup's "no conflict, submit normally" path
