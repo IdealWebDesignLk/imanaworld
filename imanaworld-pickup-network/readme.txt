@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.29
+Stable tag: 0.9.30
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,15 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.30 =
+* Fix: the collection-reminder email (sent when an order sits Ready for
+  Collection too long) told customers it would be "automatically cancelled
+  and refunded" if not collected in time. That's not what actually happens —
+  expiry only cancels the order and releases stock; refunds are always
+  manual, everywhere in this system (see the Daily Digest and Disputes
+  screens). Reworded so the email no longer promises a refund customers
+  won't automatically get.
 
 = 0.9.29 =
 * Fix: the order-cancelled customer email could show a stale, unrelated

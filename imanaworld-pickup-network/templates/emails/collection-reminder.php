@@ -47,7 +47,11 @@ ipn_email_otp_box(
 ipn_email_notice(
 	sprintf(
 		/* translators: %d: number of hours before auto-cancellation */
-		__( "⚠ If this order isn't collected within %d hours, it will be automatically cancelled and refunded to your original payment method.", 'ipn' ),
+		// Refunds are never automatic anywhere in this flow (see
+		// IPN_Uncollected_Workflow::expire_overdue_orders() and the
+		// Daily Digest screen) — expiry only cancels the order and
+		// releases stock; a human still has to process the refund.
+		__( "⚠ If this order isn't collected within %d hours, it will be automatically cancelled and the stock released. Your refund will then be reviewed and processed manually — it isn't instant.", 'ipn' ),
 		$remaining
 	),
 	'warn'
