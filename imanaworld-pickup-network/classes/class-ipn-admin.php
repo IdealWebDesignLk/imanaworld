@@ -178,7 +178,6 @@ class IPN_Admin {
 			'ipn-stock'       => __( 'Stock', 'ipn' ),
 			'ipn-import'      => __( 'Catalogue Import', 'ipn' ),
 			'ipn-orders'      => __( 'Orders & Disputes', 'ipn' ),
-			'ipn-disputes'    => __( 'Disputes & Returns', 'ipn' ),
 			'ipn-digest'      => __( 'Daily Digest', 'ipn' ),
 			'ipn-audit-log'   => __( 'Audit Trail', 'ipn' ),
 			'ipn-reports'     => __( 'Reports', 'ipn' ),
