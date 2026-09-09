@@ -240,9 +240,16 @@ class IPN_Notifications {
 			__( 'Your order has been cancelled', 'ipn' ),
 			'order-cancelled',
 			array(
-				'order'  => $order,
-				'branch' => $branch,
-				'reason' => $reason,
+				'order'           => $order,
+				'branch'          => $branch,
+				'reason'          => $reason,
+				// Confirmed live: this used to claim a refund had been
+				// initiated on every cancellation, including a plain
+				// cancelled/failed order that was never paid in the first
+				// place — nothing to refund, yet the email said otherwise.
+				// get_total_refunded() reflects an actual WooCommerce
+				// refund, so the notice now only shows for one of those.
+				'refunded_amount' => (float) $order->get_total_refunded(),
 			)
 		);
 	}

@@ -4,9 +4,13 @@ defined( 'ABSPATH' ) || exit;
  * Sent when an order is cancelled — either the automatic expiry cancel
  * (collection window closed) or a manual cancellation.
  *
- * @var WC_Order $order  Required.
- * @var string   $reason Required. Human-readable cancellation reason.
- * @var object   $branch Required. Row from IPN_Branch::get().
+ * @var WC_Order $order           Required.
+ * @var string   $reason          Required. Human-readable cancellation reason — '' when none could be
+ *                                confidently attributed to this transition (see IPN_Order::latest_order_note()).
+ * @var object   $branch          Required. Row from IPN_Branch::get().
+ * @var float    $refunded_amount Required. $order->get_total_refunded() — 0.0 for a plain
+ *                                cancellation/failure that was never paid, so there is nothing
+ *                                to have refunded yet.
  */
 
 if ( ! isset( $order ) ) {
@@ -37,16 +41,18 @@ $placed_on = $placed ? $placed->date_i18n( 'd M Y' ) : '';
 	<p style="margin:0 0 14px;color:#3a3934;"><?php echo esc_html( $reason ); ?></p>
 <?php endif; ?>
 
-<?php
-ipn_email_notice(
-	sprintf(
-		/* translators: %s: refunded amount, e.g. "BWP 222.20" */
-		__( '↩ A refund of %s has been initiated to your original payment method. Refunds are usually reflected within 3–5 business days.', 'ipn' ),
-		ipn_email_money( $order->get_total(), $currency )
-	),
-	'cancel'
-);
-?>
+<?php if ( $refunded_amount > 0 ) : ?>
+	<?php
+	ipn_email_notice(
+		sprintf(
+			/* translators: %s: refunded amount, e.g. "BWP 222.20" */
+			__( '↩ A refund of %s has been initiated to your original payment method. Refunds are usually reflected within 3–5 business days.', 'ipn' ),
+			ipn_email_money( $refunded_amount, $currency )
+		),
+		'cancel'
+	);
+	?>
+<?php endif; ?>
 
 <?php if ( $placed_on ) : ?>
 	<?php ipn_email_card_open(); ?>

@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.28
+Stable tag: 0.9.29
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,20 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.29 =
+* Fix: the order-cancelled customer email could show a stale, unrelated
+  reason line. WooCommerce fires its status-change hooks before writing that
+  transition's own order note, so reading "the latest note" from inside the
+  hook could pick up a leftover note from an earlier, unrelated transition.
+  Confirmed live: a cancellation email described a status change from over
+  40 seconds earlier instead of the transition that actually triggered it.
+  The reason line is now only shown when the note is fresh enough to
+  actually belong to the current transition.
+* Fix: the order-cancelled email always claimed "a refund has been
+  initiated", even for a plain cancellation where nothing was ever paid or
+  refunded. Now only shown when the order has an actual WooCommerce refund,
+  and shows the real refunded amount rather than the order total.
 
 = 0.9.28 =
 * Added a short description to the Daily Digest screen explaining what it's

@@ -475,6 +475,19 @@ class IPN_Order {
 		return $rows;
 	}
 
+	/**
+	 * The order's most recent note, but only when it is fresh enough to
+	 * plausibly be ABOUT the transition that is asking for it — confirmed
+	 * live (cancellation email): WooCommerce fires woocommerce_order_status_*
+	 * hooks before it writes that transition's own "status changed" note, so
+	 * a caller reading "the latest note" synchronously from inside one of
+	 * those hooks does not see the note for what is happening right now —
+	 * it sees whatever note happened to exist before this request started,
+	 * which can be from an entirely different, much earlier transition. A
+	 * customer-facing email is worse off showing a stale, unrelated reason
+	 * than showing none at all, so anything older than a few seconds is
+	 * treated as not available.
+	 */
 	protected static function latest_order_note( $order_id ) {
 		if ( ! function_exists( 'wc_get_order_notes' ) ) {
 			return '';
@@ -483,7 +496,16 @@ class IPN_Order {
 			'order_id' => $order_id,
 			'limit'    => 1,
 		) );
-		return $notes ? wp_strip_all_tags( $notes[0]->content ) : '';
+
+		if ( ! $notes || empty( $notes[0]->date_created ) || ! is_callable( array( $notes[0]->date_created, 'getTimestamp' ) ) ) {
+			return '';
+		}
+
+		if ( time() - $notes[0]->date_created->getTimestamp() > 10 ) {
+			return '';
+		}
+
+		return wp_strip_all_tags( $notes[0]->content );
 	}
 
 	public function on_accepted( $order_id ) {
