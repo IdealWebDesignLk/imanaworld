@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.20
+Stable tag: 0.9.21
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,15 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.21 =
+* Fix: the single-vendor-cart popup's "no conflict, submit normally" path
+  (v0.9.19) could silently do nothing for a simple product. Its own
+  resubmission wasn't a real click, so the browser had no submit button to
+  derive the add-to-cart id from (a simple product only carries it on the
+  button itself, not a hidden field) — confirmed live, clicking Add to Cart
+  did nothing at all, no error, no item added. The resubmission now carries
+  the product id as a hidden field explicitly rather than relying on that.
 
 = 0.9.20 =
 * Fix: the v0.9.19 vendor-conflict pre-check on the single product page sent

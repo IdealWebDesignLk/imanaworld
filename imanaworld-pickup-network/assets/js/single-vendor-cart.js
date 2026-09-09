@@ -81,14 +81,32 @@
 						return;
 					}
 
-					submitFormNormally();
+					submitFormNormally( productId );
 				} )
 				.catch( function () {
-					submitFormNormally();
+					submitFormNormally( productId );
 				} );
 		} );
 
-		function submitFormNormally() {
+		function submitFormNormally( productId ) {
+			// Resubmitting the form here isn't a real click, so nothing
+			// guarantees the browser reconstructs a submit button's own
+			// name/value pair the way it would for one — confirmed live: a
+			// simple product's add-to-cart id lives only on the button
+			// itself, and without it this resubmission carried no product id
+			// at all, so WooCommerce's handler saw nothing to add. Adding it
+			// as a hidden input (only if the form doesn't already carry one,
+			// which a variable product's own variation markup already does)
+			// makes the resubmission carry it regardless of how the browser
+			// would otherwise have resolved the submitter.
+			if ( productId && ! form.querySelector( 'input[name="add-to-cart"]' ) ) {
+				var hidden = document.createElement( 'input' );
+				hidden.type = 'hidden';
+				hidden.name = 'add-to-cart';
+				hidden.value = productId;
+				form.appendChild( hidden );
+			}
+
 			form.dataset.ipnChecked = '1';
 
 			if ( form.requestSubmit ) {
