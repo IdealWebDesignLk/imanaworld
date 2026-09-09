@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.18
+Stable tag: 0.9.19
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,15 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.19 =
+* On a single product page, a vendor conflict (#40) now shows as an
+  immediate popup with "Clear Cart & Continue" / "Cancel" instead of
+  reloading the page. The Add to Cart form is checked via a lightweight
+  AJAX request before it submits; same-vendor (or no conflict) submits
+  normally and redirects to the cart as before. When JavaScript is off
+  (or the check request itself fails), the existing page-reload notice
+  from v0.9.16 still applies as a fallback.
 
 = 0.9.18 =
 * Style the vendor-mismatch notice (#39) to match the plugin's own palette

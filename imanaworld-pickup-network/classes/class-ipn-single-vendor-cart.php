@@ -24,6 +24,8 @@ class IPN_Single_Vendor_Cart {
 		$loader->add_filter( 'woocommerce_add_to_cart_validation', $this, 'validate_single_vendor', 20, 4 );
 		$loader->add_action( 'woocommerce_check_cart_items', $this, 'check_cart_single_vendor' );
 		$loader->add_action( 'woocommerce_checkout_process', $this, 'check_cart_single_vendor' );
+		$loader->add_action( 'wp_ajax_ipn_vendor_cart_check', $this, 'ajax_check_vendor_cart' );
+		$loader->add_action( 'wp_ajax_nopriv_ipn_vendor_cart_check', $this, 'ajax_check_vendor_cart' );
 	}
 
 	/**
@@ -68,7 +70,7 @@ class IPN_Single_Vendor_Cart {
 		}
 
 		wc_add_notice(
-			__( 'This product is from a different vendor. You can only purchase products from one vendor at a time. If you want to continue with this product, you\'ll need to clear your current cart.', 'ipn' )
+			$this->conflict_message()
 			. ' <a href="' . esc_url( $this->cart_fix_url( $product_id, $quantity, $variation_id ) ) . '">' . esc_html__( 'Clear Cart & Continue', 'ipn' ) . '</a>'
 			// Points at the cart rather than back at the same product page.
 			// Nothing was ever added to the cart on this path, so this link's
@@ -108,6 +110,54 @@ class IPN_Single_Vendor_Cart {
 		}
 
 		return false;
+	}
+
+	/**
+	 * The conflict message, shared between the wc_add_notice() banner
+	 * (validate_single_vendor()'s non-JS fallback) and the AJAX popup below,
+	 * so a customer sees the same wording either way.
+	 */
+	protected function conflict_message() {
+		return __( 'This product is from a different vendor. You can only purchase products from one vendor at a time. If you want to continue with this product, you\'ll need to clear your current cart.', 'ipn' );
+	}
+
+	/**
+	 * The single-product page's own Add to Cart form (single-vendor-cart.js)
+	 * calls this before submitting, so a vendor conflict shows as an
+	 * immediate popup (issue #40) instead of the classic form's page
+	 * reload — that reload still happens as the fallback when JS is off or
+	 * this request fails outright, via validate_single_vendor() itself.
+	 *
+	 * Deliberately read-only: this never touches the cart, so — unlike
+	 * maybe_handle_cart_fix() — there's nothing here a forged request could
+	 * do beyond reading back the same "would this conflict?" answer the
+	 * customer's own next add-to-cart submission would get anyway. The
+	 * nonce is just hygiene, not load-bearing CSRF protection.
+	 */
+	public function ajax_check_vendor_cart() {
+		check_ajax_referer( 'ipn_vendor_cart_check', 'nonce' );
+
+		$product_id = isset( $_POST['add-to-cart'] ) ? absint( $_POST['add-to-cart'] ) : 0;
+
+		if ( ! $product_id ) {
+			wp_send_json_success();
+		}
+
+		$cart_vendor_id = $this->cart_vendor_id();
+
+		if ( ! $cart_vendor_id || (int) get_post_field( 'post_author', $product_id ) === $cart_vendor_id ) {
+			wp_send_json_success();
+		}
+
+		$quantity     = isset( $_POST['quantity'] ) ? max( 1, absint( $_POST['quantity'] ) ) : 1;
+		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
+
+		wp_send_json_error(
+			array(
+				'message'   => $this->conflict_message(),
+				'clear_url' => $this->cart_fix_url( $product_id, $quantity, $variation_id ),
+			)
+		);
 	}
 
 	/**

@@ -18,6 +18,23 @@ class IPN_Public {
 			wp_enqueue_script( 'ipn-storefront', IPN_PLUGIN_URL . 'assets/js/storefront.js', array( 'jquery' ), IPN_VERSION, true );
 		}
 
+		// The single-vendor-cart popup (issue #40) only has anything to do on
+		// a single product page — its own Add to Cart form is what it hooks.
+		if ( function_exists( 'is_product' ) && is_product() ) {
+			wp_enqueue_script( 'ipn-single-vendor-cart', IPN_PLUGIN_URL . 'assets/js/single-vendor-cart.js', array(), IPN_VERSION, true );
+
+			wp_localize_script(
+				'ipn-single-vendor-cart',
+				'IPN_Vendor_Cart',
+				array(
+					'ajax_url'     => admin_url( 'admin-ajax.php' ),
+					'nonce'        => wp_create_nonce( 'ipn_vendor_cart_check' ),
+					'clear_label'  => __( 'Clear Cart & Continue', 'ipn' ),
+					'cancel_label' => __( 'Cancel', 'ipn' ),
+				)
+			);
+		}
+
 		// Dokan's vendor dashboard, where IPN adds its "Click & Collect"
 		// section. Guarded on the function existing so a site running IPN
 		// without Dokan's dashboard doesn't fatal here.
