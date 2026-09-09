@@ -220,8 +220,33 @@ class IPN_Admin {
 		include IPN_PLUGIN_DIR . 'templates/admin/' . $template . '.php';
 	}
 
+	/**
+	 * The dashboard's own numbers, scoped to the partner in context the same
+	 * way Branches/Staff/Reports/Stock already are — this screen was the one
+	 * place left that still counted every partner's branches and audit
+	 * events regardless of the selection above it (issue #48). Catalogue
+	 * imports stay network-wide: the import log has no vendor_id column to
+	 * scope by, since imports were built as an admin-run operation rather
+	 * than something recorded per partner.
+	 */
 	public function render_dashboard() {
-		$this->view( 'dashboard' );
+		$date_to      = gmdate( 'Y-m-d' );
+		$date_from    = gmdate( 'Y-m-d', strtotime( '-7 days' ) );
+		$needs_status = array( 'disputed', 'expired' );
+
+		$needs_attention = array_values( array_filter( $this->get_all_ipn_orders(), function ( $order ) use ( $needs_status ) {
+			return in_array( $order->status, $needs_status, true );
+		} ) );
+
+		$this->view( 'dashboard', array(
+			'branches'            => IPN_Admin_Context::branches(),
+			'import_runs'         => IPN_CSV_Import::get_recent_runs(),
+			'audit_entries'       => IPN_Audit_Log::query( array( 'branch_ids' => IPN_Admin_Context::branch_ids() ) ),
+			'orders_by_branch'    => IPN_Reports::orders_by_branch( $date_from, $date_to ),
+			'needs_attention'     => $needs_attention,
+			'express_split'       => IPN_Reports::express_vs_standard_split( $date_from, $date_to ),
+			'collection_success'  => IPN_Reports::collection_success_rate( $date_from, $date_to ),
+		) );
 	}
 
 	/**
@@ -486,7 +511,24 @@ class IPN_Admin {
 	public function render_staff() {
 		$result = $this->maybe_handle_staff_branch_assign();
 
+		$staff = get_users( array( 'role' => IPN_Roles::ROLE ) );
+
+		// Unlike Branches, Reports and Stock, this list was never scoped to
+		// the partner selected above it at all — every branch staff account
+		// on the network showed here regardless. A partner is only ever
+		// missing from the scope check when none is selected (branch_ids()
+		// returns [] there too), which is exactly when nothing should be
+		// filtered out.
+		$scope = IPN_Admin_Context::branch_ids();
+
+		if ( $scope ) {
+			$staff = array_values( array_filter( $staff, function ( $user ) use ( $scope ) {
+				return in_array( (int) IPN_Roles::get_branch_id( $user->ID ), $scope, true );
+			} ) );
+		}
+
 		$this->view( 'staff', array(
+			'staff'         => $staff,
 			'branches'      => IPN_Admin_Context::branches(),
 			'assign_result' => $result,
 		) );

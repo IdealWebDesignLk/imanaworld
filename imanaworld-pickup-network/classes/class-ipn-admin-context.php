@@ -180,9 +180,23 @@ class IPN_Admin_Context {
 		return in_array( (int) $branch_id, self::branch_ids(), true );
 	}
 
+	/**
+	 * Strips whichever screen the bar is rendered on of its own explicit
+	 * vendor_id / branch_id GET filter before switching. Confirmed live as a
+	 * real bug (issue #47): Branches lets ?vendor_id= override the partner
+	 * in context, on the reasoning that an explicit param from the Partners
+	 * screen's own links should win — but add_query_arg()/remove_query_arg()
+	 * operate on the current URL by default, so switching partners FROM a
+	 * screen that already had one of these set in its address bar carried
+	 * the OLD partner's id/branch straight through the switch, silently
+	 * overriding the new selection everywhere that same "explicit wins"
+	 * reasoning is applied (Branches, Reports, Stock).
+	 */
 	public static function switch_url( $partner_id ) {
+		$url = remove_query_arg( array( 'vendor_id', 'branch_id' ) );
+
 		return wp_nonce_url(
-			add_query_arg( 'ipn_partner', (int) $partner_id ),
+			add_query_arg( 'ipn_partner', (int) $partner_id, $url ),
 			'ipn_switch_partner'
 		);
 	}

@@ -181,6 +181,14 @@
 .ipn-admin .stat-delta.up { color: var(--ready); }
 .ipn-admin .stat-delta.down { color: var(--danger); }
 
+.ipn-admin .dash-bars { display: flex; flex-direction: column; gap: 10px; }
+.ipn-admin .dash-bar-row { display: grid; grid-template-columns: 140px 1fr 90px; align-items: center; gap: 10px; }
+.ipn-admin .dash-bar-label { font-size: 12.5px; font-weight: 650; color: var(--ink); }
+.ipn-admin .dash-bar-track { background: var(--surface-sunken); border-radius: 999px; height: 8px; overflow: hidden; }
+.ipn-admin .dash-bar-fill { background: var(--brand-600); height: 100%; border-radius: inherit; }
+.ipn-admin .dash-bar-fill--express { background: var(--express); }
+.ipn-admin .dash-bar-value { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+
 .ipn-admin .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 26px 0 12px; flex-wrap: wrap; }
 .ipn-admin .section-head:first-child { margin-top: 0; }
 .ipn-admin .section-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }

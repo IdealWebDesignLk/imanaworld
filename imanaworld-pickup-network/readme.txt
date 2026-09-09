@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.23
+Stable tag: 0.9.24
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,22 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.24 =
+* Fix: Reports, Staff and Branches did not consistently follow the partner
+  selected above them (#44, #46, #47).
+  - Reports: every report fell back to counting the whole network the
+    moment its own branch filter was left on "All branches", instead of
+    the selected partner's branches.
+  - Staff: the branch staff list was never scoped to the selected partner
+    at all - every partner's staff always showed.
+  - Branches: switching partners while a branch/vendor filter was already
+    set in the URL could leave that stale filter in place, silently
+    overriding the new selection.
+* Admin Dashboard (#48): removed the Quick Links section (redundant with
+  the sidebar's own menu) and replaced the "not implemented yet"
+  placeholders - order volume, needs-attention, and express/standard split
+  - with real data, plus a compact reports summary.
 
 = 0.9.23 =
 * The order audit trail (staff dashboard, admin order screens, and the full

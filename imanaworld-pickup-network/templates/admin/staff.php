@@ -1,11 +1,10 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 /**
+ * @var WP_User[]          $staff Already scoped to the partner in context — see IPN_Admin::render_staff().
  * @var array             $branches
  * @var true|WP_Error|null $assign_result Result of a branch assignment posted this request, if any.
  */
-
-$staff = get_users( array( 'role' => IPN_Roles::ROLE ) );
 ?>
 <div class="wrap ipn-admin">
 	<?php if ( $assign_result instanceof WP_Error ) : ?>
@@ -55,7 +54,13 @@ $staff = get_users( array( 'role' => IPN_Roles::ROLE ) );
 				<?php if ( empty( $staff ) ) : ?>
 					<tr>
 						<td colspan="6">
-							<div class="empty-state"><?php esc_html_e( 'No branch staff accounts yet.', 'ipn' ); ?></div>
+							<div class="empty-state">
+								<?php if ( IPN_Admin_Context::get_partner_id() ) : ?>
+									<?php esc_html_e( 'No branch staff accounts for this partner yet.', 'ipn' ); ?>
+								<?php else : ?>
+									<?php esc_html_e( 'No branch staff accounts yet.', 'ipn' ); ?>
+								<?php endif; ?>
+							</div>
 						</td>
 					</tr>
 				<?php else : ?>

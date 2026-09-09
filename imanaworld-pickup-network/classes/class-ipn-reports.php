@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 class IPN_Reports {
 
 	public static function orders_by_branch( $date_from, $date_to, $branch_id = 0 ) {
-		$branches = $branch_id ? array_filter( array( IPN_Branch::get( $branch_id ) ) ) : IPN_Branch::get_all();
+		$branches = self::report_branches( $branch_id );
 		$rows     = array();
 
 		foreach ( $branches as $branch ) {
@@ -146,7 +146,7 @@ class IPN_Reports {
 	public static function branch_sales_performance( $date_from, $date_to ) {
 		$rows = array();
 
-		foreach ( IPN_Branch::get_all() as $branch ) {
+		foreach ( IPN_Admin_Context::branches() as $branch ) {
 			$revenue = 0.0;
 			$count   = 0;
 
@@ -210,24 +210,57 @@ class IPN_Reports {
 	 * @return int[]
 	 */
 	protected static function get_order_ids( $date_from, $date_to, $branch_id = 0 ) {
+		if ( $branch_id ) {
+			$meta_query = array(
+				'key'   => '_ipn_branch_id',
+				'value' => $branch_id,
+			);
+		} else {
+			// No single branch chosen. Previously this meant every IPN order
+			// on the whole network regardless of which partner was selected
+			// above the report — every report on this screen would answer
+			// for all partners combined the moment its own branch filter was
+			// left on "All branches", not just the one in scope.
+			$scope = IPN_Admin_Context::branch_ids();
+
+			$meta_query = $scope
+				? array(
+					'key'     => '_ipn_branch_id',
+					'value'   => $scope,
+					'compare' => 'IN',
+				)
+				: array(
+					'key'     => '_ipn_branch_id',
+					'compare' => 'EXISTS',
+				);
+		}
+
 		$args = array(
 			'return'       => 'ids',
 			'limit'        => -1,
 			'date_created' => $date_from . '...' . $date_to,
-			'meta_query'   => array( // phpcs:ignore WordPress.DB.SlowDBQuery
-				$branch_id
-					? array(
-						'key'   => '_ipn_branch_id',
-						'value' => $branch_id,
-					)
-					: array(
-						'key'     => '_ipn_branch_id',
-						'compare' => 'EXISTS',
-					),
-			),
+			'meta_query'   => array( $meta_query ), // phpcs:ignore WordPress.DB.SlowDBQuery
 		);
 
 		return wc_get_orders( $args );
+	}
+
+	/**
+	 * The branch list a per-branch report should iterate: just the one
+	 * requested branch, the current admin partner's branches, or (with
+	 * neither) every branch network-wide — the same three-way choice
+	 * orders_by_branch(), branch_sales_performance() and
+	 * average_duration_between() each made independently before, which is
+	 * how orders_by_branch() and branch_sales_performance() ended up
+	 * literally listing branches from partners other than the one selected
+	 * above the report.
+	 */
+	protected static function report_branches( $branch_id ) {
+		if ( $branch_id ) {
+			return array_filter( array( IPN_Branch::get( $branch_id ) ) );
+		}
+
+		return IPN_Admin_Context::branches();
 	}
 
 	/**
@@ -263,6 +296,17 @@ class IPN_Reports {
 		if ( $branch_id ) {
 			$where[]  = 'branch_id = %d';
 			$params[] = $branch_id;
+		} else {
+			// No single branch chosen — still confined to the partner in
+			// scope, rather than reading across the whole network the moment
+			// "All branches" is picked (see report_branches() below).
+			$scope = IPN_Admin_Context::branch_ids();
+
+			if ( $scope ) {
+				$placeholders = implode( ', ', array_fill( 0, count( $scope ), '%d' ) );
+				$where[]      = "branch_id IN ( {$placeholders} )";
+				$params       = array_merge( $params, $scope );
+			}
 		}
 
 		$sql = "SELECT order_id, branch_id, event_type, created_at FROM {$table} WHERE " . implode( ' AND ', $where ) . ' ORDER BY order_id ASC, created_at ASC'; // phpcs:ignore WordPress.DB.PreparedSQL
@@ -292,7 +336,7 @@ class IPN_Reports {
 			$durations_by_branch[ $branch_key ][] = $seconds;
 		}
 
-		$branches = $branch_id ? array_filter( array( IPN_Branch::get( $branch_id ) ) ) : IPN_Branch::get_all();
+		$branches = self::report_branches( $branch_id );
 		$rows     = array();
 
 		foreach ( $branches as $branch ) {
