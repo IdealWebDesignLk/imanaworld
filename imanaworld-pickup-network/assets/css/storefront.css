@@ -474,3 +474,13 @@
 	font-size: 13.5px;
 	line-height: 1.45;
 }
+
+/* ---------- WooCommerce's own notices (single-vendor cart, issue #39) ---------- */
+
+ul.woocommerce-error {
+	background: #f9dbdb;
+	border: 1px solid var( --ipn-line );
+	border-radius: 10px;
+	font-size: 13px;
+	color: var( --ipn-ink );
+}

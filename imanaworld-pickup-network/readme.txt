@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.17
+Stable tag: 0.9.18
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,10 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.18 =
+* Style the vendor-mismatch notice (#39) to match the plugin's own palette
+  instead of WooCommerce's default red banner.
 
 = 0.9.17 =
 * Fix: "Clear Cart & Continue" from the single-vendor-cart notice (#39)
