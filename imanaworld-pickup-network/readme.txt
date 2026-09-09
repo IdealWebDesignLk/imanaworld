@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.19
+Stable tag: 0.9.20
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,17 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.20 =
+* Fix: the v0.9.19 vendor-conflict pre-check on the single product page sent
+  its "is this a conflict?" request using WooCommerce's own add-to-cart /
+  quantity / variation_id field names. WooCommerce's classic add-to-cart
+  handler runs on every WordPress request (including that check's AJAX
+  request) and was hijacking it as a real add, before the pre-check's own
+  logic ever ran — making the actual Add to Cart click that followed
+  unreliable (could silently double up, or not go through at all). The
+  pre-check now uses its own field names so nothing else recognizes it as
+  a real add-to-cart submission.
 
 = 0.9.19 =
 * On a single product page, a vendor conflict (#40) now shows as an

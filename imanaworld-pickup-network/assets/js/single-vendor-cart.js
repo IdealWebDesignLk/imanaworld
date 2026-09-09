@@ -36,19 +36,36 @@
 
 			event.preventDefault();
 
-			var formData = new FormData( form );
+			// A product's real "add-to-cart" id lives either on the submit
+			// button itself (simple products: name="add-to-cart" value="{id}")
+			// or a hidden input (variable products, once a variation is
+			// chosen) — check both rather than assuming one shape.
+			var productId = event.submitter && event.submitter.name === 'add-to-cart'
+				? event.submitter.value
+				: ( form.querySelector( 'input[name="add-to-cart"]' ) || {} ).value;
 
-			// A simple product's "add-to-cart" field lives only on the submit
-			// button itself (name="add-to-cart" value="{id}"), not a hidden
-			// input — FormData(form) alone only picks that up on browsers new
-			// enough to support the FormData(form, submitter) constructor, so
-			// it's added explicitly here to work regardless.
-			if ( event.submitter && event.submitter.name && ! formData.has( event.submitter.name ) ) {
-				formData.append( event.submitter.name, event.submitter.value );
-			}
+			var quantityField = form.querySelector( 'input[name="quantity"], input.qty' );
+			var variationField = form.querySelector( 'input[name="variation_id"]' );
 
+			// Deliberately NOT sent as add-to-cart / quantity / variation_id:
+			// those are WooCommerce's own field names, and WC_Form_Handler's
+			// classic add-to-cart processing runs on wp_loaded — which fires
+			// for every WordPress request, including this admin-ajax.php one.
+			// Using them here let WooCommerce's real handler hijack this
+			// "read-only" pre-check as a genuine add (redirecting and exiting
+			// before ipn_vendor_cart_check's own handler ever ran), so the
+			// actual submission below could silently double up or, depending
+			// on timing, never happen at all. Renamed so nothing recognizes
+			// them as a real add-to-cart request.
+			var formData = new FormData();
 			formData.append( 'action', 'ipn_vendor_cart_check' );
 			formData.append( 'nonce', IPN_Vendor_Cart.nonce );
+			formData.append( 'ipn_check_product_id', productId || '' );
+			formData.append( 'ipn_check_quantity', quantityField ? quantityField.value : '1' );
+
+			if ( variationField && variationField.value ) {
+				formData.append( 'ipn_check_variation_id', variationField.value );
+			}
 
 			fetch( IPN_Vendor_Cart.ajax_url, {
 				method: 'POST',

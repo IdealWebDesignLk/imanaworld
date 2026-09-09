@@ -133,11 +133,22 @@ class IPN_Single_Vendor_Cart {
 	 * do beyond reading back the same "would this conflict?" answer the
 	 * customer's own next add-to-cart submission would get anyway. The
 	 * nonce is just hygiene, not load-bearing CSRF protection.
+	 *
+	 * Reads ipn_check_product_id / ipn_check_quantity / ipn_check_variation_id
+	 * rather than WooCommerce's own add-to-cart / quantity / variation_id
+	 * field names on purpose — WC_Form_Handler's classic add-to-cart
+	 * processing runs on wp_loaded, which fires for every WordPress request
+	 * including this admin-ajax.php one. Using WooCommerce's own field names
+	 * here let its real handler treat this "read-only" pre-check as a
+	 * genuine add-to-cart submission and redirect+exit before this method
+	 * ever ran — confirmed live: the request came back as a raw redirect to
+	 * the cart, not JSON, and the actual add-to-cart submission that
+	 * single-vendor-cart.js fires afterwards became unreliable as a result.
 	 */
 	public function ajax_check_vendor_cart() {
 		check_ajax_referer( 'ipn_vendor_cart_check', 'nonce' );
 
-		$product_id = isset( $_POST['add-to-cart'] ) ? absint( $_POST['add-to-cart'] ) : 0;
+		$product_id = isset( $_POST['ipn_check_product_id'] ) ? absint( $_POST['ipn_check_product_id'] ) : 0;
 
 		if ( ! $product_id ) {
 			wp_send_json_success();
@@ -149,8 +160,8 @@ class IPN_Single_Vendor_Cart {
 			wp_send_json_success();
 		}
 
-		$quantity     = isset( $_POST['quantity'] ) ? max( 1, absint( $_POST['quantity'] ) ) : 1;
-		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
+		$quantity     = isset( $_POST['ipn_check_quantity'] ) ? max( 1, absint( $_POST['ipn_check_quantity'] ) ) : 1;
+		$variation_id = isset( $_POST['ipn_check_variation_id'] ) ? absint( $_POST['ipn_check_variation_id'] ) : 0;
 
 		wp_send_json_error(
 			array(
