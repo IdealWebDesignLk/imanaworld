@@ -459,8 +459,9 @@ class IPN_Staff_Dashboard {
 		$detail->audit = array();
 		foreach ( IPN_Audit_Log::for_order( $order_id ) as $entry ) {
 			$detail->audit[] = array(
-				'text' => IPN_Audit_Log::describe_event( $entry->event_type ),
-				'time' => wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $entry->created_at ) ),
+				'text'       => IPN_Audit_Log::describe_event( $entry->event_type, (array) json_decode( $entry->data, true ) ),
+				'time'       => wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $entry->created_at ) ),
+				'actor_type' => $entry->actor_type,
 			);
 		}
 

@@ -345,7 +345,9 @@
 				row2.className = 'audit-item';
 				row2.innerHTML = '<div class="audit-dot"></div><div><div class="audit-text"></div><div class="audit-meta"></div></div>';
 				row2.querySelector( '.audit-text' ).textContent = entry.text;
-				row2.querySelector( '.audit-meta' ).textContent = entry.time;
+				row2.querySelector( '.audit-meta' ).textContent = entry.actor_type
+					? entry.time + ' · ' + entry.actor_type.charAt( 0 ).toUpperCase() + entry.actor_type.slice( 1 )
+					: entry.time;
 				auditEl.appendChild( row2 );
 			} );
 		}

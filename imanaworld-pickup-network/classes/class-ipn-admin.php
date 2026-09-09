@@ -883,8 +883,9 @@ class IPN_Admin {
 		$audit = array();
 		foreach ( IPN_Audit_Log::for_order( $order_id ) as $entry ) {
 			$audit[] = array(
-				'text' => IPN_Audit_Log::describe_event( $entry->event_type ),
-				'time' => mysql2date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $entry->created_at ),
+				'text'       => IPN_Audit_Log::describe_event( $entry->event_type, (array) json_decode( $entry->data, true ) ),
+				'time'       => mysql2date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $entry->created_at ),
+				'actor_type' => $entry->actor_type,
 			);
 		}
 
@@ -1112,7 +1113,7 @@ class IPN_Admin {
 
 			fputcsv( $out, array(
 				$entry->created_at,
-				IPN_Audit_Log::describe_event( $entry->event_type ),
+				IPN_Audit_Log::describe_event( $entry->event_type, (array) json_decode( $entry->data, true ) ),
 				$entry->order_id ? $entry->order_id : '',
 				$branch ? $branch->name : '',
 				$entry->actor_type,

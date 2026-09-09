@@ -192,7 +192,7 @@ class IPN_Notifications {
 			return;
 		}
 
-		$otp = IPN_OTP::generate( $order_id, $context['meta']->branch_id );
+		$otp = IPN_OTP::generate( $order_id, $context['meta']->branch_id, 'reminder' );
 
 		$this->send(
 			$context['order'],
@@ -301,7 +301,7 @@ class IPN_Notifications {
 		}
 
 		$instance = new self();
-		$otp      = IPN_OTP::generate( $order_id, $meta->branch_id );
+		$otp      = IPN_OTP::generate( $order_id, $meta->branch_id, 'resend' );
 		$instance->send_ready_for_collection( $order_id, $otp );
 
 		return true;

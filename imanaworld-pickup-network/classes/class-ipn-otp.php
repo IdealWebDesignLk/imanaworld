@@ -82,7 +82,20 @@ class IPN_OTP {
 		return false === $plain ? '' : $plain;
 	}
 
-	public static function generate( $order_id, $branch_id ) {
+	/**
+	 * @param string $reason 'ready' (the initial code, issued from
+	 *                       IPN_Order::on_ready()), 'resend' (a human
+	 *                       clicked "Resend collection code"), or 'reminder'
+	 *                       (IPN_Uncollected_Workflow's cron rotated it).
+	 *                       Recorded on the audit entry only — verification
+	 *                       itself does not care why a code was issued. Added
+	 *                       because an order can legitimately pick up several
+	 *                       "Collection code generated" entries (an initial
+	 *                       one plus any resends), and without this the audit
+	 *                       trail gave no way to tell a normal resend apart
+	 *                       from something generating codes it shouldn't.
+	 */
+	public static function generate( $order_id, $branch_id, $reason = 'ready' ) {
 		global $wpdb;
 		$table = self::table();
 
@@ -111,6 +124,7 @@ class IPN_OTP {
 		IPN_Audit_Log::log( 'otp_generated', array(
 			'order_id'  => $order_id,
 			'branch_id' => $branch_id,
+			'data'      => array( 'reason' => $reason ),
 		) );
 
 		return $code;

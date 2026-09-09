@@ -111,9 +111,20 @@ class IPN_Audit_Log {
 
 	/**
 	 * Human label for an event_type value — shared by the staff order-detail
-	 * audit card and the admin Orders/Disputes screens' order-detail modal.
+	 * audit card, the admin Orders/Disputes screens' order-detail modal, the
+	 * admin Audit Trail screen, and its CSV export.
+	 *
+	 * @param string $event_type
+	 * @param array  $data Optional — the entry's decoded `data` column.
+	 *                     Currently only otp_generated uses this, to say
+	 *                     which of the three things that can issue a new
+	 *                     collection code (the initial one, a manual resend,
+	 *                     or the uncollected-reminder cron) this entry was —
+	 *                     otherwise a customer or vendor asking "why did the
+	 *                     code change?" has nothing in the audit trail to
+	 *                     answer that.
 	 */
-	public static function describe_event( $event_type ) {
+	public static function describe_event( $event_type, array $data = array() ) {
 		$labels = array(
 			'stock_reserved'        => __( 'Stock reserved', 'ipn' ),
 			'stock_released'        => __( 'Stock released', 'ipn' ),
@@ -147,6 +158,19 @@ class IPN_Audit_Log {
 			'settings_saved'        => __( 'Global settings saved', 'ipn' ),
 		);
 
-		return isset( $labels[ $event_type ] ) ? $labels[ $event_type ] : ucfirst( str_replace( '_', ' ', $event_type ) );
+		$label = isset( $labels[ $event_type ] ) ? $labels[ $event_type ] : ucfirst( str_replace( '_', ' ', $event_type ) );
+
+		if ( 'otp_generated' === $event_type && ! empty( $data['reason'] ) ) {
+			$reasons = array(
+				'resend'   => __( '(resend)', 'ipn' ),
+				'reminder' => __( '(uncollected reminder)', 'ipn' ),
+			);
+
+			if ( isset( $reasons[ $data['reason'] ] ) ) {
+				$label .= ' ' . $reasons[ $data['reason'] ];
+			}
+		}
+
+		return $label;
 	}
 }

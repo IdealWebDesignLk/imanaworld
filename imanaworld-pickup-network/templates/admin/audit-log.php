@@ -56,7 +56,7 @@ $ipn_audit_category = function ( $event_type ) {
 						$branch_name = $branch->name;
 					}
 				}
-				$text = IPN_Audit_Log::describe_event( $entry->event_type );
+				$text = IPN_Audit_Log::describe_event( $entry->event_type, (array) json_decode( $entry->data, true ) );
 				if ( ! empty( $entry->order_id ) ) {
 					/* translators: 1: event description, 2: order ID */
 					$text = sprintf( __( '%1$s — order #%2$d', 'ipn' ), $text, $entry->order_id );

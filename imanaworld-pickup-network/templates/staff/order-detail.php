@@ -286,7 +286,12 @@ $next_status_key = array(
 										<div class="audit-dot"></div>
 										<div>
 											<div class="audit-text"><?php echo esc_html( $entry['text'] ); ?></div>
-											<div class="audit-time"><?php echo esc_html( $entry['time'] ); ?></div>
+											<div class="audit-time">
+												<?php echo esc_html( $entry['time'] ); ?>
+												<?php if ( ! empty( $entry['actor_type'] ) ) : ?>
+													&middot; <?php echo esc_html( ucfirst( $entry['actor_type'] ) ); ?>
+												<?php endif; ?>
+											</div>
 										</div>
 									</div>
 								<?php endforeach; ?>

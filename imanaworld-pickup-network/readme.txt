@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.22
+Stable tag: 0.9.23
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,16 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.23 =
+* The order audit trail (staff dashboard, admin order screens, and the full
+  Audit Trail / CSV export) now shows who performed each action and, for
+  "Collection code generated" specifically, why: the initial code, a manual
+  resend, or the uncollected-order reminder rotating it. An order can pick
+  up several of these entries legitimately (any resend adds one), and there
+  was previously no way to tell that apart from something generating codes
+  it shouldn't - the actor type was already being recorded, just never
+  shown on the order-detail views.
 
 = 0.9.22 =
 * Fix: the branch staff dashboard's Branch Stock search box had no submit
