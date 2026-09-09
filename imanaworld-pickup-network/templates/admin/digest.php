@@ -14,7 +14,10 @@ $needing_review = count( array_filter( $expired_orders, function ( $row ) {
 ?>
 <div class="wrap ipn-admin">
 	<div class="section-head">
-		<div class="section-title"><?php esc_html_e( "Today's digest", 'ipn' ); ?></div>
+		<div>
+			<div class="section-title"><?php esc_html_e( "Today's digest", 'ipn' ); ?></div>
+			<span class="hint"><?php esc_html_e( 'Orders that reached Ready for Collection but the customer never picked up before the collection window expired. Stock is released automatically; a refund is not — this is where you check which of these still need one.', 'ipn' ); ?></span>
+		</div>
 		<a
 			class="btn btn-secondary"
 			target="_blank"
