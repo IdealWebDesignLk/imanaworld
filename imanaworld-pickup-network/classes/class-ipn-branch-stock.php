@@ -213,6 +213,19 @@ class IPN_Branch_Stock {
 			$params       = array_merge( $params, $ids );
 		}
 
+		// A stock row naming a branch is not proof the product actually
+		// belongs to that branch's vendor — confirmed live (issue #45): a
+		// product authored by one vendor had a stray branch_stock row at a
+		// different vendor's branch, and the admin Stock screen showed it
+		// under that vendor's product list because nothing here ever
+		// checked who the product's own author was. Branch scoping alone
+		// answers "is this branch in scope", not "does this vendor's
+		// partner selection own this product".
+		if ( ! empty( $args['vendor_id'] ) ) {
+			$where[]  = 'p.post_author = %d';
+			$params[] = (int) $args['vendor_id'];
+		}
+
 		if ( ! empty( $args['search'] ) ) {
 			$where[]  = 'p.post_title LIKE %s';
 			$params[] = '%' . $wpdb->esc_like( $args['search'] ) . '%';

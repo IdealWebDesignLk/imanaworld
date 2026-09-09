@@ -580,6 +580,10 @@ class IPN_Admin {
 		$query_args = array(
 			'branch_id'  => $branch_id,
 			'branch_ids' => $branch_id ? array() : IPN_Admin_Context::branch_ids(),
+			// Belt and braces alongside branch scoping — a branch_stock row
+			// naming one of this partner's branches isn't proof the product
+			// is actually this partner's own (see product_query_where()).
+			'vendor_id'  => IPN_Admin_Context::get_partner_id(),
 			'search'     => $search,
 			'per_page'   => $per_page,
 			'page'       => $page,

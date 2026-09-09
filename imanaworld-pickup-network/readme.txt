@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.26
+Stable tag: 0.9.27
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,14 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.27 =
+* Fix: the admin Stock screen (#45) could show a product that belongs to a
+  different vendor than the one selected above it. Confirmed live: a stray
+  branch_stock row named one vendor's branch for a product actually owned
+  by a different vendor, and the screen only ever checked which branch a
+  stock row named, never who the product itself belongs to. Now also
+  requires the product's author to match the selected partner.
 
 = 0.9.26 =
 * Removed the "Disputes & Returns" admin menu item. Orders & Disputes
