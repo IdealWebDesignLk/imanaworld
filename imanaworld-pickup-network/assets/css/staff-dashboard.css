@@ -94,8 +94,6 @@ body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .device {
 }
 body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .screen {
 	width: 100%;
-	min-height: 100vh;
-	min-height: 100dvh;
 }
 /* The top bar keeps its corners inside a card; full-bleed it must not. */
 body.ipn-sd-standalone .ipn-staff-dashboard.ipn-staff-dashboard .ipn-sd-topbar {
