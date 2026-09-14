@@ -48,11 +48,16 @@ function ipn_email_card_close() {
 }
 
 /**
- * Echoes the ".email-otp" green collection-code block.
+ * Echoes the ".email-otp" collection-code block, in the site's brand colours
+ * (IPN_Theme — same palette the staff dashboard uses, and same --brand-100
+ * derivation: a light tint of the accent colour behind text in the primary
+ * colour) rather than the hardcoded green the mockup shipped with.
  */
 function ipn_email_otp_box( $code, $note = '' ) {
+	$bg = IPN_Theme::tint( IPN_Theme::accent(), 0.88 );
+	$fg = IPN_Theme::primary();
 	?>
-	<div style="text-align:center;background-color:#e8f5e9;color:#1b5e20;border-radius:10px;padding:18px;margin:20px 0;">
+	<div style="text-align:center;background-color:<?php echo esc_attr( $bg ); ?>;color:<?php echo esc_attr( $fg ); ?>;border-radius:10px;padding:18px;margin:20px 0;">
 		<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;opacity:.85;"><?php esc_html_e( 'Collection code', 'ipn' ); ?></div>
 		<div style="font-family:ui-monospace,'SF Mono','Cascadia Code',Menlo,Consolas,monospace;font-size:28px;font-weight:700;letter-spacing:.22em;"><?php echo esc_html( $code ); ?></div>
 		<?php if ( $note ) : ?>
@@ -63,11 +68,15 @@ function ipn_email_otp_box( $code, $note = '' ) {
 }
 
 /**
- * Echoes the ".email-btn" call-to-action button.
+ * Echoes the ".email-btn" call-to-action button, in the site's brand
+ * secondary colour — text colour computed for contrast (IPN_Theme::readable_on())
+ * so an admin picking a pale secondary can't end up with unreadable button text.
  */
 function ipn_email_button( $url, $text ) {
+	$bg = IPN_Theme::secondary();
+	$fg = IPN_Theme::readable_on( $bg );
 	?>
-	<a href="<?php echo esc_url( $url ); ?>" style="display:inline-block;background-color:#2e7d32;color:#ffffff;text-decoration:none;font-weight:650;font-size:13.5px;padding:11px 22px;border-radius:9px;margin-top:6px;"><?php echo esc_html( $text ); ?></a>
+	<a href="<?php echo esc_url( $url ); ?>" style="display:inline-block;background-color:<?php echo esc_attr( $bg ); ?>;color:<?php echo esc_attr( $fg ); ?>;text-decoration:none;font-weight:650;font-size:13.5px;padding:11px 22px;border-radius:9px;margin-top:6px;"><?php echo esc_html( $text ); ?></a>
 	<?php
 }
 

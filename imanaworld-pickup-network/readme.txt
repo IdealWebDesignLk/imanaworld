@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.30
+Stable tag: 0.9.31
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,28 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.31 =
+* Fix: on the admin Dashboard, section titles and other text could render
+  nearly invisible — light-gray on a white background — for anyone whose
+  browser or OS is set to dark mode. The IPN admin stylesheet had an
+  automatic dark-mode colour override, but wp-admin's own page background
+  never actually goes dark to match, so the text flipped to a light colour
+  with nothing dark behind it. The staff and vendor dashboards already
+  avoided this deliberately; removed the same override from the wp-admin
+  screens. (#49)
+* Removed the "Click & Collect fulfilment network — pilot partner:
+  Choppies." line from the admin Dashboard header. (#49)
+* The "Ready for collection" and reminder emails' button now reads "View my
+  order details" instead of "View collection details". (#51)
+* Customer emails now use the site's actual configured brand colours
+  (Settings > brand colours) for the header bar, collection-code box, and
+  buttons, instead of always rendering the shipped default green regardless
+  of what's configured — with button text colour computed for contrast so a
+  pale brand colour can't produce unreadable text. (#51)
+* The branch "new order to prepare" email is now the same styled HTML
+  template every customer email uses, instead of unformatted plain text.
+  (#51)
 
 = 0.9.30 =
 * Fix: the collection-reminder email (sent when an order sits Ready for

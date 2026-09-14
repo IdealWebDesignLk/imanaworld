@@ -59,6 +59,6 @@ ipn_email_otp_box(
 	</p>
 <?php endif; ?>
 
-<?php ipn_email_button( $order->get_view_order_url(), __( 'View collection details', 'ipn' ) ); ?>
+<?php ipn_email_button( $order->get_view_order_url(), __( 'View my order details', 'ipn' ) ); ?>
 
 <?php include __DIR__ . '/partials/footer.php'; ?>

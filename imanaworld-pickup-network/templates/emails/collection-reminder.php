@@ -63,6 +63,6 @@ ipn_email_notice(
 	<?php echo esc_html( isset( $branch->name ) ? $branch->name : '' ); ?><?php echo isset( $branch->address ) && $branch->address ? ', ' . esc_html( $branch->address ) : ''; ?>
 </p>
 
-<?php ipn_email_button( $order->get_view_order_url(), __( 'View collection details', 'ipn' ) ); ?>
+<?php ipn_email_button( $order->get_view_order_url(), __( 'View my order details', 'ipn' ) ); ?>
 
 <?php include __DIR__ . '/partials/footer.php'; ?>

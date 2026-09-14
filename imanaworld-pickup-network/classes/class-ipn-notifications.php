@@ -115,9 +115,10 @@ class IPN_Notifications {
 	/**
 	 * Tells the branch itself a new order is waiting in their queue —
 	 * previously staff only ever found out by happening to open the
-	 * dashboard. Plain text, sent to the branch's own contact email
-	 * (ipn_branches.email); silently skipped if that's not set, since it's
-	 * not required to create a branch.
+	 * dashboard. Sent to the branch's own contact email (ipn_branches.email);
+	 * silently skipped if that's not set, since it's not required to create
+	 * a branch. Uses the same styled HTML template as customer emails
+	 * (issue #51) rather than plain text.
 	 */
 	protected function send_branch_new_order_alert( $order, $branch ) {
 		if ( ! $branch || empty( $branch->email ) ) {
@@ -130,15 +131,21 @@ class IPN_Notifications {
 			$order->get_order_number()
 		);
 
-		$body = sprintf(
-			/* translators: 1: order number, 2: customer name, 3: item count */
-			__( "A new Click & Collect order needs accepting.\n\nOrder: %1\$s\nCustomer: %2\$s\nItems: %3\$d\n\nLog in to your branch staff dashboard to accept it.\n", 'ipn' ),
-			$order->get_order_number(),
-			IPN_Order::customer_name( $order ),
-			$order->get_item_count()
+		$body = $this->render_template(
+			'branch-new-order-alert',
+			array(
+				'order'  => $order,
+				'branch' => $branch,
+			)
 		);
 
+		if ( ! $body ) {
+			return;
+		}
+
+		add_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
 		wp_mail( $branch->email, $subject, $body );
+		remove_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
 	}
 
 	public function send_order_accepted( $order_id ) {

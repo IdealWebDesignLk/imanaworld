@@ -48,37 +48,15 @@
 	-webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-color-scheme: dark) {
-	.ipn-admin:not([data-theme="light"]) {
-		--paper: #101210;
-		--surface: #191c18;
-		--surface-sunken: #14160f;
-		--ink: #eeece3;
-		--muted: #a6a599;
-		--faint: #74736a;
-		--line: #2c2f27;
-		--line-strong: #3a3d33;
-		--brand-900: #b7e0b9;
-		--brand-700: #7fc986;
-		--brand-600: #6abf72;
-		--brand-100: #1d2c1c;
-		--on-brand: #0c1a0d;
-		--new: #7fb2f0;
-		--new-bg: #17233a;
-		--preparing: #eeab6b;
-		--preparing-bg: #3a2915;
-		--ready: #7fc986;
-		--ready-bg: #1a2c1a;
-		--express: #cd9be5;
-		--express-bg: #2c1f36;
-		--danger: #f2938c;
-		--danger-bg: #3a1917;
-		--neutral-bg: #22251e;
-		--focus: #7fc986;
-		--shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .4);
-		--shadow-lg: 0 20px 60px rgba(0, 0, 0, .55);
-	}
-}
+/*
+ * No prefers-color-scheme block here, deliberately (same reasoning as
+ * staff-dashboard.css and the vendor dashboard). These screens render inside
+ * wp-admin's own chrome, which stays light regardless of OS/browser colour
+ * preference — an automatic dark override here flips --ink to a near-white
+ * text colour with no matching dark background behind it, making section
+ * titles and other text unreadable. Confirmed live (issue #49). Dark mode
+ * stays available, just opt-in via [data-theme="dark"] below.
+ */
 
 .ipn-admin[data-theme="dark"] {
 	--paper: #101210;

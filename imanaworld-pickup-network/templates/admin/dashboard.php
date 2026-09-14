@@ -27,7 +27,6 @@ $ipn_express_total = $express_split['standard']['count'] + $express_split['expre
 <div class="wrap ipn-admin">
 	<div class="section-head">
 		<div class="section-title"><?php esc_html_e( 'IMANAWORLD Pickup Network', 'ipn' ); ?></div>
-		<span class="hint"><?php esc_html_e( 'Click & Collect fulfilment network — pilot partner: Choppies.', 'ipn' ); ?></span>
 	</div>
 
 	<div class="grid cols-4">
