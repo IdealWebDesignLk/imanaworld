@@ -35,7 +35,7 @@ $ipn_email_badge_bg   = '#ffffff' === $ipn_email_on_primary ? 'rgba(255,255,255,
 <tr>
 <td style="background-color:<?php echo esc_attr( $ipn_email_primary ); ?>;color:<?php echo esc_attr( $ipn_email_on_primary ); ?>;padding:20px 28px;text-align:center;">
 <span style="display:inline-block;width:26px;height:26px;border-radius:7px;background-color:<?php echo esc_attr( $ipn_email_badge_bg ); ?>;text-align:center;line-height:26px;font-size:11px;font-weight:700;vertical-align:middle;">IPN</span>
-<span style="font-weight:700;font-size:14px;vertical-align:middle;padding-left:8px;"><?php echo esc_html__( 'Choppies · Click & Collect', 'ipn' ); ?></span>
+<span style="font-weight:700;font-size:14px;vertical-align:middle;padding-left:8px;"><?php echo esc_html__( 'Click & Collect', 'ipn' ); ?></span>
 </td>
 </tr>
 <tr>
