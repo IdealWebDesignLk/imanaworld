@@ -49,7 +49,6 @@ $ipn_max_branch_orders  = $ipn_orders_total_count ? max( wp_list_pluck( $orders_
 $ipn_max_branch_revenue = $branch_sales ? max( wp_list_pluck( $branch_sales, 'revenue' ) ) : 0;
 
 $ipn_express_total_count = $express_split['standard']['count'] + $express_split['express']['count'];
-$ipn_express_total_revenue = $express_split['standard']['revenue'] + $express_split['express']['revenue'];
 
 /**
  * Renders the Express/Standard split as an SVG donut (order-count share) —
@@ -179,19 +178,7 @@ $ipn_render_revenue_trend = function ( array $rows, $money_formatter ) {
 				);
 				?>
 			</div>
-			<div class="stat-value" style="margin-bottom:4px;">BWP <?php echo esc_html( $ipn_money( $total_revenue ) ); ?></div>
-			<?php if ( $ipn_express_total_revenue ) : ?>
-				<div class="hint">
-					<?php
-					printf(
-						/* translators: 1: standard revenue, 2: express revenue */
-						esc_html__( 'BWP %1$s standard · BWP %2$s express', 'ipn' ),
-						esc_html( $ipn_money( $express_split['standard']['revenue'] ) ),
-						esc_html( $ipn_money( $express_split['express']['revenue'] ) )
-					);
-					?>
-				</div>
-			<?php endif; ?>
+			<div class="stat-value">BWP <?php echo esc_html( $ipn_money( $total_revenue ) ); ?></div>
 		</div>
 		<div class="panel">
 			<div class="panel-title"><?php esc_html_e( 'Revenue trend', 'ipn' ); ?></div>

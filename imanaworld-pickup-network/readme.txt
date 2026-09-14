@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.32
+Stable tag: 0.9.33
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,18 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.33 =
+* Fix: the new Reports "Total revenue" card (0.9.32) showed a "BWP X
+  standard · BWP Y express" line right below it that never added up to the
+  total — confirmed live: BWP 231.00 total against a BWP 906.50 standard
+  figure. The two numbers use different, both-correct definitions of
+  "revenue" (Total revenue counts collected orders only, matching Branch
+  Sales Performance; the Express vs Standard split counts every order
+  regardless of outcome, matching what that panel has always shown).
+  Showing them side by side implied they should sum together when they
+  don't. Removed the misleading line — the Express vs Standard split panel
+  already shows that breakdown on its own terms.
 
 = 0.9.32 =
 * Reports: added charts throughout the IPN Reports screen — "Orders by
