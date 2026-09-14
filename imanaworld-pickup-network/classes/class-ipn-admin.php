@@ -1046,6 +1046,13 @@ class IPN_Admin {
 		$date_to   = $filters['date_to'];
 		$branch_id = $filters['branch_id'];
 
+		$branch_sales = IPN_Reports::branch_sales_performance( $date_from, $date_to );
+
+		// Total revenue is a sum of the same per-branch numbers already
+		// computed for branch_sales — no separate order scan needed, and it
+		// stays in lockstep with the branch breakdown by construction.
+		$total_revenue = array_sum( wp_list_pluck( $branch_sales, 'revenue' ) );
+
 		return array(
 			'orders_by_branch'    => IPN_Reports::orders_by_branch( $date_from, $date_to, $branch_id ),
 			'collection_success'  => IPN_Reports::collection_success_rate( $date_from, $date_to, $branch_id ),
@@ -1053,8 +1060,10 @@ class IPN_Admin {
 			'prep_time'           => IPN_Reports::average_preparation_time( $date_from, $date_to, $branch_id ),
 			'turnaround'          => IPN_Reports::collection_turnaround_time( $date_from, $date_to, $branch_id ),
 			'product_performance' => IPN_Reports::product_performance_by_branch( $date_from, $date_to, $branch_id ),
-			'branch_sales'        => IPN_Reports::branch_sales_performance( $date_from, $date_to ),
+			'branch_sales'        => $branch_sales,
 			'express_split'       => IPN_Reports::express_vs_standard_split( $date_from, $date_to, $branch_id ),
+			'revenue_trend'       => IPN_Reports::revenue_trend( $date_from, $date_to, $branch_id ),
+			'total_revenue'       => $total_revenue,
 		);
 	}
 

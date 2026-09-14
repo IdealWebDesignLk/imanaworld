@@ -167,6 +167,27 @@
 .ipn-admin .dash-bar-fill--express { background: var(--express); }
 .ipn-admin .dash-bar-value { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 
+/* Revenue trend line chart and Express/Standard donut (issue #52) — plain
+   inline SVG rather than a charting library, consistent with the dash-bars
+   above: this plugin has no JS build step to bundle a chart dependency
+   into, and these two shapes are simple enough not to need one. */
+.ipn-admin .trend-chart { width: 100%; height: auto; overflow: visible; }
+.ipn-admin .trend-chart-area { fill: var(--brand-100); }
+.ipn-admin .trend-chart-line { fill: none; stroke: var(--brand-600); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ipn-admin .trend-chart-dot { fill: var(--brand-600); }
+.ipn-admin .trend-chart-axis { font-size: 10px; fill: var(--faint); font-family: var(--font-ui); }
+.ipn-admin .trend-chart-empty { fill: var(--muted); font-size: 12px; font-family: var(--font-ui); text-anchor: middle; }
+
+.ipn-admin .donut-row { display: flex; align-items: center; gap: 20px; }
+.ipn-admin .donut-svg { flex-shrink: 0; }
+.ipn-admin .donut-legend { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0; }
+.ipn-admin .donut-legend-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+.ipn-admin .donut-legend-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.ipn-admin .donut-legend-swatch--standard { background: var(--brand-600); }
+.ipn-admin .donut-legend-swatch--express { background: var(--express); }
+.ipn-admin .donut-legend-label { font-weight: 650; color: var(--ink); }
+.ipn-admin .donut-legend-value { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
 .ipn-admin .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 26px 0 12px; flex-wrap: wrap; }
 .ipn-admin .section-head:first-child { margin-top: 0; }
 .ipn-admin .section-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }

@@ -13,6 +13,8 @@ defined( 'ABSPATH' ) || exit;
  * @var object[] $product_performance See IPN_Reports::product_performance_by_branch().
  * @var object[] $branch_sales       See IPN_Reports::branch_sales_performance().
  * @var array   $express_split       See IPN_Reports::express_vs_standard_split().
+ * @var object[] $revenue_trend      See IPN_Reports::revenue_trend() — one row per day in range.
+ * @var float   $total_revenue       Sum of $branch_sales revenue (issue #52).
  */
 
 /**
@@ -40,6 +42,102 @@ $ipn_turnaround_by_branch = array();
 foreach ( $turnaround as $row ) {
 	$ipn_turnaround_by_branch[ $row->branch_id ] = $row;
 }
+
+$ipn_orders_total_count = array_sum( wp_list_pluck( $orders_by_branch, 'count' ) );
+$ipn_max_branch_orders  = $ipn_orders_total_count ? max( wp_list_pluck( $orders_by_branch, 'count' ) ) : 0;
+
+$ipn_max_branch_revenue = $branch_sales ? max( wp_list_pluck( $branch_sales, 'revenue' ) ) : 0;
+
+$ipn_express_total_count = $express_split['standard']['count'] + $express_split['express']['count'];
+$ipn_express_total_revenue = $express_split['standard']['revenue'] + $express_split['express']['revenue'];
+
+/**
+ * Renders the Express/Standard split as an SVG donut (order-count share) —
+ * a plain two-segment ring built from stroke-dasharray, no charting library.
+ */
+$ipn_render_split_donut = function ( array $split, $total ) {
+	if ( ! $total ) {
+		return;
+	}
+
+	$radius = 36;
+	$circumference = 2 * M_PI * $radius;
+	$standard_pct = $split['standard']['count'] / $total;
+	$standard_len = $standard_pct * $circumference;
+	?>
+	<svg class="donut-svg" width="96" height="96" viewBox="0 0 96 96">
+		<circle cx="48" cy="48" r="<?php echo esc_attr( $radius ); ?>" fill="none" stroke="var(--express)" stroke-width="14" />
+		<circle
+			cx="48" cy="48" r="<?php echo esc_attr( $radius ); ?>" fill="none" stroke="var(--brand-600)" stroke-width="14"
+			stroke-dasharray="<?php echo esc_attr( round( $standard_len, 2 ) . ' ' . round( $circumference, 2 ) ); ?>"
+			transform="rotate(-90 48 48)"
+		/>
+	</svg>
+	<?php
+};
+
+/**
+ * Renders $rows (date/revenue objects, see IPN_Reports::revenue_trend()) as
+ * a filled SVG line chart. Point count isn't fixed — the 90-day range
+ * produces as many points as the 7-day one, just closer together.
+ */
+$ipn_render_revenue_trend = function ( array $rows, $money_formatter ) {
+	$count = count( $rows );
+
+	$width  = 600;
+	$height = 140;
+	$pad_x  = 4;
+	$pad_top = 16;
+	$pad_bottom = 24;
+	$plot_w = $width - ( $pad_x * 2 );
+	$plot_h = $height - $pad_top - $pad_bottom;
+
+	// $rows is normally never empty — revenue_trend() zero-fills one entry
+	// per day in range — but an empty array is handled the same as an
+	// all-zero one rather than rendering nothing, in case date_from ever
+	// ends up after date_to.
+	$max = $count ? max( wp_list_pluck( $rows, 'revenue' ) ) : 0;
+
+	if ( ! $max ) {
+		?>
+		<svg class="trend-chart" viewBox="0 0 <?php echo esc_attr( $width ); ?> <?php echo esc_attr( $height ); ?>" preserveAspectRatio="none">
+			<text class="trend-chart-empty" x="<?php echo esc_attr( $width / 2 ); ?>" y="<?php echo esc_attr( $height / 2 ); ?>"><?php esc_html_e( 'No revenue in this period yet.', 'ipn' ); ?></text>
+		</svg>
+		<?php
+		return;
+	}
+
+	$points = array();
+
+	foreach ( $rows as $i => $row ) {
+		$x = $count > 1 ? $pad_x + ( $i / ( $count - 1 ) ) * $plot_w : $pad_x + ( $plot_w / 2 );
+		$y = $pad_top + $plot_h - ( ( $row->revenue / $max ) * $plot_h );
+		$points[] = array( round( $x, 1 ), round( $y, 1 ) );
+	}
+
+	$line_points = implode( ' ', array_map( function ( $p ) {
+		return $p[0] . ',' . $p[1];
+	}, $points ) );
+
+	$area_points = $line_points . ' ' . ( $width - $pad_x ) . ',' . ( $height - $pad_bottom ) . ' ' . $pad_x . ',' . ( $height - $pad_bottom );
+
+	$first_date = date_i18n( 'd M', strtotime( $rows[0]->date ) );
+	$last_date  = date_i18n( 'd M', strtotime( $rows[ $count - 1 ]->date ) );
+	?>
+	<svg class="trend-chart" viewBox="0 0 <?php echo esc_attr( $width ); ?> <?php echo esc_attr( $height ); ?>" preserveAspectRatio="none">
+		<polygon class="trend-chart-area" points="<?php echo esc_attr( $area_points ); ?>"></polygon>
+		<polyline class="trend-chart-line" points="<?php echo esc_attr( $line_points ); ?>"></polyline>
+		<?php if ( $count <= 31 ) : ?>
+			<?php foreach ( $points as $p ) : ?>
+				<circle class="trend-chart-dot" cx="<?php echo esc_attr( $p[0] ); ?>" cy="<?php echo esc_attr( $p[1] ); ?>" r="2.5"></circle>
+			<?php endforeach; ?>
+		<?php endif; ?>
+		<text class="trend-chart-axis" x="<?php echo esc_attr( $pad_x ); ?>" y="<?php echo esc_attr( $height - 6 ); ?>"><?php echo esc_html( $first_date ); ?></text>
+		<text class="trend-chart-axis" x="<?php echo esc_attr( $width - $pad_x ); ?>" y="<?php echo esc_attr( $height - 6 ); ?>" text-anchor="end"><?php echo esc_html( $last_date ); ?></text>
+		<text class="trend-chart-axis" x="<?php echo esc_attr( $width - $pad_x ); ?>" y="<?php echo esc_attr( $pad_top ); ?>" text-anchor="end"><?php echo esc_html( 'BWP ' . $money_formatter( $max ) ); ?></text>
+	</svg>
+	<?php
+};
 ?>
 <div class="wrap ipn-admin">
 	<div class="section-head">
@@ -68,18 +166,66 @@ foreach ( $turnaround as $row ) {
 		</a>
 	</form>
 
+	<div class="section-head"><div class="section-title"><?php esc_html_e( 'Revenue', 'ipn' ); ?></div></div>
 	<div class="grid cols-2">
 		<div class="panel">
+			<div class="panel-title"><?php esc_html_e( 'Total revenue', 'ipn' ); ?></div>
+			<div class="panel-sub">
+				<?php
+				printf(
+					/* translators: %s: number of days in the selected range */
+					esc_html__( 'Collected orders, %s days', 'ipn' ),
+					esc_html( $range )
+				);
+				?>
+			</div>
+			<div class="stat-value" style="margin-bottom:4px;">BWP <?php echo esc_html( $ipn_money( $total_revenue ) ); ?></div>
+			<?php if ( $ipn_express_total_revenue ) : ?>
+				<div class="hint">
+					<?php
+					printf(
+						/* translators: 1: standard revenue, 2: express revenue */
+						esc_html__( 'BWP %1$s standard · BWP %2$s express', 'ipn' ),
+						esc_html( $ipn_money( $express_split['standard']['revenue'] ) ),
+						esc_html( $ipn_money( $express_split['express']['revenue'] ) )
+					);
+					?>
+				</div>
+			<?php endif; ?>
+		</div>
+		<div class="panel">
+			<div class="panel-title"><?php esc_html_e( 'Revenue trend', 'ipn' ); ?></div>
+			<div class="panel-sub">
+				<?php
+				printf(
+					/* translators: %s: number of days in the selected range */
+					esc_html__( 'Daily, last %s days', 'ipn' ),
+					esc_html( $range )
+				);
+				?>
+			</div>
+			<?php $ipn_render_revenue_trend( $revenue_trend, $ipn_money ); ?>
+		</div>
+	</div>
+
+	<div class="grid cols-2" style="margin-top:14px;">
+		<div class="panel">
 			<div class="panel-title"><?php esc_html_e( 'Orders by branch', 'ipn' ); ?></div>
-			<?php if ( empty( $orders_by_branch ) ) : ?>
-				<div class="empty-state"><?php esc_html_e( 'No branches configured yet.', 'ipn' ); ?></div>
+			<?php if ( empty( $orders_by_branch ) || ! $ipn_orders_total_count ) : ?>
+				<div class="empty-state"><?php esc_html_e( 'No orders in this period yet.', 'ipn' ); ?></div>
 			<?php else : ?>
-				<?php foreach ( $orders_by_branch as $row ) : ?>
-					<div class="import-log-row">
-						<span><?php echo esc_html( $row->branch_name ); ?></span>
-						<span><b><?php echo esc_html( $row->count ); ?></b></span>
-					</div>
-				<?php endforeach; ?>
+				<div class="dash-bars">
+					<?php foreach ( $orders_by_branch as $row ) : ?>
+						<?php $ipn_pct = $ipn_max_branch_orders ? round( ( $row->count / $ipn_max_branch_orders ) * 100 ) : 0; ?>
+						<div class="dash-bar-row">
+							<div class="dash-bar-label"><?php echo esc_html( $row->branch_name ); ?></div>
+							<div class="dash-bar-track">
+								<div class="dash-bar-fill" style="width:<?php echo esc_attr( $ipn_pct ); ?>%;"></div>
+							</div>
+							<div class="dash-bar-value"><?php echo esc_html( $row->count ); ?></div>
+						</div>
+					<?php endforeach; ?>
+				</div>
 			<?php endif; ?>
 		</div>
 		<div class="panel">
@@ -136,24 +282,30 @@ foreach ( $turnaround as $row ) {
 				);
 				?>
 			</div>
-			<?php if ( empty( $branch_sales ) ) : ?>
-				<div class="empty-state"><?php esc_html_e( 'No branches configured yet.', 'ipn' ); ?></div>
+			<?php if ( empty( $branch_sales ) || ! $ipn_max_branch_revenue ) : ?>
+				<div class="empty-state"><?php esc_html_e( 'No collected orders in this period yet.', 'ipn' ); ?></div>
 			<?php else : ?>
-				<?php foreach ( $branch_sales as $row ) : ?>
-					<div class="import-log-row">
-						<span><?php echo esc_html( $row->branch_name ); ?></span>
-						<span>
-							<?php
-							printf(
-								/* translators: 1: revenue amount, 2: order count */
-								esc_html__( 'BWP %1$s · %2$d orders', 'ipn' ),
-								esc_html( $ipn_money( $row->revenue ) ),
-								(int) $row->orders
-							);
-							?>
-						</span>
-					</div>
-				<?php endforeach; ?>
+				<div class="dash-bars">
+					<?php foreach ( $branch_sales as $row ) : ?>
+						<?php $ipn_pct = $ipn_max_branch_revenue ? round( ( $row->revenue / $ipn_max_branch_revenue ) * 100 ) : 0; ?>
+						<div class="dash-bar-row">
+							<div class="dash-bar-label"><?php echo esc_html( $row->branch_name ); ?></div>
+							<div class="dash-bar-track">
+								<div class="dash-bar-fill" style="width:<?php echo esc_attr( $ipn_pct ); ?>%;"></div>
+							</div>
+							<div class="dash-bar-value">
+								<?php
+								printf(
+									/* translators: 1: revenue amount, 2: order count */
+									esc_html__( 'BWP %1$s · %2$d', 'ipn' ),
+									esc_html( $ipn_money( $row->revenue ) ),
+									(int) $row->orders
+								);
+								?>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
 			<?php endif; ?>
 		</div>
 	</div>
@@ -161,34 +313,41 @@ foreach ( $turnaround as $row ) {
 	<div class="grid cols-2" style="margin-top:14px;">
 		<div class="panel">
 			<div class="panel-title"><?php esc_html_e( 'Express vs Standard split', 'ipn' ); ?></div>
-			<?php if ( ! $express_split['standard']['count'] && ! $express_split['express']['count'] ) : ?>
+			<?php if ( ! $ipn_express_total_count ) : ?>
 				<div class="empty-state"><?php esc_html_e( 'No orders in this period yet.', 'ipn' ); ?></div>
 			<?php else : ?>
-				<div class="import-log-row">
-					<span><?php esc_html_e( 'Standard', 'ipn' ); ?></span>
-					<span>
-						<?php
-						printf(
-							/* translators: 1: order count, 2: revenue amount */
-							esc_html__( '%1$d orders · BWP %2$s', 'ipn' ),
-							(int) $express_split['standard']['count'],
-							esc_html( $ipn_money( $express_split['standard']['revenue'] ) )
-						);
-						?>
-					</span>
-				</div>
-				<div class="import-log-row">
-					<span><?php esc_html_e( 'Express', 'ipn' ); ?></span>
-					<span>
-						<?php
-						printf(
-							/* translators: 1: order count, 2: revenue amount */
-							esc_html__( '%1$d orders · BWP %2$s', 'ipn' ),
-							(int) $express_split['express']['count'],
-							esc_html( $ipn_money( $express_split['express']['revenue'] ) )
-						);
-						?>
-					</span>
+				<div class="donut-row">
+					<?php $ipn_render_split_donut( $express_split, $ipn_express_total_count ); ?>
+					<div class="donut-legend">
+						<div class="donut-legend-row">
+							<span class="donut-legend-swatch donut-legend-swatch--standard"></span>
+							<span class="donut-legend-label"><?php esc_html_e( 'Standard', 'ipn' ); ?></span>
+							<span class="donut-legend-value">
+								<?php
+								printf(
+									/* translators: 1: order count, 2: revenue amount */
+									esc_html__( '%1$d orders · BWP %2$s', 'ipn' ),
+									(int) $express_split['standard']['count'],
+									esc_html( $ipn_money( $express_split['standard']['revenue'] ) )
+								);
+								?>
+							</span>
+						</div>
+						<div class="donut-legend-row">
+							<span class="donut-legend-swatch donut-legend-swatch--express"></span>
+							<span class="donut-legend-label"><?php esc_html_e( 'Express', 'ipn' ); ?></span>
+							<span class="donut-legend-value">
+								<?php
+								printf(
+									/* translators: 1: order count, 2: revenue amount */
+									esc_html__( '%1$d orders · BWP %2$s', 'ipn' ),
+									(int) $express_split['express']['count'],
+									esc_html( $ipn_money( $express_split['express']['revenue'] ) )
+								);
+								?>
+							</span>
+						</div>
+					</div>
 				</div>
 			<?php endif; ?>
 		</div>

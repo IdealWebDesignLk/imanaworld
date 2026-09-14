@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.31
+Stable tag: 0.9.32
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,16 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.32 =
+* Reports: added charts throughout the IPN Reports screen — "Orders by
+  branch" and "Branch sales performance" are now bar charts, "Express vs
+  Standard split" is now a donut chart, and a new daily revenue trend line
+  chart covers the whole selected range (7/30/90 days), not just a snapshot.
+  All plain inline SVG — no new JS dependency. (#52)
+* Reports: added a dedicated Revenue section — total revenue for the
+  selected period (with the existing range/branch filters), broken down by
+  Standard vs Express, alongside the new trend chart. (#52)
 
 = 0.9.31 =
 * Fix: on the admin Dashboard, section titles and other text could render

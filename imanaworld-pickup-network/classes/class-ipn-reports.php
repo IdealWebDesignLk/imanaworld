@@ -174,6 +174,55 @@ class IPN_Reports {
 	}
 
 	/**
+	 * Revenue per day across the selected range (issue #52) — one bucket per
+	 * calendar day from $date_from to $date_to inclusive, zero-filled so the
+	 * trend line doesn't skip days with no collected orders. Bucketed by the
+	 * order's creation day, matching how every other report here scopes
+	 * "orders in this period" (get_order_ids() filters on date_created), and
+	 * counted only when actually collected — same revenue definition
+	 * branch_sales_performance() and express_vs_standard_split() use.
+	 *
+	 * @return object[] Each: date ('Y-m-d'), revenue (float).
+	 */
+	public static function revenue_trend( $date_from, $date_to, $branch_id = 0 ) {
+		$buckets = array();
+		// Parsed explicitly as UTC (rather than the server's local timezone,
+		// which strtotime() would otherwise assume) so this can't drift by a
+		// day against the gmdate() calls below and in get_report_filters().
+		$cursor = strtotime( $date_from . ' 00:00:00 UTC' );
+		$end    = strtotime( $date_to . ' 00:00:00 UTC' );
+
+		while ( $cursor <= $end ) {
+			$buckets[ gmdate( 'Y-m-d', $cursor ) ] = 0.0;
+			$cursor += DAY_IN_SECONDS;
+		}
+
+		foreach ( self::get_orders( $date_from, $date_to, $branch_id ) as $order ) {
+			if ( 'completed' !== $order->get_status() ) {
+				continue;
+			}
+
+			$created = $order->get_date_created();
+			$day     = $created ? $created->date( 'Y-m-d' ) : null;
+
+			if ( $day && isset( $buckets[ $day ] ) ) {
+				$buckets[ $day ] += (float) $order->get_total();
+			}
+		}
+
+		$rows = array();
+
+		foreach ( $buckets as $date => $revenue ) {
+			$rows[] = (object) array(
+				'date'    => $date,
+				'revenue' => $revenue,
+			);
+		}
+
+		return $rows;
+	}
+
+	/**
 	 * @return array{standard:array{count:int,revenue:float},express:array{count:int,revenue:float}}
 	 */
 	public static function express_vs_standard_split( $date_from, $date_to, $branch_id = 0 ) {
