@@ -157,6 +157,8 @@ if ( $show_all ) {
 								<div class="empty-state">
 									<?php if ( '' !== $search || $filter_branch_id ) : ?>
 										<?php esc_html_e( 'No products match this search.', 'ipn' ); ?>
+									<?php elseif ( $show_all ) : ?>
+										<?php esc_html_e( 'This vendor has no products in WooCommerce yet.', 'ipn' ); ?>
 									<?php else : ?>
 										<?php esc_html_e( 'No stock records yet — run a catalogue import, or set branch stock on a product from its WooCommerce edit screen.', 'ipn' ); ?>
 									<?php endif; ?>
