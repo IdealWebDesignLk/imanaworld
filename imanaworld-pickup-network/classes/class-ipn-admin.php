@@ -245,6 +245,9 @@ class IPN_Admin {
 			'needs_attention'     => $needs_attention,
 			'express_split'       => IPN_Reports::express_vs_standard_split( $date_from, $date_to ),
 			'collection_success'  => IPN_Reports::collection_success_rate( $date_from, $date_to ),
+			// Charts added for issue #59 — separate from the IPN Reports screen's.
+			'revenue_trend'       => IPN_Reports::revenue_trend( $date_from, $date_to ),
+			'status_split'        => IPN_Reports::order_status_split( $date_from, $date_to ),
 		) );
 	}
 

@@ -50,93 +50,14 @@ $ipn_max_branch_revenue = $branch_sales ? max( wp_list_pluck( $branch_sales, 're
 
 $ipn_express_total_count = $express_split['standard']['count'] + $express_split['express']['count'];
 
-/**
- * Renders the Express/Standard split as an SVG donut (order-count share) —
- * a plain two-segment ring built from stroke-dasharray, no charting library.
- */
-$ipn_render_split_donut = function ( array $split, $total ) {
-	if ( ! $total ) {
-		return;
-	}
+// Shared with the admin Dashboard (issue #59) — ipn_admin_render_donut() and
+// ipn_admin_render_trend_chart().
+require_once __DIR__ . '/partials/charts.php';
 
-	$radius = 36;
-	$circumference = 2 * M_PI * $radius;
-	$standard_pct = $split['standard']['count'] / $total;
-	$standard_len = $standard_pct * $circumference;
-	?>
-	<svg class="donut-svg" width="96" height="96" viewBox="0 0 96 96">
-		<circle cx="48" cy="48" r="<?php echo esc_attr( $radius ); ?>" fill="none" stroke="var(--express)" stroke-width="14" />
-		<circle
-			cx="48" cy="48" r="<?php echo esc_attr( $radius ); ?>" fill="none" stroke="var(--brand-600)" stroke-width="14"
-			stroke-dasharray="<?php echo esc_attr( round( $standard_len, 2 ) . ' ' . round( $circumference, 2 ) ); ?>"
-			transform="rotate(-90 48 48)"
-		/>
-	</svg>
-	<?php
-};
-
-/**
- * Renders $rows (date/revenue objects, see IPN_Reports::revenue_trend()) as
- * a filled SVG line chart. Point count isn't fixed — the 90-day range
- * produces as many points as the 7-day one, just closer together.
- */
-$ipn_render_revenue_trend = function ( array $rows, $money_formatter ) {
-	$count = count( $rows );
-
-	$width  = 600;
-	$height = 140;
-	$pad_x  = 4;
-	$pad_top = 16;
-	$pad_bottom = 24;
-	$plot_w = $width - ( $pad_x * 2 );
-	$plot_h = $height - $pad_top - $pad_bottom;
-
-	// $rows is normally never empty — revenue_trend() zero-fills one entry
-	// per day in range — but an empty array is handled the same as an
-	// all-zero one rather than rendering nothing, in case date_from ever
-	// ends up after date_to.
-	$max = $count ? max( wp_list_pluck( $rows, 'revenue' ) ) : 0;
-
-	if ( ! $max ) {
-		?>
-		<svg class="trend-chart" viewBox="0 0 <?php echo esc_attr( $width ); ?> <?php echo esc_attr( $height ); ?>" preserveAspectRatio="none">
-			<text class="trend-chart-empty" x="<?php echo esc_attr( $width / 2 ); ?>" y="<?php echo esc_attr( $height / 2 ); ?>"><?php esc_html_e( 'No revenue in this period yet.', 'ipn' ); ?></text>
-		</svg>
-		<?php
-		return;
-	}
-
-	$points = array();
-
-	foreach ( $rows as $i => $row ) {
-		$x = $count > 1 ? $pad_x + ( $i / ( $count - 1 ) ) * $plot_w : $pad_x + ( $plot_w / 2 );
-		$y = $pad_top + $plot_h - ( ( $row->revenue / $max ) * $plot_h );
-		$points[] = array( round( $x, 1 ), round( $y, 1 ) );
-	}
-
-	$line_points = implode( ' ', array_map( function ( $p ) {
-		return $p[0] . ',' . $p[1];
-	}, $points ) );
-
-	$area_points = $line_points . ' ' . ( $width - $pad_x ) . ',' . ( $height - $pad_bottom ) . ' ' . $pad_x . ',' . ( $height - $pad_bottom );
-
-	$first_date = date_i18n( 'd M', strtotime( $rows[0]->date ) );
-	$last_date  = date_i18n( 'd M', strtotime( $rows[ $count - 1 ]->date ) );
-	?>
-	<svg class="trend-chart" viewBox="0 0 <?php echo esc_attr( $width ); ?> <?php echo esc_attr( $height ); ?>" preserveAspectRatio="none">
-		<polygon class="trend-chart-area" points="<?php echo esc_attr( $area_points ); ?>"></polygon>
-		<polyline class="trend-chart-line" points="<?php echo esc_attr( $line_points ); ?>"></polyline>
-		<?php if ( $count <= 31 ) : ?>
-			<?php foreach ( $points as $p ) : ?>
-				<circle class="trend-chart-dot" cx="<?php echo esc_attr( $p[0] ); ?>" cy="<?php echo esc_attr( $p[1] ); ?>" r="2.5"></circle>
-			<?php endforeach; ?>
-		<?php endif; ?>
-		<text class="trend-chart-axis" x="<?php echo esc_attr( $pad_x ); ?>" y="<?php echo esc_attr( $height - 6 ); ?>"><?php echo esc_html( $first_date ); ?></text>
-		<text class="trend-chart-axis" x="<?php echo esc_attr( $width - $pad_x ); ?>" y="<?php echo esc_attr( $height - 6 ); ?>" text-anchor="end"><?php echo esc_html( $last_date ); ?></text>
-		<text class="trend-chart-axis" x="<?php echo esc_attr( $width - $pad_x ); ?>" y="<?php echo esc_attr( $pad_top ); ?>" text-anchor="end"><?php echo esc_html( 'BWP ' . $money_formatter( $max ) ); ?></text>
-	</svg>
-	<?php
-};
+$ipn_express_donut_segments = array(
+	array( 'count' => $express_split['standard']['count'], 'color' => 'var(--brand-600)' ),
+	array( 'count' => $express_split['express']['count'], 'color' => 'var(--express)' ),
+);
 ?>
 <div class="wrap ipn-admin">
 	<div class="section-head">
@@ -191,7 +112,7 @@ $ipn_render_revenue_trend = function ( array $rows, $money_formatter ) {
 				);
 				?>
 			</div>
-			<?php $ipn_render_revenue_trend( $revenue_trend, $ipn_money ); ?>
+			<?php ipn_admin_render_trend_chart( $revenue_trend, $ipn_money ); ?>
 		</div>
 	</div>
 
@@ -304,7 +225,7 @@ $ipn_render_revenue_trend = function ( array $rows, $money_formatter ) {
 				<div class="empty-state"><?php esc_html_e( 'No orders in this period yet.', 'ipn' ); ?></div>
 			<?php else : ?>
 				<div class="donut-row">
-					<?php $ipn_render_split_donut( $express_split, $ipn_express_total_count ); ?>
+					<?php ipn_admin_render_donut( $ipn_express_donut_segments ); ?>
 					<div class="donut-legend">
 						<div class="donut-legend-row">
 							<span class="donut-legend-swatch donut-legend-swatch--standard"></span>

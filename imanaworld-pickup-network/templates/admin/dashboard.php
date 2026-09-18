@@ -8,7 +8,74 @@ defined( 'ABSPATH' ) || exit;
  * @var object[] $needs_attention  Disputed or expired orders, last 7 days — already scoped.
  * @var array    $express_split    IPN_Reports::express_vs_standard_split(), last 7 days — already scoped.
  * @var array    $collection_success IPN_Reports::collection_success_rate(), last 7 days — already scoped.
+ * @var object[] $revenue_trend    IPN_Reports::revenue_trend(), last 7 days — already scoped (issue #59).
+ * @var array    $status_split     IPN_Reports::order_status_split(), last 7 days — already scoped (issue #59).
  */
+
+require_once __DIR__ . '/partials/charts.php';
+
+// Same slugs IPN_Order::display_status() already uses for chip-{slug} colours
+// elsewhere (Orders & Disputes, staff dashboard) — reused here rather than
+// inventing a second status-to-colour mapping just for this chart.
+$ipn_status_meta = array(
+	'awaiting-payment' => array(
+		'label' => __( 'Awaiting payment', 'ipn' ),
+		'color' => 'var(--preparing)',
+	),
+	'new'              => array(
+		'label' => __( 'New', 'ipn' ),
+		'color' => 'var(--new)',
+	),
+	'accepted'         => array(
+		'label' => __( 'Accepted', 'ipn' ),
+		'color' => 'var(--new)',
+	),
+	'preparing'        => array(
+		'label' => __( 'Preparing', 'ipn' ),
+		'color' => 'var(--preparing)',
+	),
+	'ready'            => array(
+		'label' => __( 'Ready for collection', 'ipn' ),
+		'color' => 'var(--ready)',
+	),
+	'collected'        => array(
+		'label' => __( 'Collected', 'ipn' ),
+		'color' => 'var(--muted)',
+	),
+	'disputed'         => array(
+		'label' => __( 'Disputed', 'ipn' ),
+		'color' => 'var(--danger)',
+	),
+	'expired'          => array(
+		'label' => __( 'Expired', 'ipn' ),
+		'color' => 'var(--danger)',
+	),
+	'cancelled'        => array(
+		'label' => __( 'Cancelled', 'ipn' ),
+		'color' => 'var(--danger)',
+	),
+);
+
+$ipn_status_total    = array_sum( $status_split );
+$ipn_status_segments = array();
+
+foreach ( $status_split as $ipn_slug => $ipn_count ) {
+	$ipn_meta = isset( $ipn_status_meta[ $ipn_slug ] ) ? $ipn_status_meta[ $ipn_slug ] : array(
+		'label' => ucfirst( $ipn_slug ),
+		'color' => 'var(--muted)',
+	);
+
+	$ipn_status_segments[] = array(
+		'slug'  => $ipn_slug,
+		'label' => $ipn_meta['label'],
+		'color' => $ipn_meta['color'],
+		'count' => $ipn_count,
+	);
+}
+
+usort( $ipn_status_segments, function ( $a, $b ) {
+	return $b['count'] <=> $a['count'];
+} );
 
 $ipn_active_count = count(
 	array_filter(
@@ -123,6 +190,35 @@ $ipn_express_total = $express_split['standard']['count'] + $express_split['expre
 							<div class="dash-bar-fill dash-bar-fill--express" style="width:<?php echo esc_attr( $ipn_express_pct ); ?>%;"></div>
 						</div>
 						<div class="dash-bar-value"><?php echo esc_html( $express_split['express']['count'] ); ?> (<?php echo esc_html( $ipn_express_pct ); ?>%)</div>
+					</div>
+				</div>
+			<?php endif; ?>
+		</div>
+	</div>
+
+	<div class="grid cols-2" style="margin-top:14px;">
+		<div class="panel">
+			<div class="panel-title"><?php esc_html_e( 'Revenue trend', 'ipn' ); ?></div>
+			<div class="panel-sub"><?php esc_html_e( 'Collected orders, last 7 days', 'ipn' ); ?></div>
+			<?php ipn_admin_render_trend_chart( $revenue_trend, function ( $amount ) { return number_format_i18n( (float) $amount, 2 ); } ); ?>
+		</div>
+		<div class="panel">
+			<div class="panel-title"><?php esc_html_e( 'Order status split', 'ipn' ); ?></div>
+			<div class="panel-sub"><?php esc_html_e( 'Last 7 days', 'ipn' ); ?></div>
+			<?php if ( ! $ipn_status_total ) : ?>
+				<div class="empty-state"><?php esc_html_e( 'No orders in the last 7 days.', 'ipn' ); ?></div>
+			<?php else : ?>
+				<div class="donut-row">
+					<?php ipn_admin_render_donut( $ipn_status_segments ); ?>
+					<div class="donut-legend">
+						<?php foreach ( $ipn_status_segments as $ipn_segment ) : ?>
+							<?php if ( ! $ipn_segment['count'] ) : continue; endif; ?>
+							<div class="donut-legend-row">
+								<span class="donut-legend-swatch" style="background:<?php echo esc_attr( $ipn_segment['color'] ); ?>;"></span>
+								<span class="donut-legend-label"><?php echo esc_html( $ipn_segment['label'] ); ?></span>
+								<span class="donut-legend-value"><?php echo esc_html( $ipn_segment['count'] ); ?></span>
+							</div>
+						<?php endforeach; ?>
 					</div>
 				</div>
 			<?php endif; ?>

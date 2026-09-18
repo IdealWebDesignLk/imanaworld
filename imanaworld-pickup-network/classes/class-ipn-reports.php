@@ -54,6 +54,33 @@ class IPN_Reports {
 	}
 
 	/**
+	 * Order counts by simplified status (issue #59's admin Dashboard pie
+	 * chart) — reuses IPN_Order::display_status()'s slug map so the chart's
+	 * categories and colours line up with the chip labels already used
+	 * everywhere else (Orders & Disputes, staff dashboard, tracker) rather
+	 * than inventing a second status taxonomy. That map deliberately excludes
+	 * cancelled/refunded/failed (not part of the IPN lifecycle it tracks),
+	 * so those are bucketed here as 'cancelled' instead of silently dropped —
+	 * a status split that quietly omits cancellations would misrepresent the
+	 * period, and collection_success_rate() above already treats them as a
+	 * real outcome worth counting.
+	 *
+	 * @return array Slug (e.g. 'ready', 'cancelled') => count.
+	 */
+	public static function order_status_split( $date_from, $date_to, $branch_id = 0 ) {
+		$counts = array();
+
+		foreach ( self::get_orders( $date_from, $date_to, $branch_id ) as $order ) {
+			$slug = IPN_Order::display_status( $order->get_status() );
+			$slug = $slug ? $slug : 'cancelled';
+
+			$counts[ $slug ] = ( isset( $counts[ $slug ] ) ? $counts[ $slug ] : 0 ) + 1;
+		}
+
+		return $counts;
+	}
+
+	/**
 	 * Orders currently sitting Ready for Collection within the filtered
 	 * range — the live "who still needs to come pick this up" list.
 	 */
