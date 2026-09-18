@@ -571,36 +571,59 @@ class IPN_Admin {
 		$branch_id = isset( $_GET['branch_id'] ) ? absint( $_GET['branch_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$search    = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$page      = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$partner_id = IPN_Admin_Context::get_partner_id();
+		// "Show all products" only makes sense with one partner selected —
+		// otherwise there's no single vendor whose catalogue to list. Confirmed
+		// live (issue #54): the admin had no way to see a vendor's full
+		// WooCommerce catalogue, only the subset already added to Click &
+		// Collect, so there was no way to tell "not stocked anywhere" apart
+		// from "doesn't exist".
+		$show_all  = $partner_id && isset( $_GET['show'] ) && 'all' === $_GET['show']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		// A branch_id left over in a bookmark must not reach across partners.
 		if ( $branch_id && ! IPN_Admin_Context::is_branch_in_scope( $branch_id ) ) {
 			$branch_id = 0;
 		}
 
-		$query_args = array(
-			'branch_id'  => $branch_id,
-			'branch_ids' => $branch_id ? array() : IPN_Admin_Context::branch_ids(),
-			// Belt and braces alongside branch scoping — a branch_stock row
-			// naming one of this partner's branches isn't proof the product
-			// is actually this partner's own (see product_query_where()).
-			'vendor_id'  => IPN_Admin_Context::get_partner_id(),
-			'search'     => $search,
-			'per_page'   => $per_page,
-			'page'       => $page,
-		);
+		if ( $show_all ) {
+			$query_args = array(
+				'vendor_id' => $partner_id,
+				'search'    => $search,
+				'per_page'  => $per_page,
+				'page'      => $page,
+			);
 
-		$products = IPN_Branch_Stock::query_products( $query_args );
+			$products      = IPN_Branch_Stock::query_all_vendor_products( $query_args );
+			$total_products = IPN_Branch_Stock::count_all_vendor_products( $query_args );
+		} else {
+			$query_args = array(
+				'branch_id'  => $branch_id,
+				'branch_ids' => $branch_id ? array() : IPN_Admin_Context::branch_ids(),
+				// Belt and braces alongside branch scoping — a branch_stock row
+				// naming one of this partner's branches isn't proof the product
+				// is actually this partner's own (see product_query_where()).
+				'vendor_id'  => $partner_id,
+				'search'     => $search,
+				'per_page'   => $per_page,
+				'page'       => $page,
+			);
+
+			$products      = IPN_Branch_Stock::query_products( $query_args );
+			$total_products = IPN_Branch_Stock::count_products( $query_args );
+		}
 
 		$this->view( 'stock', array(
 			'branches'         => IPN_Admin_Context::branches(),
 			'stock_products'   => $products,
 			'stock_breakdown'  => IPN_Branch_Stock::get_branch_breakdown( wp_list_pluck( $products, 'product_id' ), $branch_id ),
-			'total_products'   => IPN_Branch_Stock::count_products( $query_args ),
+			'total_products'   => $total_products,
 			'filter_branch_id' => $branch_id,
 			'search'           => $search,
 			'page'             => $page,
 			'per_page'         => $per_page,
 			'adjust_result'    => $result,
+			'show_all'         => $show_all,
+			'can_show_all'     => (bool) $partner_id,
 		) );
 	}
 

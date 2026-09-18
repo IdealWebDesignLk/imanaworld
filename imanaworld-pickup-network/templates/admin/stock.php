@@ -15,6 +15,8 @@ defined( 'ABSPATH' ) || exit;
  * @var int                $per_page
  * @var int                $total_products
  * @var true|WP_Error|null $adjust_result    Result of a stock adjustment posted this request, if any.
+ * @var bool               $show_all         True when listing the selected partner's whole catalogue (issue #54), not just products already in Click & Collect.
+ * @var bool               $can_show_all     Whether the "show all" toggle can be offered — only when one partner is selected.
  */
 
 $ipn_total_pages   = (int) ceil( $total_products / max( 1, $per_page ) );
@@ -27,7 +29,7 @@ foreach ( $branches as $ipn_branch_option ) {
 	}
 }
 
-$ipn_page_url = function ( $page_number ) use ( $filter_branch_id, $search ) {
+$ipn_page_url = function ( $page_number ) use ( $filter_branch_id, $search, $show_all ) {
 	$args = array( 'page' => 'ipn-stock' );
 
 	if ( $filter_branch_id ) {
@@ -35,6 +37,9 @@ $ipn_page_url = function ( $page_number ) use ( $filter_branch_id, $search ) {
 	}
 	if ( '' !== $search ) {
 		$args['s'] = $search;
+	}
+	if ( $show_all ) {
+		$args['show'] = 'all';
 	}
 	if ( $page_number > 1 ) {
 		$args['paged'] = $page_number;
@@ -44,6 +49,9 @@ $ipn_page_url = function ( $page_number ) use ( $filter_branch_id, $search ) {
 };
 
 $ipn_columns = $filter_branch_id ? 5 : 6;
+if ( $show_all ) {
+	$ipn_columns++;
+}
 ?>
 <div class="wrap ipn-admin">
 	<?php if ( $adjust_result instanceof WP_Error ) : ?>
@@ -54,7 +62,9 @@ $ipn_columns = $filter_branch_id ? 5 : 6;
 
 	<div class="section-head">
 		<div class="section-title">
-			<?php if ( $ipn_filter_branch ) : ?>
+			<?php if ( $show_all ) : ?>
+				<?php esc_html_e( 'This vendor\'s full catalogue', 'ipn' ); ?>
+			<?php elseif ( $ipn_filter_branch ) : ?>
 				<?php
 				printf(
 					/* translators: %s: branch name */
@@ -81,23 +91,40 @@ $ipn_columns = $filter_branch_id ? 5 : 6;
 		<?php endif; ?>
 	</div>
 
+	<?php if ( $can_show_all ) : ?>
+		<p class="hint" style="margin:-8px 0 14px;">
+			<?php if ( $show_all ) : ?>
+				<?php esc_html_e( 'Showing every product this vendor owns in WooCommerce, including ones never added to Click & Collect.', 'ipn' ); ?>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ipn-stock' ) ); ?>"><?php esc_html_e( 'Show only Click & Collect products', 'ipn' ); ?></a>
+			<?php else : ?>
+				<?php esc_html_e( 'Only showing products already added to Click & Collect at some branch.', 'ipn' ); ?>
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=ipn-stock&show=all' ) ); ?>"><?php esc_html_e( 'Show this vendor\'s whole catalogue', 'ipn' ); ?></a>
+			<?php endif; ?>
+		</p>
+	<?php endif; ?>
+
 	<?php if ( empty( $branches ) ) : ?>
 		<div class="empty-state"><?php esc_html_e( 'Add a branch first, then import or set stock per product.', 'ipn' ); ?></div>
 	<?php else : ?>
 		<form method="get" class="toolbar">
 			<input type="hidden" name="page" value="ipn-stock" />
+			<?php if ( $show_all ) : ?>
+				<input type="hidden" name="show" value="all" />
+			<?php endif; ?>
 			<input type="text" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Search products…', 'ipn' ); ?>" />
-			<select name="branch_id" onchange="this.form.submit();">
-				<option value="0"><?php esc_html_e( 'All branches', 'ipn' ); ?></option>
-				<?php foreach ( $branches as $ipn_branch_option ) : ?>
-					<option value="<?php echo esc_attr( $ipn_branch_option->id ); ?>" <?php selected( (int) $filter_branch_id, (int) $ipn_branch_option->id ); ?>>
-						<?php echo esc_html( $ipn_branch_option->name ); ?>
-					</option>
-				<?php endforeach; ?>
-			</select>
+			<?php if ( ! $show_all ) : ?>
+				<select name="branch_id" onchange="this.form.submit();">
+					<option value="0"><?php esc_html_e( 'All branches', 'ipn' ); ?></option>
+					<?php foreach ( $branches as $ipn_branch_option ) : ?>
+						<option value="<?php echo esc_attr( $ipn_branch_option->id ); ?>" <?php selected( (int) $filter_branch_id, (int) $ipn_branch_option->id ); ?>>
+							<?php echo esc_html( $ipn_branch_option->name ); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			<?php endif; ?>
 			<button type="submit" class="btn btn-secondary"><?php esc_html_e( 'Search', 'ipn' ); ?></button>
 			<?php if ( '' !== $search || $filter_branch_id ) : ?>
-				<a class="btn btn-ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=ipn-stock' ) ); ?>"><?php esc_html_e( 'Reset', 'ipn' ); ?></a>
+				<a class="btn btn-ghost" href="<?php echo esc_url( admin_url( 'admin.php?page=ipn-stock' . ( $show_all ? '&show=all' : '' ) ) ); ?>"><?php esc_html_e( 'Reset', 'ipn' ); ?></a>
 			<?php endif; ?>
 		</form>
 
@@ -106,6 +133,9 @@ $ipn_columns = $filter_branch_id ? 5 : 6;
 				<thead>
 					<tr>
 						<th><?php esc_html_e( 'Product', 'ipn' ); ?></th>
+						<?php if ( $show_all ) : ?>
+							<th><?php esc_html_e( 'Status', 'ipn' ); ?></th>
+						<?php endif; ?>
 						<?php if ( ! $filter_branch_id ) : ?>
 							<th><?php esc_html_e( 'Branches', 'ipn' ); ?></th>
 						<?php endif; ?>
@@ -165,6 +195,15 @@ $ipn_columns = $filter_branch_id ? 5 : 6;
 										<?php endif; ?>
 									</div>
 								</td>
+								<?php if ( $show_all ) : ?>
+									<td>
+										<?php if ( $ipn_product->in_click_collect ) : ?>
+											<span class="chip chip-active"><?php esc_html_e( 'In Click & Collect', 'ipn' ); ?></span>
+										<?php else : ?>
+											<span class="chip chip-inactive"><?php esc_html_e( 'Not added', 'ipn' ); ?></span>
+										<?php endif; ?>
+									</td>
+								<?php endif; ?>
 								<?php if ( ! $filter_branch_id ) : ?>
 									<td>
 										<?php

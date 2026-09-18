@@ -312,6 +312,103 @@ class IPN_Branch_Stock {
 	}
 
 	/**
+	 * Every product a vendor owns in WooCommerce, whether or not it has ever
+	 * been added to Click & Collect (issue #54) — query_products() above only
+	 * ever surfaces products with an existing branch_stock row, so an admin
+	 * had no way to see a vendor's full catalogue or tell "not stocked
+	 * anywhere" apart from "doesn't exist". LEFT JOIN rather than
+	 * query_products()'s INNER JOIN, so a product with zero stock rows still
+	 * comes back with in_click_collect = false.
+	 *
+	 * @param array $args {
+	 *     @type int    $vendor_id Required — the vendor whose catalogue to list.
+	 *     @type string $search    Product-title substring.
+	 *     @type int    $per_page
+	 *     @type int    $page      1-based.
+	 * }
+	 * @return object[] product_id, product_name, total_stock, reserved_stock, branch_count, in_click_collect.
+	 */
+	public static function query_all_vendor_products( array $args = array() ) {
+		global $wpdb;
+
+		$args = wp_parse_args( $args, array(
+			'vendor_id' => 0,
+			'search'    => '',
+			'per_page'  => 25,
+			'page'      => 1,
+		) );
+
+		if ( ! $args['vendor_id'] ) {
+			return array();
+		}
+
+		$per_page = max( 1, (int) $args['per_page'] );
+		$offset   = max( 0, ( max( 1, (int) $args['page'] ) - 1 ) * $per_page );
+
+		$table  = self::table();
+		$where  = array( "p.post_type = 'product'", 'p.post_status = %s', 'p.post_author = %d' );
+		$params = array( 'publish', (int) $args['vendor_id'] );
+
+		if ( ! empty( $args['search'] ) ) {
+			$where[]  = 'p.post_title LIKE %s';
+			$params[] = '%' . $wpdb->esc_like( $args['search'] ) . '%';
+		}
+
+		$where_sql = implode( ' AND ', $where );
+
+		$sql = "SELECT p.ID AS product_id,
+					p.post_title AS product_name,
+					COALESCE(SUM(s.total_stock), 0) AS total_stock,
+					COALESCE(SUM(s.reserved_stock), 0) AS reserved_stock,
+					COUNT(DISTINCT s.branch_id) AS branch_count
+				FROM {$wpdb->posts} p
+				LEFT JOIN {$table} s ON s.product_id = p.ID
+				WHERE {$where_sql}
+				GROUP BY p.ID, p.post_title
+				ORDER BY p.post_title ASC
+				LIMIT %d OFFSET %d";
+
+		$params[] = $per_page;
+		$params[] = $offset;
+
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+
+		foreach ( $rows as $row ) {
+			$row->in_click_collect = $row->branch_count > 0;
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * Total count behind query_all_vendor_products(), for its pager.
+	 */
+	public static function count_all_vendor_products( array $args = array() ) {
+		global $wpdb;
+
+		$args = wp_parse_args( $args, array(
+			'vendor_id' => 0,
+			'search'    => '',
+		) );
+
+		if ( ! $args['vendor_id'] ) {
+			return 0;
+		}
+
+		$where  = array( "post_type = 'product'", 'post_status = %s', 'post_author = %d' );
+		$params = array( 'publish', (int) $args['vendor_id'] );
+
+		if ( ! empty( $args['search'] ) ) {
+			$where[]  = 'post_title LIKE %s';
+			$params[] = '%' . $wpdb->esc_like( $args['search'] ) . '%';
+		}
+
+		$sql = "SELECT COUNT(*) FROM {$wpdb->posts} WHERE " . implode( ' AND ', $where );
+
+		return (int) $wpdb->get_var( $wpdb->prepare( $sql, $params ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
+	/**
 	 * Per-branch breakdown for a specific set of products — one query for
 	 * the whole page of products rather than one per row, so expanding a
 	 * product's branch detail costs nothing extra at render time.
