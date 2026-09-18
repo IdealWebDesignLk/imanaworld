@@ -237,6 +237,27 @@
 }
 .ipn-vd__actions { flex-wrap: wrap; gap: 6px; }
 
+/* Confirmed live (issue #56): on a phone-width screen, forcing every header
+   to stay on one line ("SET TOTAL" etc.) pushed the table wider than it
+   needed to be, leaving the Save/Remove actions scrolled off the right
+   edge with no visible cue that there was more to scroll to. The wrapper
+   already scrolls (.ipn-vd__table-wrap, overflow-x: auto) — this just
+   shrinks the table enough that scrolling is the exception, not the norm,
+   and adds a fading edge so it's obvious when it's still needed. */
+@media (max-width: 600px) {
+	.ipn-vd__table { font-size: 12.5px; }
+	.ipn-vd__table th { white-space: normal; padding: 7px 8px; }
+	.ipn-vd__table td { padding: 7px 8px; }
+	.ipn-vd__qty { width: 56px; padding: 5px 6px; }
+	.ipn-vd__table-wrap {
+		position: relative;
+		background-image: linear-gradient( to left, var( --ipn-vd-surface ) 0%, transparent 24px );
+		background-repeat: no-repeat;
+		background-position: 100% 0;
+		background-size: 24px 100%;
+	}
+}
+
 /* ---------- hours editor ---------- */
 .ipn-vd__hours { border: 1px solid var( --ipn-vd-line ); border-radius: var( --ipn-vd-radius ); overflow: hidden; }
 .ipn-vd__hours-row {
