@@ -30,6 +30,7 @@ defined( 'ABSPATH' ) || exit;
 			<thead>
 				<tr>
 					<th><?php esc_html_e( 'Staff member', 'ipn' ); ?></th>
+					<th><?php esc_html_e( 'Employee #', 'ipn' ); ?></th>
 					<th><?php esc_html_e( 'Branch', 'ipn' ); ?></th>
 					<th></th>
 				</tr>
@@ -41,6 +42,7 @@ defined( 'ABSPATH' ) || exit;
 							<b><?php echo esc_html( $ipn_person->display_name ); ?></b>
 							<div class="ipn-vd__muted"><?php echo esc_html( $ipn_person->email ); ?></div>
 						</td>
+						<td><?php echo esc_html( $ipn_person->employee_number ? $ipn_person->employee_number : '—' ); ?></td>
 						<td>
 							<form method="post" class="ipn-vd__inline-form">
 								<?php wp_nonce_field( 'ipn_vendor_save_staff' ); ?>
@@ -107,6 +109,10 @@ defined( 'ABSPATH' ) || exit;
 		<label class="ipn-vd__field">
 			<span><?php esc_html_e( 'Email address', 'ipn' ); ?></span>
 			<input type="email" name="email" required="required" />
+		</label>
+		<label class="ipn-vd__field">
+			<span><?php esc_html_e( 'Employee number (optional)', 'ipn' ); ?></span>
+			<input type="text" name="employee_number" />
 		</label>
 		<label class="ipn-vd__field">
 			<span><?php esc_html_e( 'Branch', 'ipn' ); ?></span>

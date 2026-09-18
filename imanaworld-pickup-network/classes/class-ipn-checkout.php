@@ -14,6 +14,7 @@ class IPN_Checkout {
 		$loader->add_action( 'woocommerce_checkout_process', $this, 'validate_collection_fields' );
 		$loader->add_action( 'woocommerce_checkout_update_order_meta', $this, 'save_collection_fields' );
 		$loader->add_action( 'woocommerce_cart_calculate_fees', $this, 'add_express_surcharge' );
+		$loader->add_filter( 'woocommerce_package_rates', $this, 'force_local_pickup_rate', 10, 2 );
 	}
 
 	/**
@@ -221,6 +222,36 @@ class IPN_Checkout {
 		}
 
 		$cart->add_fee( __( 'Express Collection', 'ipn' ), (float) $branch->express_surcharge, false );
+	}
+
+	/**
+	 * Replaces whatever shipping rates a package would otherwise get (a
+	 * vendor's own Dokan shipping zone, a WooCommerce zone, etc.) with a
+	 * single free "collect in person" rate whenever the customer has an IPN
+	 * branch selected for this order — confirmed live (issues #57/#58): IPN
+	 * has never had any shipping code of its own, so Click & Collect orders
+	 * were being charged a normal vendor shipping rate ($10 in testing) with
+	 * no relation to actually shipping anything.
+	 *
+	 * A rate with method_id 'local_pickup' also makes WooCommerce's own
+	 * WC_Cart::needs_shipping_address() return false once it's the only rate
+	 * on every package, which is what hides the shipping-address fields on
+	 * checkout — no separate field-hiding code needed for #57.
+	 */
+	public function force_local_pickup_rate( $rates, $package ) {
+		if ( ! $this->get_selected_branch_id() ) {
+			return $rates;
+		}
+
+		return array(
+			'ipn_local_pickup' => new WC_Shipping_Rate(
+				'ipn_local_pickup',
+				__( 'Collect in person', 'ipn' ),
+				0,
+				array(),
+				'local_pickup'
+			),
+		);
 	}
 
 	protected function nonce_ok() {

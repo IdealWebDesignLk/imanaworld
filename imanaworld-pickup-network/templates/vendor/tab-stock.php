@@ -36,9 +36,13 @@ $ipn_pages = (int) ceil( $stock_total / 20 );
 	<button type="submit" class="ipn-vd__btn"><?php esc_html_e( 'Search', 'ipn' ); ?></button>
 </form>
 
+<p class="ipn-vd__hint">
+	<?php esc_html_e( 'This is where you put products into Click & Collect: search for one of your existing products below and add it to a branch with a stock count. Products never added to any branch here stay normal WooCommerce products, unaffected by Click & Collect.', 'ipn' ); ?>
+</p>
+
 <?php if ( '' !== $stock_search && ! empty( $addable ) ) : ?>
 	<div class="ipn-vd__panel">
-		<h4 class="ipn-vd__form-sub"><?php esc_html_e( 'Add a product to this branch', 'ipn' ); ?></h4>
+		<h4 class="ipn-vd__form-sub"><?php esc_html_e( 'Add a product to Click & Collect at this branch', 'ipn' ); ?></h4>
 		<div class="ipn-vd__table-wrap">
 			<table class="ipn-vd__table">
 				<tbody>
@@ -72,7 +76,7 @@ $ipn_pages = (int) ceil( $stock_total / 20 );
 		<?php if ( '' !== $stock_search ) : ?>
 			<p><?php esc_html_e( 'No products stocked at this branch match that search.', 'ipn' ); ?></p>
 		<?php else : ?>
-			<p><?php esc_html_e( 'This branch has no stock yet. Search for one of your products above to add it.', 'ipn' ); ?></p>
+			<p><?php esc_html_e( 'This branch has no products in Click & Collect yet. Search for one of your products above to add it.', 'ipn' ); ?></p>
 		<?php endif; ?>
 	</div>
 <?php else : ?>

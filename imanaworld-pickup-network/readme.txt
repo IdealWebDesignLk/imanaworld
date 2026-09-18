@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.34
+Stable tag: 0.9.35
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,21 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.35 =
+* Vendor dashboard: added an optional "Employee number" field to staff
+  registration, saved and shown alongside each staff member on the Staff
+  tab. (#53)
+* Vendor dashboard: clarified that adding a product on the Stock tab is
+  what puts it into Click & Collect — the mechanism already existed but
+  wasn't labelled as such. Renamed the panel and empty-state copy, added an
+  explanatory hint. (#55)
+* Click & Collect orders no longer get a shipping cost or shipping-address
+  fields — confirmed live that IPN has never had any shipping code, so
+  these orders were picking up a normal vendor/WooCommerce shipping rate
+  ($10 in testing) with no relation to shipping anything. Now forces a free
+  "Collect in person" rate whenever a branch is selected, which also makes
+  WooCommerce hide the shipping-address fields on its own. (#57, #58)
 
 = 0.9.34 =
 * Removed the "Choppies" pilot-partner reference from every email — the

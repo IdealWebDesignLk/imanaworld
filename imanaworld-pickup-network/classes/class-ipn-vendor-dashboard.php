@@ -217,11 +217,12 @@ class IPN_Vendor_Dashboard {
 			$branch    = $branch_id ? IPN_Branch::get( $branch_id ) : null;
 
 			$rows[] = (object) array(
-				'user_id'      => (int) $user->ID,
-				'display_name' => $user->display_name,
-				'email'        => $user->user_email,
-				'branch_id'    => $branch_id,
-				'branch_name'  => $branch ? $branch->name : '',
+				'user_id'         => (int) $user->ID,
+				'display_name'    => $user->display_name,
+				'email'           => $user->user_email,
+				'branch_id'       => $branch_id,
+				'branch_name'     => $branch ? $branch->name : '',
+				'employee_number' => get_user_meta( $user->ID, '_ipn_employee_number', true ),
 			);
 		}
 
@@ -486,8 +487,9 @@ class IPN_Vendor_Dashboard {
 			return __( 'Staff member updated.', 'ipn' );
 		}
 
-		$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
-		$name  = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$email           = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+		$name            = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$employee_number = isset( $_POST['employee_number'] ) ? sanitize_text_field( wp_unslash( $_POST['employee_number'] ) ) : '';
 
 		if ( '' === $name || ! is_email( $email ) ) {
 			return new WP_Error( 'ipn_staff_invalid', __( 'A name and a valid email address are both required.', 'ipn' ) );
@@ -528,6 +530,10 @@ class IPN_Vendor_Dashboard {
 		}
 
 		IPN_Roles::set_branch_id( $new_id, $branch->id );
+
+		if ( '' !== $employee_number ) {
+			update_user_meta( $new_id, '_ipn_employee_number', $employee_number );
+		}
 
 		// Deliberately records that an account was made, never the password.
 		IPN_Audit_Log::log( 'staff_created', array(
