@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.36
+Stable tag: 0.9.37
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,14 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.37 =
+* Fix: the 0.9.36 "show this vendor's whole catalogue" toggle didn't work
+  for a vendor with no branches yet — confirmed live (Bagwai Investment):
+  it fell straight through to the pre-existing "add a branch first" empty
+  state instead of listing the vendor's products, exactly the situation
+  where seeing the catalogue first is most useful. The catalogue view no
+  longer requires branches to exist.
 
 = 0.9.36 =
 * Admin Stock screen: with one partner selected, added a "Show this

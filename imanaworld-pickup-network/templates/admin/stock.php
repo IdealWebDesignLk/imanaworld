@@ -103,8 +103,13 @@ if ( $show_all ) {
 		</p>
 	<?php endif; ?>
 
-	<?php if ( empty( $branches ) ) : ?>
-		<div class="empty-state"><?php esc_html_e( 'Add a branch first, then import or set stock per product.', 'ipn' ); ?></div>
+	<?php if ( empty( $branches ) && ! $show_all ) : ?>
+		<div class="empty-state">
+			<?php esc_html_e( 'Add a branch first, then import or set stock per product.', 'ipn' ); ?>
+			<?php if ( $can_show_all ) : ?>
+				<br /><a href="<?php echo esc_url( admin_url( 'admin.php?page=ipn-stock&show=all' ) ); ?>"><?php esc_html_e( "See this vendor's products in the meantime", 'ipn' ); ?></a>
+			<?php endif; ?>
+		</div>
 	<?php else : ?>
 		<form method="get" class="toolbar">
 			<input type="hidden" name="page" value="ipn-stock" />
