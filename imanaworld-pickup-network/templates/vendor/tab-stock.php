@@ -36,47 +36,65 @@ $ipn_pages = (int) ceil( $stock_total / 20 );
 	<button type="submit" class="ipn-vd__btn"><?php esc_html_e( 'Search', 'ipn' ); ?></button>
 </form>
 
-<p class="ipn-vd__hint">
-	<?php esc_html_e( 'This is where you put products into Click & Collect: search for one of your existing products below and add it to a branch with a stock count. Products never added to any branch here stay normal WooCommerce products, unaffected by Click & Collect.', 'ipn' ); ?>
-</p>
+<?php
+// Issue #55: the picker used to appear only after a search term was typed,
+// so vendors never saw where products are added to Click & Collect. It is
+// now always on the page: every product of theirs not yet at this branch,
+// tick the ones wanted and add them together.
+$ipn_to_add = array_values( array_filter( $addable, function ( $p ) {
+	return ! $p->stocked;
+} ) );
+?>
+<div class="ipn-vd__panel" id="ipn-add-products">
+	<h4 class="ipn-vd__form-sub"><?php esc_html_e( 'Add products to Click & Collect at this branch', 'ipn' ); ?></h4>
+	<p class="ipn-vd__hint">
+		<?php esc_html_e( 'Tick the products you want customers to be able to collect from this branch, set a starting stock count, then press Add selected. Products never added here stay normal WooCommerce products, unaffected by Click & Collect.', 'ipn' ); ?>
+	</p>
 
-<?php if ( '' !== $stock_search && ! empty( $addable ) ) : ?>
-	<div class="ipn-vd__panel">
-		<h4 class="ipn-vd__form-sub"><?php esc_html_e( 'Add a product to Click & Collect at this branch', 'ipn' ); ?></h4>
-		<div class="ipn-vd__table-wrap">
-			<table class="ipn-vd__table">
-				<tbody>
-					<?php foreach ( $addable as $ipn_p ) : ?>
+	<?php if ( empty( $ipn_to_add ) ) : ?>
+		<p class="ipn-vd__muted">
+			<?php echo '' !== $stock_search ? esc_html__( 'None of your other products match that search — they are either already at this branch or do not exist.', 'ipn' ) : esc_html__( 'Every product in your store is already at this branch, or you have not created any products yet.', 'ipn' ); ?>
+		</p>
+	<?php else : ?>
+		<form method="post">
+			<?php wp_nonce_field( 'ipn_vendor_save_stock_bulk' ); ?>
+			<input type="hidden" name="ipn_vendor_action" value="save_stock_bulk" />
+			<input type="hidden" name="branch_id" value="<?php echo esc_attr( $stock_branch_id ); ?>" />
+			<div class="ipn-vd__table-wrap">
+				<table class="ipn-vd__table">
+					<thead>
 						<tr>
-							<td><?php echo esc_html( $ipn_p->name ); ?></td>
-							<td>
-								<?php if ( $ipn_p->stocked ) : ?>
-									<span class="ipn-vd__muted"><?php esc_html_e( 'Already stocked here', 'ipn' ); ?></span>
-								<?php else : ?>
-									<form method="post" class="ipn-vd__inline-form">
-										<?php wp_nonce_field( 'ipn_vendor_save_stock' ); ?>
-										<input type="hidden" name="ipn_vendor_action" value="save_stock" />
-										<input type="hidden" name="branch_id" value="<?php echo esc_attr( $stock_branch_id ); ?>" />
-										<input type="hidden" name="product_id" value="<?php echo esc_attr( $ipn_p->product_id ); ?>" />
-										<input type="number" name="total_stock" min="0" value="0" class="ipn-vd__qty" />
-										<button type="submit" class="ipn-vd__btn ipn-vd__btn--primary"><?php esc_html_e( 'Add', 'ipn' ); ?></button>
-									</form>
-								<?php endif; ?>
-							</td>
+							<th style="width:32px;"><input type="checkbox" onclick="var b=this.closest('table').querySelectorAll('tbody input[type=checkbox]');for(var i=0;i<b.length;i++){b[i].checked=this.checked;}" aria-label="<?php esc_attr_e( 'Select all', 'ipn' ); ?>" /></th>
+							<th><?php esc_html_e( 'Product', 'ipn' ); ?></th>
 						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
-		</div>
-	</div>
-<?php endif; ?>
+					</thead>
+					<tbody>
+						<?php foreach ( $ipn_to_add as $ipn_p ) : ?>
+							<tr>
+								<td><input type="checkbox" name="product_ids[]" value="<?php echo esc_attr( $ipn_p->product_id ); ?>" /></td>
+								<td><?php echo esc_html( $ipn_p->name ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+			<div class="ipn-vd__form-foot" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+				<label class="ipn-vd__field ipn-vd__field--inline">
+					<span><?php esc_html_e( 'Starting stock for each', 'ipn' ); ?></span>
+					<input type="number" name="total_stock" min="0" value="0" class="ipn-vd__qty" />
+				</label>
+				<button type="submit" class="ipn-vd__btn ipn-vd__btn--primary"><?php esc_html_e( 'Add selected', 'ipn' ); ?></button>
+			</div>
+		</form>
+	<?php endif; ?>
+</div>
 
 <?php if ( empty( $stock_products ) ) : ?>
 	<div class="ipn-vd__empty">
 		<?php if ( '' !== $stock_search ) : ?>
 			<p><?php esc_html_e( 'No products stocked at this branch match that search.', 'ipn' ); ?></p>
 		<?php else : ?>
-			<p><?php esc_html_e( 'This branch has no products in Click & Collect yet. Search for one of your products above to add it.', 'ipn' ); ?></p>
+			<p><?php esc_html_e( 'This branch has no products in Click & Collect yet. Tick some in the panel above and press Add selected.', 'ipn' ); ?></p>
 		<?php endif; ?>
 	</div>
 <?php else : ?>

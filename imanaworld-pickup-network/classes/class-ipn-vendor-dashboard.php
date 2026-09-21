@@ -151,7 +151,10 @@ class IPN_Vendor_Dashboard {
 					'stock_total'     => $branch_id ? IPN_Branch_Stock::count_products( $query_args ) : 0,
 					'stock_search'    => $search,
 					'stock_page'      => $page,
-					'addable'         => ( $branch_id && '' !== $search ) ? $this->searchable_products( $vendor_id, $search, $branch_id ) : array(),
+					// Always offered (not only after a search) — issue #55: with the
+						// picker hidden until a term was typed, vendors could not see
+						// that this is where products are added to Click & Collect.
+						'addable'         => $branch_id ? $this->searchable_products( $vendor_id, $search, $branch_id ) : array(),
 				);
 
 			case 'orders':
@@ -240,7 +243,7 @@ class IPN_Vendor_Dashboard {
 			'post_status'    => array( 'publish', 'draft', 'private' ),
 			'author'         => (int) $vendor_id,
 			's'              => $search,
-			'posts_per_page' => 20,
+			'posts_per_page' => 200,
 			'orderby'        => 'title',
 			'order'          => 'ASC',
 		) );
@@ -367,6 +370,9 @@ class IPN_Vendor_Dashboard {
 				break;
 			case 'save_stock':
 				$this->result = $this->handle_save_stock();
+				break;
+			case 'save_stock_bulk':
+				$this->result = $this->handle_save_stock_bulk();
 				break;
 			case 'delete_stock':
 				$this->result = $this->handle_delete_stock();
@@ -709,6 +715,52 @@ class IPN_Vendor_Dashboard {
 		) );
 
 		return __( 'Stock updated.', 'ipn' );
+	}
+
+	/**
+	 * Adds several of this vendor's products to one branch in one go (issue
+	 * #55) — each starts at the same opening stock count, adjustable per row
+	 * afterwards. Products already at the branch are left as they are.
+	 *
+	 * @return string|WP_Error
+	 */
+	protected function handle_save_stock_bulk() {
+		$branch = IPN_Access::require_branch( isset( $_POST['branch_id'] ) ? absint( $_POST['branch_id'] ) : 0 );
+
+		if ( is_wp_error( $branch ) ) {
+			return $branch;
+		}
+
+		$ids   = isset( $_POST['product_ids'] ) ? array_filter( array_map( 'absint', (array) wp_unslash( $_POST['product_ids'] ) ) ) : array();
+		$total = isset( $_POST['total_stock'] ) && '' !== $_POST['total_stock'] ? absint( $_POST['total_stock'] ) : null;
+
+		if ( ! $ids || null === $total ) {
+			return new WP_Error( 'ipn_stock_invalid', __( 'Tick at least one product and enter a starting stock quantity.', 'ipn' ) );
+		}
+
+		$vendor_id = IPN_Access::current_vendor_id();
+		$added     = 0;
+
+		foreach ( array_unique( $ids ) as $product_id ) {
+			if ( (int) get_post_field( 'post_author', $product_id ) !== $vendor_id || IPN_Branch_Stock::get_row( $product_id, $branch->id ) ) {
+				continue;
+			}
+
+			IPN_Branch_Stock::set_total( $product_id, $branch->id, $total );
+
+			IPN_Audit_Log::log( 'stock_adjusted', array(
+				'branch_id' => $branch->id,
+				'data'      => array( 'product_id' => $product_id, 'new_total' => $total ),
+			) );
+
+			$added++;
+		}
+
+		return sprintf(
+			/* translators: %d: number of products added to Click & Collect */
+			_n( '%d product added to Click & Collect.', '%d products added to Click & Collect.', $added, 'ipn' ),
+			$added
+		);
 	}
 
 	/**

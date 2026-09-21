@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.41
+Stable tag: 0.9.42
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,16 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.42 =
+* Fix (#55): vendors couldn't find where to add products to Click &
+  Collect — the add-product picker on the Branch stock tab only appeared
+  after typing a search term, so on a fresh page there was no visible
+  option at all (0.9.35 only reworded the hint text, which didn't help).
+  The tab now always shows an "Add products to Click & Collect at this
+  branch" panel listing every product of theirs not yet at the branch,
+  with tick boxes, a select-all box, a starting stock count and an "Add
+  selected" button to add several at once. Search still narrows the list.
 
 = 0.9.41 =
 * Settings: added a "Danger zone — reset all IPN data" tool (admin only,
