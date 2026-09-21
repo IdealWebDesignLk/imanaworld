@@ -104,7 +104,7 @@ defined( 'ABSPATH' ) || exit;
 	<div class="ipn-vd__grid">
 		<label class="ipn-vd__field">
 			<span><?php esc_html_e( 'Full name', 'ipn' ); ?></span>
-			<input type="text" name="name" required="required" />
+			<input type="text" name="staff_name" required="required" />
 		</label>
 		<label class="ipn-vd__field">
 			<span><?php esc_html_e( 'Email address', 'ipn' ); ?></span>

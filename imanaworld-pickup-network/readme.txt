@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.43
+Stable tag: 0.9.44
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,15 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.44 =
+* Fix: saving a staff member (or a branch) from the vendor dashboard
+  ended on a "Page not found" screen. The forms had a field called
+  "name", which is a reserved WordPress query variable (the post slug),
+  so WordPress went looking for a page named after the person or branch
+  and returned a 404 even though the save itself had run. The fields are
+  now "staff_name" and "branch_name", so the dashboard reloads normally
+  and shows the confirmation message.
 
 = 0.9.43 =
 * Fix: number columns (Total / Reserved / Available, Total on orders,

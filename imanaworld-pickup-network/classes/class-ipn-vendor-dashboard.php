@@ -405,8 +405,10 @@ class IPN_Vendor_Dashboard {
 			}
 		}
 
-		$name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
-		$code = isset( $_POST['code'] ) ? sanitize_text_field( wp_unslash( $_POST['code'] ) ) : '';
+		// Not "name": a POSTed `name` is a WordPress public query var and turns
+		// the response into a 404 (see handle_save_staff).
+		$name = isset( $_POST['branch_name'] ) ? sanitize_text_field( wp_unslash( $_POST['branch_name'] ) ) : '';
+		$code =isset( $_POST['code'] ) ? sanitize_text_field( wp_unslash( $_POST['code'] ) ) : '';
 
 		if ( '' === $name || '' === $code ) {
 			return new WP_Error( 'ipn_branch_invalid', __( 'Branch name and branch code are both required.', 'ipn' ) );
@@ -494,7 +496,9 @@ class IPN_Vendor_Dashboard {
 		}
 
 		$email           = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
-		$name            = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		// Not "name": that is a WordPress public query var, so a POSTed `name`
+		// makes WP look up a post by that slug and the response is a 404.
+		$name            = isset( $_POST['staff_name'] ) ? sanitize_text_field( wp_unslash( $_POST['staff_name'] ) ) : '';
 		$employee_number = isset( $_POST['employee_number'] ) ? sanitize_text_field( wp_unslash( $_POST['employee_number'] ) ) : '';
 
 		if ( '' === $name || ! is_email( $email ) ) {

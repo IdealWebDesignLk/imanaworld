@@ -135,7 +135,7 @@ $ipn_val = function ( $field, $default = '' ) use ( $ipn_editing ) {
 		<div class="ipn-vd__grid">
 			<label class="ipn-vd__field">
 				<span><?php esc_html_e( 'Branch name', 'ipn' ); ?></span>
-				<input type="text" name="name" required="required" value="<?php echo esc_attr( $ipn_val( 'name' ) ); ?>" />
+				<input type="text" name="branch_name" required="required" value="<?php echo esc_attr( $ipn_val( 'name' ) ); ?>" />
 			</label>
 			<label class="ipn-vd__field">
 				<span><?php esc_html_e( 'Branch code', 'ipn' ); ?></span>
