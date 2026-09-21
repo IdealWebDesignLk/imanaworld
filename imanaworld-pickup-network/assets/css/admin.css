@@ -216,6 +216,7 @@
 .ipn-admin table.data tr:last-child td { border-bottom: none; }
 .ipn-admin table.data tr:hover td { background: var(--surface-sunken); }
 .ipn-admin .num { font-variant-numeric: tabular-nums; text-align: right; }
+.ipn-admin table.data th.num, .ipn-admin table.data td.num { text-align: right; }
 
 /* ---------- status counters (Orders & Disputes) ---------- */
 .ipn-admin .status-counters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }

@@ -119,6 +119,7 @@
 .ipn-vd__table td { padding: 10px 12px; border-bottom: 1px solid var( --ipn-vd-line ); vertical-align: middle; }
 .ipn-vd__table tr:last-child td { border-bottom: none; }
 .ipn-vd__num { text-align: right; font-variant-numeric: tabular-nums; }
+.ipn-vd__table th.ipn-vd__num, .ipn-vd__table td.ipn-vd__num { text-align: right; }
 .ipn-vd__actions { white-space: nowrap; display: flex; gap: 6px; align-items: center; }
 .ipn-vd__actions form { margin: 0; }
 
