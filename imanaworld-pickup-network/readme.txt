@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.51
+Stable tag: 0.9.52
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,19 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.52 =
+* Products that are not assigned to any branch now follow the normal WooCommerce
+  purchase flow. Until now, once a branch was selected every order was forced
+  to a free "Collect in person" rate (hiding the shipping address) and asked
+  for a collection type and recipient, even when the cart held only ordinary
+  products. An ordinary cart now gets WooCommerce's own shipping zones and
+  rates, the shipping address fields and tax, no Click & Collect fields or
+  express surcharge, no branch prompt, and no IPN order record (so no stock
+  reservation, OTP or branch queue). Carts with a branch (Click & Collect)
+  product are unchanged. Shipping is decided per package, and the checks all
+  read one shared rule: the cart is Click & Collect if it holds a product some
+  branch stocks.
 
 = 0.9.51 =
 * A cart can no longer mix Click & Collect (branch) products with products that

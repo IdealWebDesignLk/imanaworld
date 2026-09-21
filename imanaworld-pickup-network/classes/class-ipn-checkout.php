@@ -24,6 +24,12 @@ class IPN_Checkout {
 	 * class, since only the session constant is needed here.
 	 */
 	public function render_collection_fields( $checkout ) {
+		// Ordinary (non-branch) products keep WooCommerce's normal checkout —
+		// no branch picker, collection type or recipient fields.
+		if ( ! self::cart_is_click_collect() ) {
+			return;
+		}
+
 		$branch_id = 0;
 
 		if ( function_exists( 'WC' ) && WC()->session ) {
@@ -80,6 +86,10 @@ class IPN_Checkout {
 	 * before payment, so this is the last checkpoint before money moves.
 	 */
 	public function validate_collection_fields() {
+		if ( ! self::cart_is_click_collect() ) {
+			return;
+		}
+
 		if ( ! $this->nonce_ok() ) {
 			return;
 		}
@@ -177,6 +187,13 @@ class IPN_Checkout {
 	 * into ipn_order_meta.
 	 */
 	public function save_collection_fields( $order_id ) {
+		// No IPN record for an ordinary order: without one the order simply is
+		// not an IPN order (no stock reservation, OTP or branch queue), which is
+		// what IPN_Order's status hooks already rely on.
+		if ( ! self::cart_is_click_collect() ) {
+			return;
+		}
+
 		if ( ! $this->nonce_ok() ) {
 			return;
 		}
@@ -205,6 +222,10 @@ class IPN_Checkout {
 	 * when the customer switches the Standard/Express radio.
 	 */
 	public function add_express_surcharge( $cart ) {
+		if ( ! self::cart_is_click_collect() ) {
+			return;
+		}
+
 		if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
 			return;
 		}
@@ -243,6 +264,14 @@ class IPN_Checkout {
 			return $rates;
 		}
 
+		// Only a package made of Click & Collect products is collected in
+		// person. An ordinary product follows WooCommerce's normal flow —
+		// the store's own shipping zones and rates, the shipping address
+		// fields and tax — even while a branch happens to be selected.
+		if ( ! self::package_is_click_collect( $package ) ) {
+			return $rates;
+		}
+
 		return array(
 			'ipn_local_pickup' => new WC_Shipping_Rate(
 				'ipn_local_pickup',
@@ -252,6 +281,49 @@ class IPN_Checkout {
 				'local_pickup'
 			),
 		);
+	}
+
+	/**
+	 * Whether the cart is a Click & Collect order: it holds at least one
+	 * product that some branch stocks. IPN_Storefront keeps a cart from mixing
+	 * those with ordinary products, so a cart is one or the other; an ordinary
+	 * cart is not this plugin's business and follows the default WooCommerce
+	 * purchase flow.
+	 */
+	public static function cart_is_click_collect() {
+		if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+			return false;
+		}
+
+		foreach ( WC()->cart->get_cart() as $item ) {
+			$product_id = ! empty( $item['product_id'] ) ? (int) $item['product_id'] : 0;
+
+			if ( $product_id && IPN_Branch_Stock::is_tracked( $product_id ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * The same question for one shipping package (its own line items), so a
+	 * multi-package cart is decided package by package.
+	 */
+	public static function package_is_click_collect( $package ) {
+		if ( empty( $package['contents'] ) || ! is_array( $package['contents'] ) ) {
+			return false;
+		}
+
+		foreach ( $package['contents'] as $item ) {
+			$product_id = ! empty( $item['product_id'] ) ? (int) $item['product_id'] : 0;
+
+			if ( $product_id && IPN_Branch_Stock::is_tracked( $product_id ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	protected function nonce_ok() {
