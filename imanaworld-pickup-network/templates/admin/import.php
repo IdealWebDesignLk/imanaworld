@@ -29,6 +29,14 @@ defined( 'ABSPATH' ) || exit;
 		</div>
 	<?php endif; ?>
 
+	<?php if ( isset( $_GET['ipn_import_deleted'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+		<?php if ( '1' === $_GET['ipn_import_deleted'] ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<div class="notice notice-success"><p><?php esc_html_e( 'Import log entry deleted. Products and stock from that run were not changed.', 'ipn' ); ?></p></div>
+		<?php else : ?>
+			<div class="notice notice-error"><p><?php esc_html_e( 'That import log entry no longer exists.', 'ipn' ); ?></p></div>
+		<?php endif; ?>
+	<?php endif; ?>
+
 	<div class="grid cols-2">
 		<div class="panel">
 			<div class="panel-title"><?php esc_html_e( 'CSV / Excel catalogue import', 'ipn' ); ?></div>
@@ -72,6 +80,12 @@ defined( 'ABSPATH' ) || exit;
 							<?php if ( $run->failed_count > 0 ) : ?>
 								<span class="chip chip-disputed"><?php echo esc_html( $run->failed_count ); ?> <?php esc_html_e( 'failed', 'ipn' ); ?></span>
 							<?php endif; ?>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Delete this import log entry? Products and stock it changed are not affected.', 'ipn' ) ); ?>');">
+								<?php wp_nonce_field( 'ipn_delete_import_run_' . (int) $run->id ); ?>
+								<input type="hidden" name="action" value="ipn_delete_import_run" />
+								<input type="hidden" name="import_id" value="<?php echo esc_attr( (int) $run->id ); ?>" />
+								<button type="submit" class="btn btn-ghost btn-sm"><?php esc_html_e( 'Delete', 'ipn' ); ?></button>
+								</form>
 						</span>
 					</div>
 					<?php if ( ! empty( $run->failed_rows ) ) : ?>

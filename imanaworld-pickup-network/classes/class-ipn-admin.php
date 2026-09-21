@@ -20,6 +20,7 @@ class IPN_Admin {
 		$loader->add_action( 'admin_post_ipn_export_reports', $this, 'export_reports' );
 		$loader->add_action( 'admin_post_ipn_export_audit_log', $this, 'export_audit_log' );
 		$loader->add_action( 'admin_post_ipn_preview_digest_email', $this, 'preview_digest_email' );
+		$loader->add_action( 'admin_post_ipn_delete_import_run', $this, 'delete_import_run' );
 		$loader->add_action( 'add_meta_boxes', $this, 'add_branch_stock_meta_box' );
 		$loader->add_action( 'save_post_product', $this, 'save_branch_stock_meta_box' );
 	}
@@ -666,6 +667,31 @@ class IPN_Admin {
 		) );
 
 		return true;
+	}
+
+	/**
+	 * Deletes one entry from the catalogue import history (the log only —
+	 * never the products or stock the run touched).
+	 */
+	public function delete_import_run() {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_die( esc_html__( 'You do not have permission to do this.', 'ipn' ) );
+		}
+
+		$import_id = isset( $_POST['import_id'] ) ? absint( $_POST['import_id'] ) : 0;
+
+		check_admin_referer( 'ipn_delete_import_run_' . $import_id );
+
+		$deleted = IPN_CSV_Import::delete_run( $import_id );
+
+		wp_safe_redirect( add_query_arg(
+			array(
+				'page'               => 'ipn-import',
+				'ipn_import_deleted' => $deleted ? '1' : '0',
+			),
+			admin_url( 'admin.php' )
+		) );
+		exit;
 	}
 
 	public function render_import() {

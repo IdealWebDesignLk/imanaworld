@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.45
+Stable tag: 0.9.46
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,13 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.46 =
+* New: each entry in Catalogue Import > Import log now has a Delete button
+  (administrators only, with a confirm prompt) so test or mistaken runs can
+  be cleared from the history. It removes only the log record and its
+  per-row results; products and branch stock the run touched are left as
+  they are.
 
 = 0.9.45 =
 * Security: vendors are now strictly limited to their own products.

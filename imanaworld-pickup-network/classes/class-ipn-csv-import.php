@@ -291,6 +291,27 @@ class IPN_CSV_Import {
 		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d", $limit ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 	}
 
+	/**
+	 * Removes one run from the import history, along with its per-row results.
+	 * Only the log is touched — products and branch stock the run created or
+	 * changed are left exactly as they are.
+	 *
+	 * @return bool Whether a run with that ID existed and was removed.
+	 */
+	public static function delete_run( $import_id ) {
+		global $wpdb;
+
+		$import_id = (int) $import_id;
+
+		if ( $import_id < 1 ) {
+			return false;
+		}
+
+		$wpdb->delete( self::log_rows_table(), array( 'import_id' => $import_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+
+		return (bool) $wpdb->delete( self::log_table(), array( 'id' => $import_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+	}
+
 	public static function get_failed_rows( $import_id ) {
 		global $wpdb;
 		$table = self::log_rows_table();
