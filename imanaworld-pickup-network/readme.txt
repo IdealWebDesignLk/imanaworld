@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.40
+Stable tag: 0.9.41
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,14 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.41 =
+* Settings: added a "Danger zone — reset all IPN data" tool (admin only,
+  requires typing RESET). Clears every IPN table (branches, hours,
+  closures, stock, OTP codes, audit log, import history, per-order IPN
+  records), un-flags vendors as IPN partners, removes staff branch links,
+  and strips the IPN fields off WooCommerce orders. Vendor accounts,
+  stores, WooCommerce products and orders themselves are left alone.
 
 = 0.9.40 =
 * Admin Dashboard: added a revenue trend line chart and an order status

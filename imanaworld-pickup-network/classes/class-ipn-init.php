@@ -60,6 +60,9 @@ class IPN_Init {
 		$notifications = new IPN_Notifications();
 		$notifications->register_hooks( $this->loader );
 
+		$data_reset = new IPN_Data_Reset();
+		$data_reset->register_hooks( $this->loader );
+
 		$uncollected_workflow = new IPN_Uncollected_Workflow();
 		$uncollected_workflow->register_hooks( $this->loader );
 	}

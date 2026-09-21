@@ -202,6 +202,8 @@
 .ipn-admin .btn-secondary:hover { background: var(--surface-sunken); color: var(--brand-700); }
 .ipn-admin .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
 .ipn-admin .btn-ghost:hover { background: var(--surface-sunken); color: var(--muted); }
+.ipn-admin .btn-danger { background: var(--danger); color: #fff; border: 1px solid var(--danger); }
+.ipn-admin .btn-danger:hover { filter: brightness(.92); }
 .ipn-admin .btn-danger-outline { background: transparent; color: var(--danger); border: 1px solid var(--danger-bg); }
 .ipn-admin .btn-danger-outline:hover { background: var(--danger-bg); }
 .ipn-admin .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }

@@ -219,4 +219,45 @@ defined( 'ABSPATH' ) || exit;
 	</div>
 	</form>
 
+	<?php
+	$ipn_reset_state   = isset( $_GET['ipn_reset'] ) ? sanitize_key( wp_unslash( $_GET['ipn_reset'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$ipn_reset_summary = 'done' === $ipn_reset_state ? get_transient( 'ipn_reset_summary_' . get_current_user_id() ) : false;
+	?>
+
+	<?php if ( 'mismatch' === $ipn_reset_state ) : ?>
+		<div class="notice notice-error"><p><?php esc_html_e( 'Nothing was deleted — the confirmation word did not match.', 'ipn' ); ?></p></div>
+	<?php elseif ( is_array( $ipn_reset_summary ) ) : ?>
+		<div class="notice notice-success">
+			<p>
+				<?php
+				printf(
+					/* translators: 1: branches, 2: stock rows, 3: audit entries, 4: partners, 5: orders unlinked */
+					esc_html__( 'IPN data reset. Removed %1$d branches, %2$d stock rows, %3$d audit entries; un-flagged %4$d partners; unlinked %5$d WooCommerce orders.', 'ipn' ),
+					(int) $ipn_reset_summary['branches'],
+					(int) $ipn_reset_summary['branch_stock'],
+					(int) $ipn_reset_summary['audit_log'],
+					(int) $ipn_reset_summary['partners'],
+					(int) $ipn_reset_summary['orders_unlinked']
+				);
+				?>
+			</p>
+		</div>
+	<?php endif; ?>
+
+	<div class="panel" style="margin-top:28px;border-color:var(--danger);">
+		<div class="panel-title" style="color:var(--danger);"><?php esc_html_e( 'Danger zone — reset all IPN data', 'ipn' ); ?></div>
+		<div class="panel-sub">
+			<?php esc_html_e( 'Deletes every branch (with hours and closures), all per-branch stock, collection codes, the audit log, catalogue-import history and IPN order records. Vendors are un-flagged as IPN partners and staff lose their branch link. Vendor accounts, stores, WooCommerce products and WooCommerce orders themselves are NOT deleted. This cannot be undone.', 'ipn' ); ?>
+		</div>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" onsubmit="return confirm('<?php echo esc_js( __( 'Permanently delete all IPN data? This cannot be undone.', 'ipn' ) ); ?>');">
+			<input type="hidden" name="action" value="ipn_reset_data" />
+			<?php wp_nonce_field( 'ipn_reset_data' ); ?>
+			<div class="field">
+				<label for="ipn_reset_confirm"><?php esc_html_e( 'Type RESET to confirm', 'ipn' ); ?></label>
+				<input type="text" id="ipn_reset_confirm" name="ipn_reset_confirm" autocomplete="off" />
+			</div>
+			<button type="submit" class="btn btn-danger"><?php esc_html_e( 'Delete all IPN data', 'ipn' ); ?></button>
+		</form>
+	</div>
+
 </div>
