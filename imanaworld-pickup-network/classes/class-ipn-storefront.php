@@ -32,6 +32,12 @@ class IPN_Storefront {
 		// product page itself, with Add to Cart locked while it applies.
 		$loader->add_action( 'woocommerce_before_single_product', $this, 'render_branch_unavailable_notice', 15 );
 		$loader->add_action( 'woocommerce_after_add_to_cart_form', $this, 'render_add_to_cart_lock' );
+		// A cart that no longer fits the selected branch (#37 follow-up): say so on
+		// every storefront page, lock the cart's checkout button, and turn away
+		// direct visits to checkout.
+		$loader->add_action( 'woocommerce_before_main_content', $this, 'render_cart_conflict_notice', 12 );
+		$loader->add_action( 'woocommerce_proceed_to_checkout', $this, 'maybe_lock_proceed_to_checkout', 5 );
+		$loader->add_action( 'template_redirect', $this, 'maybe_redirect_conflicting_checkout' );
 	}
 
 	public function get_selected_branch_id() {
@@ -427,16 +433,32 @@ class IPN_Storefront {
 	 * hook alone runs ahead of every theme's checkout submission.
 	 */
 	public function check_cart_against_branch() {
-		$branch_id = $this->get_selected_branch_id();
+		$message = $this->cart_conflict_message( $this->get_selected_branch_id() );
 
-		if ( ! $branch_id ) {
+		if ( '' === $message ) {
 			return;
+		}
+
+		wc_add_notice( $message, 'error' );
+	}
+
+	/**
+	 * The "Not available at <branch>: <items>" message with its two ways out,
+	 * or an empty string when nothing in the cart conflicts with the branch.
+	 * One builder for every place it is shown — the cart, checkout and the
+	 * rest of the storefront — so they always say the same thing.
+	 *
+	 * @return string HTML, already escaped.
+	 */
+	protected function cart_conflict_message( $branch_id ) {
+		if ( ! $branch_id ) {
+			return '';
 		}
 
 		$unavailable = $this->unavailable_cart_items( $branch_id );
 
 		if ( ! $unavailable ) {
-			return;
+			return '';
 		}
 
 		$branch = IPN_Branch::get( $branch_id );
@@ -453,17 +475,77 @@ class IPN_Storefront {
 				: $item['name'];
 		}
 
-		wc_add_notice(
-			sprintf(
-				/* translators: 1: branch name, 2: list of product names */
-				__( 'Not available at %1$s: %2$s. Please choose another product, or clear your cart and shop what this branch has.', 'ipn' ),
-				$branch ? esc_html( $branch->name ) : esc_html__( 'your selected branch', 'ipn' ),
-				esc_html( implode( ', ', $names ) )
-			)
-			. ' <a href="' . esc_url( $this->cart_fix_url( 'remove_unavailable' ) ) . '">' . esc_html__( 'Remove those items', 'ipn' ) . '</a>'
-			. ' &middot; <a href="' . esc_url( $this->cart_fix_url( 'clear' ) ) . '">' . esc_html__( 'Clear my cart', 'ipn' ) . '</a>',
-			'error'
-		);
+		return sprintf(
+			/* translators: 1: branch name, 2: list of product names */
+			__( 'Not available at %1$s: %2$s. Please choose another product, or clear your cart and shop what this branch has.', 'ipn' ),
+			$branch ? esc_html( $branch->name ) : esc_html__( 'your selected branch', 'ipn' ),
+			esc_html( implode( ', ', $names ) )
+		)
+		. ' <a href="' . esc_url( $this->cart_fix_url( 'remove_unavailable' ) ) . '">' . esc_html__( 'Remove those items', 'ipn' ) . '</a>'
+		. ' &middot; <a href="' . esc_url( $this->cart_fix_url( 'clear' ) ) . '">' . esc_html__( 'Clear my cart', 'ipn' ) . '</a>';
+	}
+
+	/**
+	 * The same message on every other storefront page (shop, category, product),
+	 * so a customer who switches branch with a full cart is told straight away
+	 * rather than only when they next open the cart. The cart and checkout
+	 * already raise it themselves through check_cart_against_branch(), so those
+	 * are skipped here to avoid saying it twice.
+	 */
+	public function render_cart_conflict_notice() {
+		if ( ( function_exists( 'is_cart' ) && is_cart() ) || ( function_exists( 'is_checkout' ) && is_checkout() ) ) {
+			return;
+		}
+
+		$message = $this->cart_conflict_message( $this->get_selected_branch_id() );
+
+		if ( '' === $message ) {
+			return;
+		}
+
+		wc_print_notice( $message, 'error' );
+	}
+
+	/**
+	 * On the cart page, swaps "Proceed to checkout" for a greyed-out button
+	 * while anything in the cart cannot be collected from the selected branch.
+	 */
+	public function maybe_lock_proceed_to_checkout() {
+		if ( '' === $this->cart_conflict_message( $this->get_selected_branch_id() ) ) {
+			return;
+		}
+
+		remove_action( 'woocommerce_proceed_to_checkout', 'woocommerce_button_proceed_to_checkout', 20 );
+
+		echo '<span class="checkout-button button alt wc-forward ipn-checkout-locked" aria-disabled="true" '
+			. 'style="pointer-events:none;opacity:.45;cursor:not-allowed;display:block;text-align:center;" '
+			. 'title="' . esc_attr__( 'Resolve the items above before checking out.', 'ipn' ) . '">'
+			. esc_html__( 'Proceed to checkout', 'ipn' )
+			. '</span>';
+	}
+
+	/**
+	 * Anyone reaching the checkout page with a conflicting cart — from the
+	 * header mini-cart, a bookmark, the browser's back button — is sent back to
+	 * the cart, where the message and the fix links are. The order itself is
+	 * still refused in check_cart_against_branch() on woocommerce_checkout_process
+	 * if a request ever gets past this.
+	 */
+	public function maybe_redirect_conflicting_checkout() {
+		if ( wp_doing_ajax() || ! function_exists( 'is_checkout' ) || ! is_checkout() || ! function_exists( 'WC' ) || ! WC()->cart ) {
+			return;
+		}
+
+		if ( is_wc_endpoint_url( 'order-received' ) || is_wc_endpoint_url( 'order-pay' ) ) {
+			return;
+		}
+
+		if ( '' === $this->cart_conflict_message( $this->get_selected_branch_id() ) ) {
+			return;
+		}
+
+		wp_safe_redirect( wc_get_cart_url() );
+		exit;
 	}
 
 	/**

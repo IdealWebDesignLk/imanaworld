@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.49
+Stable tag: 0.9.50
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,21 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.50 =
+* Changing branch with items already in the cart now says so straight away and
+  will not let the customer go on to checkout with items that branch cannot
+  supply. Previously the "Not available at <branch>" message only appeared
+  once the cart or checkout was opened.
+  - The same message (with Remove those items / Clear my cart) now shows on
+    every storefront page, so it appears right after switching branch.
+  - On the cart page, Proceed to checkout is replaced by a greyed-out button
+    until the cart fits the branch.
+  - Reaching the checkout page any other way (header mini-cart, bookmark) sends
+    the customer back to the cart. Order confirmation and payment pages are
+    never redirected. The order is still refused server-side as before.
+* Includes 0.9.49: the product page shows the notice and locks Add to Cart /
+  Buy Now when the selected branch cannot supply that product.
 
 = 0.9.49 =
 * New: the "Not available at <branch>" warning that the cart shows is now on
