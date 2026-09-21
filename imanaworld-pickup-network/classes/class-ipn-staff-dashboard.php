@@ -425,15 +425,11 @@ class IPN_Staff_Dashboard {
 			'phone'   => $order->get_billing_phone(),
 		);
 
-		$shipping_address = $order->get_formatted_shipping_address();
-
-		$detail->shipping = $shipping_address ? (object) array(
-			'name'    => trim( $order->get_formatted_shipping_full_name() ),
-			'company' => $order->get_shipping_company(),
-			'address' => $shipping_address,
-			'phone'   => method_exists( $order, 'get_shipping_phone' ) ? $order->get_shipping_phone() : '',
-			'method'  => $order->get_shipping_method(),
-		) : null;
+		// Every IPN order is collect-in-person, so there is nothing to ship: the
+		// shipping address WooCommerce stores is only a copy of billing and showing
+		// it suggests the order is being delivered (issue #57). Staff only need to
+		// know how the order is being handed over.
+		$detail->collection_method = $order->get_shipping_method();
 
 		$detail->totals = (object) array(
 			'subtotal' => (float) $order->get_subtotal(),

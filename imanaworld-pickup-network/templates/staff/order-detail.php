@@ -158,19 +158,10 @@ $next_status_key = array(
 						</div>
 					<?php endif; ?>
 
-					<?php if ( $order->shipping ) : ?>
+					<?php if ( ! empty( $order->collection_method ) ) : ?>
 						<div class="card card--half">
-							<div class="card-title"><?php esc_html_e( 'Shipping address', 'ipn' ); ?></div>
-							<?php if ( $order->shipping->company ) : ?>
-								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Company', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->shipping->company ); ?></span></div>
-							<?php endif; ?>
-							<div class="address-block"><?php echo wp_kses_post( $order->shipping->address ); ?></div>
-							<?php if ( $order->shipping->phone ) : ?>
-								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Phone', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->shipping->phone ); ?></span></div>
-							<?php endif; ?>
-							<?php if ( $order->shipping->method ) : ?>
-								<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Method', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->shipping->method ); ?></span></div>
-							<?php endif; ?>
+							<div class="card-title"><?php esc_html_e( 'Collection', 'ipn' ); ?></div>
+							<div class="kv-row"><span class="kv-label"><?php esc_html_e( 'Method', 'ipn' ); ?></span><span class="kv-value"><?php echo esc_html( $order->collection_method ); ?></span></div>
 						</div>
 					<?php endif; ?>
 
