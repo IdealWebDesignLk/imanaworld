@@ -651,7 +651,11 @@ class IPN_Admin {
 			return new WP_Error( 'ipn_stock_invalid', __( 'Invalid stock adjustment — a product, branch, and stock quantity are all required.', 'ipn' ) );
 		}
 
-		IPN_Branch_Stock::set_total( $product_id, $branch_id, $total );
+		$saved = IPN_Branch_Stock::set_total( $product_id, $branch_id, $total );
+
+		if ( is_wp_error( $saved ) ) {
+			return $saved;
+		}
 
 		IPN_Audit_Log::log( 'stock_adjusted', array(
 			'branch_id' => $branch_id,

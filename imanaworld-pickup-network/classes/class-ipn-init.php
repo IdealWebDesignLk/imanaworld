@@ -63,6 +63,9 @@ class IPN_Init {
 		$data_reset = new IPN_Data_Reset();
 		$data_reset->register_hooks( $this->loader );
 
+		$product_guard = new IPN_Product_Guard();
+		$product_guard->register_hooks( $this->loader );
+
 		$uncollected_workflow = new IPN_Uncollected_Workflow();
 		$uncollected_workflow->register_hooks( $this->loader );
 	}

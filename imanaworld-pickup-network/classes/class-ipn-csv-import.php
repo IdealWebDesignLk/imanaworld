@@ -137,8 +137,9 @@ class IPN_CSV_Import {
 
 		// An existing SKU belonging to somebody else must not be rewritten by
 		// a vendor's file — that would let one store edit another's catalogue
-		// by guessing a SKU.
-		if ( $vendor_id && ! $is_new && (int) get_post_field( 'post_author', $product_id ) !== (int) $vendor_id ) {
+		// by guessing a SKU. Checked against the branch's vendor (not just the
+		// importing vendor) so an admin-run import cannot cross stores either.
+		if ( ! $is_new && (int) get_post_field( 'post_author', $product_id ) !== (int) $branch->vendor_id ) {
 			/* translators: %s: SKU from the import file */
 			return self::row_result( 'failed', sprintf( __( 'SKU "%s" belongs to another store.', 'ipn' ), $sku ) );
 		}

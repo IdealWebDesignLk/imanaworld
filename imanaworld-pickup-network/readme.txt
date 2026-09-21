@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.44
+Stable tag: 0.9.45
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,22 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.45 =
+* Security: vendors are now strictly limited to their own products.
+  - A branch can only be stocked with products owned by that branch's
+    vendor. The check lives in IPN_Branch_Stock::set_total(), so it covers
+    every route that writes stock — the admin Stock "Adjust" dialog, the
+    product-edit-screen stock box and the catalogue importer — not only the
+    vendor dashboard, which already checked. An attempt is refused with
+    "That product belongs to a different vendor than this branch".
+  - The catalogue importer no longer lets an existing SKU owned by one store
+    be rewritten or stocked into another store's branch, including when the
+    import is run by an administrator.
+  - New IPN_Product_Guard: a marketplace vendor cannot edit or delete a
+    product whose author is another vendor, by any route (Dokan dashboard,
+    wp-admin, REST API). Administrators, shop managers and Dokan vendor
+    staff are unaffected.
 
 = 0.9.44 =
 * Fix: saving a staff member (or a branch) from the vendor dashboard

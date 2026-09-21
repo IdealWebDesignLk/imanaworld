@@ -30,8 +30,39 @@ class IPN_Branch_Stock {
 		return max( 0, (int) $row->total_stock - (int) $row->reserved_stock );
 	}
 
+	/**
+	 * Whether a product belongs to the vendor who owns the given branch.
+	 *
+	 * A branch can only ever carry its own vendor's products. Every write onto
+	 * ipn_branch_stock goes through set_total(), so this is enforced there
+	 * rather than at each screen that happens to offer a stock field.
+	 */
+	public static function product_belongs_to_branch_vendor( $product_id, $branch_id ) {
+		$branch = IPN_Branch::get( (int) $branch_id );
+
+		if ( ! $branch ) {
+			return false;
+		}
+
+		return (int) get_post_field( 'post_author', (int) $product_id ) === (int) $branch->vendor_id;
+	}
+
+	/**
+	 * Sets (or creates) the total stock of a product at a branch.
+	 *
+	 * @return int|false|WP_Error Rows affected/false from the database, or a
+	 *                            WP_Error when the product is another vendor's.
+	 */
 	public static function set_total( $product_id, $branch_id, $total_stock ) {
 		global $wpdb;
+
+		if ( ! self::product_belongs_to_branch_vendor( $product_id, $branch_id ) ) {
+			return new WP_Error(
+				'ipn_stock_foreign_product',
+				__( 'That product belongs to a different vendor than this branch, so it cannot be stocked here.', 'ipn' )
+			);
+		}
+
 		$table = self::table();
 		$now   = current_time( 'mysql' );
 
