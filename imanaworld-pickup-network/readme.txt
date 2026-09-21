@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.48
+Stable tag: 0.9.49
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,16 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.49 =
+* New: the "Not available at <branch>" warning that the cart shows is now on
+  the product page too. When the branch you have selected cannot supply the
+  product you are looking at (no stock row there, or none left), the same red
+  notice appears at the top of the page and Add to Cart / Buy Now are locked,
+  so you find out before adding it rather than in the cart. It uses the same
+  rule as the cart, so the two cannot disagree; the server-side refusal on
+  add-to-cart is unchanged. Nothing shows until a branch is selected, and
+  non Click & Collect products are untouched.
 
 = 0.9.48 =
 * Fix (#57): the branch staff order screen still showed a "Shipping address"

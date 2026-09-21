@@ -28,6 +28,10 @@ class IPN_Storefront {
 		// assuming the cart hook alone reaches checkout on every theme.
 		$loader->add_action( 'woocommerce_checkout_process', $this, 'check_cart_against_branch' );
 		$loader->add_action( 'woocommerce_before_add_to_cart_button', $this, 'render_branch_required_prompt' );
+		// The same "not available at this branch" answer the cart gives, but on the
+		// product page itself, with Add to Cart locked while it applies.
+		$loader->add_action( 'woocommerce_before_single_product', $this, 'render_branch_unavailable_notice', 15 );
+		$loader->add_action( 'woocommerce_after_add_to_cart_form', $this, 'render_add_to_cart_lock' );
 	}
 
 	public function get_selected_branch_id() {
@@ -484,6 +488,106 @@ class IPN_Storefront {
 			$base
 		);
 	}
+
+	/**
+	 * Whether the product page currently being shown is one the selected
+	 * branch cannot supply, using the very rule the cart and checkout use
+	 * (branch_availability_problem) so the page and the cart cannot disagree.
+	 *
+	 * Only ever true for the main product of a single product page and only
+	 * once a branch is chosen: before that, render_branch_required_prompt()
+	 * already says what to do.
+	 *
+	 * @return array|null 'branch' (object) and 'name' (string), or null.
+	 */
+	protected function current_product_branch_problem() {
+		global $product;
+
+		if ( ! $product instanceof WC_Product || ! function_exists( 'is_product' ) || ! is_product() ) {
+			return null;
+		}
+
+		if ( (int) get_queried_object_id() !== (int) $product->get_id() ) {
+			return null;
+		}
+
+		$branch_id = $this->get_selected_branch_id();
+
+		if ( ! $branch_id ) {
+			return null;
+		}
+
+		if ( ! $this->branch_availability_problem( $product->get_id(), 1, $branch_id ) ) {
+			return null;
+		}
+
+		return array(
+			'branch' => IPN_Branch::get( $branch_id ),
+			'name'   => $product->get_name(),
+		);
+	}
+
+	/**
+	 * The same red notice the cart shows, at the top of the product page.
+	 */
+	public function render_branch_unavailable_notice() {
+		$problem = $this->current_product_branch_problem();
+
+		if ( ! $problem ) {
+			return;
+		}
+
+		wc_print_notice(
+			sprintf(
+				/* translators: 1: branch name, 2: product name */
+				__( 'Not available at %1$s: %2$s. Choose a branch that has it from the list below, or pick another product.', 'ipn' ),
+				$problem['branch'] ? esc_html( $problem['branch']->name ) : esc_html__( 'your selected branch', 'ipn' ),
+				esc_html( $problem['name'] )
+			),
+			'error'
+		);
+	}
+
+	/**
+	 * Locks Add to Cart (and the theme's Buy Now) while the selected branch
+	 * cannot supply this product. This is the visible half only: the actual
+	 * refusal stays in validate_branch_stock(), so a stale page or a direct
+	 * request is still turned away.
+	 *
+	 * Done with a class, CSS and a submit guard rather than just a `disabled`
+	 * attribute, because WooCommerce's variation script re-enables the button
+	 * whenever a variation is picked.
+	 */
+	public function render_add_to_cart_lock() {
+		if ( ! $this->current_product_branch_problem() ) {
+			return;
+		}
+
+		$label = esc_js( __( 'This product is not available at your selected branch.', 'ipn' ) );
+		?>
+		<style>
+			form.cart.ipn-branch-locked .single_add_to_cart_button,
+			form.cart.ipn-branch-locked .buy_now_button,
+			form.cart.ipn-branch-locked .quantity,
+			form.cart.ipn-branch-locked .quantity input { pointer-events: none; opacity: .45; cursor: not-allowed; }
+		</style>
+		<script>
+			( function () {
+				var forms = document.querySelectorAll( 'form.cart' );
+				Array.prototype.forEach.call( forms, function ( form ) {
+					form.classList.add( 'ipn-branch-locked' );
+					form.addEventListener( 'submit', function ( e ) { e.preventDefault(); e.stopImmediatePropagation(); }, true );
+					Array.prototype.forEach.call( form.querySelectorAll( '.single_add_to_cart_button, .buy_now_button, .quantity input' ), function ( el ) {
+						el.setAttribute( 'aria-disabled', 'true' );
+						el.setAttribute( 'title', '<?php echo $label; // phpcs:ignore WordPress.Security.EscapeOutput ?>' );
+						el.setAttribute( 'tabindex', '-1' );
+					} );
+				} );
+			}() );
+		</script>
+		<?php
+	}
+
 
 	/**
 	 * Says so above the Add to Cart button when no branch has been chosen yet
