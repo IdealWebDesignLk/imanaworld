@@ -392,9 +392,15 @@ class IPN_Storefront {
 	public function unavailable_cart_items( $branch_id ) {
 		$out = array();
 
-		if ( ! $branch_id || ! function_exists( 'WC' ) || ! WC()->cart ) {
+		if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
 			return $out;
 		}
+
+		// Whether the cart holds any Click & Collect product decides what the
+		// rest of it may be: alongside one, a product no branch stocks would be
+		// "collected in person" from a branch that has never carried it.
+		$composition        = $this->cart_composition();
+		$has_branch_product = $composition['has_branch'];
 
 		foreach ( WC()->cart->get_cart() as $key => $item ) {
 			$product_id = ! empty( $item['product_id'] ) ? (int) $item['product_id'] : 0;
@@ -404,7 +410,13 @@ class IPN_Storefront {
 				continue;
 			}
 
-			$problem = $this->branch_availability_problem( $product_id, $quantity, $branch_id );
+			if ( IPN_Branch_Stock::is_tracked( $product_id ) ) {
+				$problem = $branch_id ? $this->branch_availability_problem( $product_id, $quantity, $branch_id ) : null;
+			} elseif ( $has_branch_product ) {
+				$problem = array( 'reason' => 'not_branch', 'available' => 0 );
+			} else {
+				$problem = null;
+			}
 
 			if ( ! $problem ) {
 				continue;
@@ -422,6 +434,75 @@ class IPN_Storefront {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * What the cart is made of: whether any line is a Click & Collect product
+	 * (one some branch stocks), and the keys of the lines that are not.
+	 *
+	 * A cart may be all one or all the other; it may not be both, because
+	 * checkout forces every order to collect-in-person from the chosen branch.
+	 *
+	 * @return array 'has_branch' (bool) and 'plain' (string[] cart item keys).
+	 */
+	protected function cart_composition() {
+		$out = array( 'has_branch' => false, 'plain' => array() );
+
+		if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+			return $out;
+		}
+
+		foreach ( WC()->cart->get_cart() as $key => $item ) {
+			$product_id = ! empty( $item['product_id'] ) ? (int) $item['product_id'] : 0;
+
+			if ( ! $product_id ) {
+				continue;
+			}
+
+			if ( IPN_Branch_Stock::is_tracked( $product_id ) ) {
+				$out['has_branch'] = true;
+			} else {
+				$out['plain'][] = $key;
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Whether putting this product in the cart would mix Click & Collect and
+	 * non-Click & Collect products.
+	 *
+	 * @return string|null 'plain' (a non-branch product going into a cart that
+	 *                     has branch products), 'branch' (a branch product going
+	 *                     into a cart that has non-branch products), or null.
+	 */
+	protected function mixed_cart_problem( $product_id ) {
+		$composition = $this->cart_composition();
+		$tracked     = IPN_Branch_Stock::is_tracked( $product_id );
+
+		if ( ! $tracked && $composition['has_branch'] ) {
+			return 'plain';
+		}
+
+		if ( $tracked && $composition['plain'] ) {
+			return 'branch';
+		}
+
+		return null;
+	}
+
+	/**
+	 * The refusal shown when a product would mix the two kinds, with the way
+	 * out. HTML, already escaped.
+	 */
+	protected function mixed_cart_message( $kind ) {
+		$text = 'branch' === $kind
+			? __( "We can't add this product: it is a Click & Collect product, and your cart has other items that can't be collected from a branch. Clear your cart to add it, or continue with your current items.", 'ipn' )
+			: __( "We can't add this product: it isn't available at any Click & Collect branch, and your cart already has branch products. Clear your cart to add it, or continue with the branch products.", 'ipn' );
+
+		return esc_html( $text )
+			. ' <a href="' . esc_url( $this->cart_fix_url( 'clear' ) ) . '">' . esc_html__( 'Clear my cart', 'ipn' ) . '</a>';
 	}
 
 	/**
@@ -451,21 +532,22 @@ class IPN_Storefront {
 	 * @return string HTML, already escaped.
 	 */
 	protected function cart_conflict_message( $branch_id ) {
-		if ( ! $branch_id ) {
-			return '';
-		}
-
 		$unavailable = $this->unavailable_cart_items( $branch_id );
 
 		if ( ! $unavailable ) {
 			return '';
 		}
 
-		$branch = IPN_Branch::get( $branch_id );
-		$names  = array();
+		$branch_names = array();
+		$plain_names  = array();
 
 		foreach ( $unavailable as $item ) {
-			$names[] = 'short' === $item['reason'] && $item['available'] > 0
+			if ( 'not_branch' === $item['reason'] ) {
+				$plain_names[] = $item['name'];
+				continue;
+			}
+
+			$branch_names[] = 'short' === $item['reason'] && $item['available'] > 0
 				? sprintf(
 					/* translators: 1: product name, 2: units available at the branch */
 					__( '%1$s (only %2$d left here)', 'ipn' ),
@@ -475,12 +557,27 @@ class IPN_Storefront {
 				: $item['name'];
 		}
 
-		return sprintf(
-			/* translators: 1: branch name, 2: list of product names */
-			__( 'Not available at %1$s: %2$s. Please choose another product, or clear your cart and shop what this branch has.', 'ipn' ),
-			$branch ? esc_html( $branch->name ) : esc_html__( 'your selected branch', 'ipn' ),
-			esc_html( implode( ', ', $names ) )
-		)
+		$branch   = $branch_id ? IPN_Branch::get( $branch_id ) : null;
+		$sentence = array();
+
+		if ( $branch_names ) {
+			$sentence[] = sprintf(
+				/* translators: 1: branch name, 2: list of product names */
+				__( 'Not available at %1$s: %2$s. Please choose another product, or clear your cart and shop what this branch has.', 'ipn' ),
+				$branch ? esc_html( $branch->name ) : esc_html__( 'your selected branch', 'ipn' ),
+				esc_html( implode( ', ', $branch_names ) )
+			);
+		}
+
+		if ( $plain_names ) {
+			$sentence[] = sprintf(
+				/* translators: %s: list of product names */
+				__( "Not in any Click & Collect branch: %s. These can't be ordered together with branch products — remove them to continue with the branch products, or clear your cart.", 'ipn' ),
+				esc_html( implode( ', ', $plain_names ) )
+			);
+		}
+
+		return implode( ' ', $sentence )
 		. ' <a href="' . esc_url( $this->cart_fix_url( 'remove_unavailable' ) ) . '">' . esc_html__( 'Remove those items', 'ipn' ) . '</a>'
 		. ' &middot; <a href="' . esc_url( $this->cart_fix_url( 'clear' ) ) . '">' . esc_html__( 'Clear my cart', 'ipn' ) . '</a>';
 	}
@@ -593,6 +690,14 @@ class IPN_Storefront {
 			return null;
 		}
 
+		// Mixing branch and non-branch products is refused whether or not a
+		// branch has been chosen yet.
+		$kind = $this->mixed_cart_problem( $product->get_id() );
+
+		if ( $kind ) {
+			return array( 'kind' => $kind );
+		}
+
 		$branch_id = $this->get_selected_branch_id();
 
 		if ( ! $branch_id ) {
@@ -604,6 +709,7 @@ class IPN_Storefront {
 		}
 
 		return array(
+			'kind'   => 'unavailable',
 			'branch' => IPN_Branch::get( $branch_id ),
 			'name'   => $product->get_name(),
 		);
@@ -616,6 +722,11 @@ class IPN_Storefront {
 		$problem = $this->current_product_branch_problem();
 
 		if ( ! $problem ) {
+			return;
+		}
+
+		if ( 'unavailable' !== $problem['kind'] ) {
+			wc_print_notice( $this->mixed_cart_message( $problem['kind'] ), 'error' );
 			return;
 		}
 
@@ -711,6 +822,17 @@ class IPN_Storefront {
 	 * let through by a different, disagreeing rule.
 	 */
 	public function validate_branch_stock( $passed, $product_id, $quantity ) {
+		// A cart is either all Click & Collect products or none of them: checkout
+		// collects the whole order in person from the chosen branch, so a product
+		// no branch stocks cannot ride along (and a branch product cannot join a
+		// cart of ordinary ones).
+		$mixed = $this->mixed_cart_problem( $product_id );
+
+		if ( $mixed ) {
+			wc_add_notice( $this->mixed_cart_message( $mixed ), 'error' );
+			return false;
+		}
+
 		$branch_id = $this->get_selected_branch_id();
 
 		if ( ! $branch_id ) {

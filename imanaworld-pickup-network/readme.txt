@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.50
+Stable tag: 0.9.51
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,26 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.51 =
+* A cart can no longer mix Click & Collect (branch) products with products that
+  no branch stocks. Checkout collects the whole order in person from the
+  chosen branch, so an ordinary product riding along in a branch order was
+  being "collected" from a branch that has never carried it.
+  - Adding an ordinary product to a cart that already has a branch product is
+    refused: "We can't add this product: it isn't available at any Click &
+    Collect branch, and your cart already has branch products. Clear your cart
+    to add it, or continue with the branch products." (with a Clear my cart
+    link). Adding a branch product to a cart of ordinary products is refused
+    the same way, with matching wording.
+  - The product page shows that notice and locks Add to Cart / Buy Now up
+    front, as it does for a product the selected branch cannot supply.
+  - A cart that is already mixed is flagged at cart level ("Not in any Click &
+    Collect branch: ..."); Remove those items drops the ordinary products and
+    keeps the branch ones, and Proceed to checkout stays locked until it is
+    resolved. This works whether or not a branch has been selected.
+  - Carts that are all branch products, or all ordinary products, behave as
+    before.
 
 = 0.9.50 =
 * Changing branch with items already in the cart now says so straight away and
