@@ -16,8 +16,14 @@ class IPN_Activator {
 		IPN_Pages::ensure_staff_dashboard_page();
 		update_option( 'ipn_pages_version', IPN_VERSION );
 
-		flush_rewrite_rules();
-		update_option( 'ipn_rewrite_version', IPN_VERSION );
+		// Deliberately not flushing rewrite rules here. During activation the
+		// plugin's hooks are not booted, so Dokan has not been told about the
+		// /dashboard/ipn/ endpoint and a flush now would write rules without
+		// it — and recording the version as "done" would then stop the real
+		// flush from ever running (a permanent 404 on the vendor dashboard).
+		// Clearing the marker makes the first normal request flush once the
+		// endpoint is registered; see IPN_Vendor_Dashboard::maybe_flush_rewrites().
+		delete_option( 'ipn_rewrite_version' );
 	}
 
 	protected static function add_default_options() {

@@ -4,7 +4,7 @@ Tags: woocommerce, dokan, click-and-collect, multi-vendor
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 0.9.46
+Stable tag: 0.9.47
 License: GPLv2 or later
 
 Click & Collect fulfilment network for IMANAWORLD, built on WooCommerce and Dokan. Pilot partner: Choppies.
@@ -110,6 +110,15 @@ a GitHub Release — WordPress then offers that release as a normal plugin
 update, the same as a wordpress.org-hosted plugin.
 
 == Changelog ==
+
+= 0.9.47 =
+* Fix: after deactivating and re-activating the plugin, the vendor Click &
+  Collect dashboard (/dashboard/ipn/) returned a 404. Activation refreshed
+  the site's URL rules before the plugin had told Dokan about that page, and
+  then recorded the refresh as done, so it was never redone. Activation now
+  leaves that to the first normal request, when the page is registered.
+  Sites already affected are fixed by this update: the version change makes
+  the plugin refresh the URL rules once on the next page load.
 
 = 0.9.46 =
 * New: each entry in Catalogue Import > Import log now has a Delete button
